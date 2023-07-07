@@ -1,0 +1,7 @@
+name: test
+description: A Helm chart for Kubernetes
+type: "service" / "system"
+
+deploy_version: 0.1.0
+
+prism_version: "1.16.0"
