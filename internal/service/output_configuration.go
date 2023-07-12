@@ -52,7 +52,7 @@ func (s *OutputService) CreateNomadConfiguration(
 		template.New("nomad_template.tmpl").Funcs(template.FuncMap{
 			"marshalArgs":    marshalArgs,
 			"marshalVolumes": marshalVolumes,
-		}).ParseFS(templates.TemplateFile, "*.tmpl"),
+		}).ParseFS(templates.TemplateFile, "nomad_template.tmpl"),
 	)
 
 	err = tmpl.Execute(file, config)

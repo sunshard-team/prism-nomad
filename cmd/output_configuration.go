@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"prism/internal/service"
 
 	"github.com/spf13/cobra"
 )
@@ -17,8 +16,8 @@ var createCmd = &cobra.Command{
 		from, _ := cmd.Flags().GetString("from")
 
 		if name != "" && path != "" {
-			var outputService service.Output
-			outputService.CreateNomadConfiguration(name, path, from)
+			var output = services.Output
+			output.CreateNomadConfiguration(name, path, from)
 			return
 		}
 

@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"os"
+	"prism/internal/service"
 
 	"github.com/spf13/cobra"
 )
+
+var services = service.NewService()
 
 var rootCmd = &cobra.Command{
 	Use:   "prism",
