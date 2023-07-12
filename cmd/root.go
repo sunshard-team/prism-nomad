@@ -1,34 +1,17 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "prism",
 	Short: "Creates a deployment template and configures the nomad",
 	Long:  `Prism creates a deployment template and configures the nomad.`,
-
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
-		init, _ := cmd.Flags().GetBool("init")
-
-		if init {
-			fmt.Println("Init default configuration.")
-		}
-	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -48,11 +31,4 @@ func init() {
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-
-	rootCmd.PersistentFlags().BoolP(
-		"init",
-		"i",
-		false,
-		"creating a default configuration",
-	)
 }
