@@ -14,7 +14,7 @@ import (
 
 type OutputService struct{}
 
-func NewCreateService() *OutputService {
+func NewOutputService() *OutputService {
 	return &OutputService{}
 }
 

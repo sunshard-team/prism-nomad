@@ -1,15 +1,15 @@
 package service
 
-type Create interface {
+type Output interface {
 	CreateNomadConfiguration(name, path, from string) (bool, error)
 }
 
 type Service struct {
-	Create Create
+	Output Output
 }
 
 func NewService() *Service {
 	return &Service{
-		Create: NewCreateService(),
+		Output: NewOutputService(),
 	}
 }

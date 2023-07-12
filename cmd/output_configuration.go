@@ -7,9 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "out",
+	Use:   "output",
 	Short: "Create nomad configuration file",
 	Long:  `Create nomad template configuration file.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -18,8 +17,8 @@ var createCmd = &cobra.Command{
 		from, _ := cmd.Flags().GetString("from")
 
 		if name != "" && path != "" {
-			var service service.OutputService
-			service.CreateNomadConfiguration(name, path, from)
+			var outputService service.Output
+			outputService.CreateNomadConfiguration(name, path, from)
 			return
 		}
 
