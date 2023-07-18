@@ -1,43 +1,83 @@
-outputFile: /home/yaroslav/working_folder/private/SUNSHARD/sun-go/output.nomad
+job: "nginx"
+  datacenters: ["dc1"]
+  type: "смотреть prism.yaml"
+	namespace: "default"
+  meta:
+    run_uuid: "${uuidv4()}" #подставить deploy_version
+  
+  group: "nginx"
+    count: 1
+    network_mode: "bridge" #(долджен войти в блок network в формате mode = "bridge")
+    #https://developer.hashicorp.com/nomad/docs/job-specification/network
+    network:
+      - name: "http"
+        static: 80
+        to: 80
+      - name: "https"
+        to: 443
+      - name: "test"
+        static: 81
+      - name: "test1"
 
-job_name: test111
-datacenters: DC222
-job_type: "1231111"
+    scaling:
+			enabled: true #(default = false)
+			min: 1
+			max: 6
+		
+    service:
+      - name: "nginx"
+        provider: consul (default = consul)
+        port: "http"
+        tags: ["nginx", "test"]
+        check:
+          name: "alive"
+          type: "http"
+          path: "/"
+          interval: "10s"
+          timeout: "2s"
+        # Если открываем сервис для консул коннекта
+        connect:
+          sidecar_service: true
+      - name: "nginx-https"
+        provider: consul (default = consul)
+        port: "https"
+        tags: ["nginx", "test"]
+        # Если мы присоединяем сторонний сервис
+        connect:
+          sidecar_service:
+            proxy:
+              upstreams:
+                destination_name: "nginx"
+                local_bind_port: 80
 
-constraint:
-  constraintAttribute: value111
-  constraintValue: value111
+    restart:
+			attempts: 10
+			interval: "5m"
+			delay: "25s"
+			mode: "delay"
 
-update:
-  max_parallel = 1
-  min_healthy_time = "10s"
-  healthy_deadline = "3m"
-  progress_deadline = "10m"
-  auto_revert = false
-  canary = 0
+    task: "nginx" 
+      driver: "docker"
+      config:
+        image: "nginx"
+        force_pull: true 
+        ports: ["http"]
+        volumes: 
+          - "local:/etc/nginx/conf.d"
+          - "local/test.conf:/etc/nginx/conf.d/test.conf"
+          - "custom_path:/custom_path_in_container"
+        
+        template: 
+          - name: load-balancer.conf
+            destination: "local/load-balancer.conf"
+            change_mode: "signal"
+            change_signal: "SIGHUP"
+        env:
+          - WORDPRESS_DB_HOST = "${NOMAD_UPSTREAM_IP_mysql-server}"
+          - WORDPRESS_CONFIG_EXTRA = "define('WP_HOME','wp.sunshard.ru:443')"
+          - WORDPRESS_CONFIG_EXTRA = "define('WP_ALLOW_REPAIR', true );\ndefine('WP_HOME','https://wp.sunshard.space');\ndefine('WP_SITEURL','https://wp.sunshard.space');"
 
-group:
-  name: nginx
-  count
-  network_mode: "123qq1111"
-  network:
-    - name: nexus_web
-      to: 8081111111
-      static: 808111
-    - name: nexus
-      to: 500011
-    - name: nexus_static
-  scaling
-  service:
-    - name: "nginx"
-      port: "http"
-      tags: ["nginx"]
-  task:
-    name:
-    template: 
-      - name: load-balancer.conf
-        destination   = "local/load-balancer.conf"
-        change_mode   = "signal"
-        change_signal = "SIGHUP"
-      - 
+      resources:
+        cpu: 1000
+        memory: 1000
 
