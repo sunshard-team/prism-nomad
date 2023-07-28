@@ -41,6 +41,8 @@ job: "grafana"
         template: 
           - name: prometheus.yaml
             destination: "local/datasources/prometheus.yaml"
+            change_mode: "signal"
+            change_signal: "SIGHUP"
           - name: loki.yaml
             destination: "local/datasources/loki.yaml"
           - name: nomad-autoscaler.yaml
