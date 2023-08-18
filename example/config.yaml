@@ -36,12 +36,14 @@ job:
             path: "/"
             interval: "10s"
             timeout: "2s"
+          # Если открываем сервис для консул коннекта
           connect:
             sidecar_service: true
         - name: "nginx-https"
           provider: consul (default = consul)
           port: "https"
           tags: ["nginx", "test"]
+          # Если мы присоединяем сторонний сервис
           connect:
             sidecar_service:
               proxy:

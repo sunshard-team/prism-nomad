@@ -4,8 +4,8 @@ job:
   type: "смотреть prism.yaml"
   namespace: "default"
   meta:
-    run_uuid: "${uuidv4()}" #подставить deploy_version
-  
+    run_uuid: "${uuidv4()}"
+
   group:
     - name: "nginx"
       count: 1
@@ -21,13 +21,13 @@ job:
         - name: "test1"
 
       scaling:
-        enabled: true #(default = false)
+        enabled: true
         min: 1
         max: 6
-      
+
       service:
         - name: "nginx"
-          provider: consul #(default = consul)
+          provider: consul
           port: "http"
           tags: ["nginx", "test"]
           check:
@@ -56,18 +56,18 @@ job:
         mode: "delay"
 
       task:
-        name: "nginx" 
+        name: "nginx"
         driver: "docker"
         config:
           image: "nginx"
-          force_pull: true 
+          force_pull: true
           ports: ["http"]
-          volumes: 
+          volumes:
             - "local:/etc/nginx/conf.d"
             - "local/test.conf:/etc/nginx/conf.d/test.conf"
             - "custom_path:/custom_path_in_container"
-          
-          template: 
+
+          template:
             - name: load-balancer.conf
               destination: "local/load-balancer.conf"
               change_mode: "signal"

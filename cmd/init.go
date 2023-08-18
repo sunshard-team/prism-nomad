@@ -109,8 +109,6 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		// printJob(configYAML)
 	},
 }
 
@@ -121,31 +119,3 @@ func init() {
 	initCmd.Flags().StringP("name", "n", "", "project name")
 	initCmd.Flags().StringP("chart", "c", "", "path to chart file")
 }
-
-// func printJob(job model.ConfigBlock) {
-// 	// fmt.Println(job.Name)
-// 	fmt.Print("parameters:\n\n")
-// 	for _, p := range job.Parameter {
-// 		fmt.Printf("%v\n", p)
-// 	}
-
-// 	fmt.Print("\n\nblocks:\n\n")
-// 	for _, b := range job.Block {
-// 		fmt.Printf("%v\n\n", b)
-
-// 		// 	if b.Name == "group" {
-// 		// 		for _, b := range b.Block {
-// 		// 			for _, v := range b.Parameter {
-// 		// 				for k, v := range v {
-// 		// 					fmt.Printf("%v: %v [%T]\n", k, v, v)
-// 		// 				}
-// 		// 			}
-// 		// 		}
-// 		// 	}
-// 	}
-
-// 	// fmt.Printf("\njob struct parameter's: %v\n", job.Parameter)
-// 	// fmt.Printf("\njob struct block's: %v\n", job.Block)
-
-// 	services.Builder.BuildConfigTemplate(job)
-// }
