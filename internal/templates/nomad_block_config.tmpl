@@ -1,0 +1,12 @@
+{{ define "block" -}}
+{{.BlockName}} {{- if .Name }} "{{.Name}}"{{- end }} {
+    {{- range $index, $item := .Parameter }}
+    {{ $item }}
+    {{- end }}
+
+    {{- range $index, $item := .Block }}
+    {{ "\n" }}
+    {{- include "block" . | indent 4 }}
+    {{- end }}
+}
+{{- end }}
