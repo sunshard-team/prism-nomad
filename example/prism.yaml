@@ -13,23 +13,23 @@ deploy_version: 0.1.0
 prism_version: "1.16.0"
 
 
-project
-  charts
-    nginx
-    rabbit
-  env
-    prod
-      config
-        rabbit_config.yaml  http 81
-        nginx_config.yaml   service_name  - nginx-prod
-    test
-      config
-        rabbit_config.yaml   http 82
-        nginx_config.yaml    service_name - nginx-test
-    dev
-      config
-        rabbit_config.yaml
-        nginx_config.yaml
+# project
+#   charts
+#     nginx
+#     rabbit
+#   env
+#     prod
+#       config
+#         rabbit_config.yaml  http 81
+#         nginx_config.yaml   service_name  - nginx-prod
+#     test
+#       config
+#         rabbit_config.yaml   http 82
+#         nginx_config.yaml    service_name - nginx-test
+#     dev
+#       config
+#         rabbit_config.yaml
+#         nginx_config.yaml
 
-prism install project/charts/nginx -namespace 123 -f project/env/prod/config/nginx_confog.yaml
-prism install project/charts/nginx -namespace 123 -f project/env/test/config/nginx_confog.yaml
+# prism install project/charts/nginx -namespace 123 -f project/env/prod/config/nginx_confog.yaml
+# prism install project/charts/nginx -namespace 123 -f project/env/test/config/nginx_confog.yaml

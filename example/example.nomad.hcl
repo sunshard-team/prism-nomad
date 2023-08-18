@@ -10,11 +10,7 @@ job "nginx" {
 
     network {
       port "http" {
-        to = 8080
         static = 8080
-      }
-      port "http1" {
-        static = 8081
       }
     }
 
@@ -28,17 +24,6 @@ job "nginx" {
       name = "nginx"
       port = "http"
       tags = ["nginx"]
-      # Если открываем сервис для консул коннекта
-      // CUSTOM
-      // connect {
-      //   sidecar_service {}
-      // }
-    }
-    service {
-      name = "nginx-https"
-      port = "https"
-      tags = ["nginx"]
-      # Если мы присоединяем сторонний сервис
       // CUSTOM
       // connect {
 			// 	sidecar_service {
@@ -51,7 +36,6 @@ job "nginx" {
 			// 	}
 			// }
     }
-
 
     restart {
 			attempts = 10
