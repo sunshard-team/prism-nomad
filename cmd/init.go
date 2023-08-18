@@ -117,5 +117,4 @@ func init() {
 
 	// Flags.
 	initCmd.Flags().StringP("name", "n", "", "project name")
-	initCmd.Flags().StringP("chart", "c", "", "path to chart file")
 }
