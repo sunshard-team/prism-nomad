@@ -2,10 +2,10 @@ job:
   name: "nextcloud"
   datacenters: ["SUNSHARD"]
   type: "смотреть prism.yaml"
-	namespace: "default"
+  namespace: "default"
   meta:
     run_uuid: "${uuidv4()}" #подставить deploy_version
-  
+
   group:
     - name: "mariadb"
       count: 1
@@ -56,7 +56,6 @@ job:
           cpu: 1000
           memory: 1000
 
-  group:
     - name: "nextcloud"
       count: 1
       network_mode: "bridge" #(долджен войти в блок network в формате mode = "bridge")
