@@ -1,16 +1,16 @@
 job:
   name: "nextcloud"
   datacenters: ["SUNSHARD"]
-  type: "смотреть prism.yaml"
+  type: "service" # chart type
   namespace: "default"
+
   meta:
-    run_uuid: "${uuidv4()}" #подставить deploy_version
+    run_uuid: "${uuidv4()}" # chart deploy_version
 
   group:
     - name: "mariadb"
       count: 1
-      network_mode: "bridge" #(долджен войти в блок network в формате mode = "bridge")
-      #https://developer.hashicorp.com/nomad/docs/job-specification/network
+      network_mode: "bridge" # network config block - mode = "bridge")
 
       update:
         min_healthy_time: "10s"
@@ -58,8 +58,8 @@ job:
 
     - name: "nextcloud"
       count: 1
-      network_mode: "bridge" #(долджен войти в блок network в формате mode = "bridge")
-      #https://developer.hashicorp.com/nomad/docs/job-specification/network
+      network_mode: "bridge"
+
       network:
         - name: "http"
           to: 80

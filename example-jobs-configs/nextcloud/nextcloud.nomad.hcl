@@ -70,7 +70,6 @@ job "nextcloud" {
         MYSQL_PASSWORD="lqrs15d7"
       }
  
-
       resources {
         cpu    = 1000
         memory = 1000
@@ -83,6 +82,7 @@ job "nextcloud" {
 
     network {
       mode = "bridge"
+
       port "http" {
         to = 80
       }
@@ -145,7 +145,6 @@ job "nextcloud" {
         MYSQL_USER="nextcloud"
         NEXTCLOUD_TRUSTED_DOMAINS="next.sunshard.ru"
       }
-
 
       resources {
         cpu    = 3000

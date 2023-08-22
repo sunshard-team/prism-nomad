@@ -19,6 +19,7 @@ job "grafana" {
 
     task "grafana" {
       driver = "docker"
+      
       config {
         image = "grafana/grafana:9.3.1"
         ports = ["grafana_ui"]
@@ -108,7 +109,6 @@ EOH
         name     = "grafana"
         // provider = "nomad"
         port     = "grafana_ui"
-        
 
         check {
           type     = "http"

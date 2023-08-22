@@ -1,16 +1,17 @@
 job:
   name: "rabbit"
   datacenters: ["SUNSHARD"]
-  type: "смотреть prism.yaml"
+  type: "service" # chart type
 	namespace: "default"
+
   meta:
-    run_uuid: "${uuidv4()}" #подставить deploy_version
+    run_uuid: "${uuidv4()}" # chart deploy_version
   
   group:
     - name: "rabbitmq"
       count: 1
-      network_mode: "bridge" #(долджен войти в блок network в формате mode = "bridge")
-      #https://developer.hashicorp.com/nomad/docs/job-specification/network
+      network_mode: "bridge" # network config block - mode = "bridge")
+
       network:
         - name: "rabbitmq_amqp"
           static: 5672
@@ -18,8 +19,10 @@ job:
         - name: "rabbit_ui"
           to: 15672
 
-      task: "rabbit" 
+      task:
+        name: "rabbit" 
         driver: "docker"
+
         config:
           image: "rabbitmq:3-management"
           force_pull: true
@@ -34,9 +37,8 @@ job:
             port: "rabbit_ui"
           - name: "rabbitmq-amqp"
             provider: consul (default = consul)
-            port: "rabbitmq-amqp"
+            port: "rabbitmq_amqp"
 
         resources:
           cpu: 1000
           memory: 1000
-
