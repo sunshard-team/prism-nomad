@@ -1,11 +1,12 @@
 job:
   name: "nginx"
   datacenters: ["dc1"]
-  type: "смотреть prism.yaml"
+  type: "service" # chart type, default "service"
   namespace: "default"
+
   meta:
-    run_uuid: "${uuidv4()}" #подставить deploy_version
-  
+    run_uuid: "${uuidv4()}" # chart deploy_version
+
   group:
     - name: "nginx"
       count: 1
@@ -21,13 +22,13 @@ job:
         - name: "test1"
 
       scaling:
-        enabled: true #(default = false)
+        enabled: true
         min: 1
         max: 6
-      
+
       service:
         - name: "nginx"
-          provider: consul #(default = consul)
+          provider: "consul"
           port: "http"
           tags: ["nginx", "test"]
           check:
@@ -36,14 +37,12 @@ job:
             path: "/"
             interval: "10s"
             timeout: "2s"
-          # Если открываем сервис для консул коннекта
           connect:
             sidecar_service: true
         - name: "nginx-https"
-          provider: consul (default = consul)
+          provider: "consul"
           port: "https"
           tags: ["nginx", "test"]
-          # Если мы присоединяем сторонний сервис
           connect:
             sidecar_service:
               proxy:
@@ -58,26 +57,28 @@ job:
         mode: "delay"
 
       task:
-        name: "nginx" 
+        name: "nginx"
         driver: "docker"
+
         config:
           image: "nginx"
-          force_pull: true 
+          force_pull: true
           ports: ["http"]
-          volumes: 
+          volumes:
             - "local:/etc/nginx/conf.d"
             - "local/test.conf:/etc/nginx/conf.d/test.conf"
             - "custom_path:/custom_path_in_container"
-          
-          template: 
-            - name: load-balancer.conf
-              destination: "local/load-balancer.conf"
-              change_mode: "signal"
-              change_signal: "SIGHUP"
-          env:
-            - WORDPRESS_DB_HOST = "${NOMAD_UPSTREAM_IP_mysql-server}"
-            - WORDPRESS_CONFIG_EXTRA = "define('WP_HOME','wp.sunshard.ru:443')"
-            - WORDPRESS_CONFIG_EXTRA = "define('WP_ALLOW_REPAIR', true );\ndefine('WP_HOME','https://wp.sunshard.space');\ndefine('WP_SITEURL','https://wp.sunshard.space');"
+
+        template:
+          - name: load-balancer.conf
+            destination: "local/load-balancer.conf"
+            change_mode: "signal"
+            change_signal: "SIGHUP"
+
+        env:
+          - WORDPRESS_DB_HOST = "${NOMAD_UPSTREAM_IP_mysql-server}"
+          - WORDPRESS_CONFIG_EXTRA = "define('WP_HOME','wp.sunshard.ru:443')"
+          - WORDPRESS_CONFIG_EXTRA = "define('WP_ALLOW_REPAIR', true );\ndefine('WP_HOME','https://wp.sunshard.space');\ndefine('WP_SITEURL','https://wp.sunshard.space');"
 
         resources:
           cpu: 1000

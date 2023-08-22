@@ -1,10 +1,12 @@
 job "nginx" {
   datacenters = ["dc1"]
-  type        = "смотреть prism.yaml"
+  type        = "service"
 	namespace   = "default"
+
   meta {
     run_uuid = "${uuidv4()}" //подставить deploy_version
   }
+
   group "nginx" {
     count = 1
 
@@ -50,7 +52,6 @@ job "nginx" {
       config {
         image = "nginx"
         force_pull = true 
-
         ports = ["http"]
 
         volumes = [
@@ -102,9 +103,8 @@ EOF
 			// }
 
       resources {
-					cpu    = 1000
-					memory = 1000
-
+        cpu    = 1000
+        memory = 1000
 			}
     }
   }
