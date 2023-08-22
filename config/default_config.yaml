@@ -1,10 +1,11 @@
 job:
   name: "nginx"
   datacenters: ["dc1"]
-  type: "смотреть prism.yaml"
+  type: "service" # chart type, default "service"
   namespace: "default"
+
   meta:
-    run_uuid: "${uuidv4()}"
+    run_uuid: "${uuidv4()}" # chart deploy_version
 
   group:
     - name: "nginx"
@@ -27,7 +28,7 @@ job:
 
       service:
         - name: "nginx"
-          provider: consul
+          provider: "consul"
           port: "http"
           tags: ["nginx", "test"]
           check:
@@ -39,7 +40,7 @@ job:
           connect:
             sidecar_service: true
         - name: "nginx-https"
-          provider: consul (default = consul)
+          provider: "consul"
           port: "https"
           tags: ["nginx", "test"]
           connect:
@@ -58,6 +59,7 @@ job:
       task:
         name: "nginx"
         driver: "docker"
+
         config:
           image: "nginx"
           force_pull: true
@@ -67,15 +69,16 @@ job:
             - "local/test.conf:/etc/nginx/conf.d/test.conf"
             - "custom_path:/custom_path_in_container"
 
-          template:
-            - name: load-balancer.conf
-              destination: "local/load-balancer.conf"
-              change_mode: "signal"
-              change_signal: "SIGHUP"
-          env:
-            - WORDPRESS_DB_HOST = "${NOMAD_UPSTREAM_IP_mysql-server}"
-            - WORDPRESS_CONFIG_EXTRA = "define('WP_HOME','wp.sunshard.ru:443')"
-            - WORDPRESS_CONFIG_EXTRA = "define('WP_ALLOW_REPAIR', true );\ndefine('WP_HOME','https://wp.sunshard.space');\ndefine('WP_SITEURL','https://wp.sunshard.space');"
+        template:
+          - name: load-balancer.conf
+            destination: "local/load-balancer.conf"
+            change_mode: "signal"
+            change_signal: "SIGHUP"
+
+        env:
+          - WORDPRESS_DB_HOST = "${NOMAD_UPSTREAM_IP_mysql-server}"
+          - WORDPRESS_CONFIG_EXTRA = "define('WP_HOME','wp.sunshard.ru:443')"
+          - WORDPRESS_CONFIG_EXTRA = "define('WP_ALLOW_REPAIR', true );\ndefine('WP_HOME','https://wp.sunshard.space');\ndefine('WP_SITEURL','https://wp.sunshard.space');"
 
         resources:
           cpu: 1000
