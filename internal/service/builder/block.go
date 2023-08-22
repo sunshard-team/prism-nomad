@@ -30,12 +30,17 @@ func (b *Block) Job(
 	job := structBuilder.Job(block)
 
 	if len(chart) > 0 {
-		for k, v := range chart {
-			if k == "deploy_version" {
-				i := make(map[string]interface{})
-				i[k] = v
-
-				job.Parameter = append(job.Parameter, i)
+	Loop:
+		for key, value := range chart {
+			if key == "type" {
+				for i := range job.Parameter {
+					for k := range job.Parameter[i] {
+						if k == key {
+							job.Parameter[i][k] = value
+							break Loop
+						}
+					}
+				}
 			}
 		}
 	}
