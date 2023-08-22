@@ -19,14 +19,11 @@ func (b *TemplateBuilder) BuildConfigTemplate(
 
 	// Job.
 	job := blockBuilder.Job(config, chart)
-	var jobBlock []model.TemplateBlock
 
 	// Group.
 	groups := blockBuilder.Group(config)
-	// var groupBlock []model.TemplateBlock
 
-	jobBlock = append(jobBlock, groups...)
-	job.Block = append(job.Block, jobBlock...)
+	job.Block = append(job.Block, groups...)
 
 	return job
 }

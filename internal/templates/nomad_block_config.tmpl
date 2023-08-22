@@ -1,7 +1,7 @@
 {{ define "block" -}}
 {{.BlockName}} {{- if .Name }} "{{.Name}}"{{- end }} {
     {{- range $index, $item := .Parameter }}
-    {{ $item }}
+    {{ $item | getValue}}
     {{- end }}
 
     {{- range $index, $item := .Block }}

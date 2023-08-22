@@ -116,13 +116,6 @@ func parseBlock(name string, blockMap map[string]interface{}) model.ConfigBlock 
 		default:
 			continue
 		}
-
-	}
-
-	block = model.ConfigBlock{
-		Name:      block.Name,
-		Parameter: block.Parameter,
-		Block:     block.Block,
 	}
 
 	return block

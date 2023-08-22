@@ -11,8 +11,8 @@ type ConfigBlock struct {
 
 // Structure for creating a nomad configuration template.
 type TemplateBlock struct {
-	BlockName string          // "job", "group", "task" etc.
-	Name      string          // job "name", group "name" etc.
-	Parameter []string        // parameter list
-	Block     []TemplateBlock // list of configuration blocks
+	BlockName string                   // "job", "group", "task" etc.
+	Name      string                   // job "name", group "name" etc.
+	Parameter []map[string]interface{} // parameter list
+	Block     []TemplateBlock          // list of configuration blocks
 }

@@ -1,11 +1,11 @@
 package builder
 
 import (
-	"fmt"
 	"prism/internal/model"
 )
 
 type BlockBuilder interface {
+	Artifact(block model.ConfigBlock) model.TemplateBlock
 	Job(block model.ConfigBlock, chart map[string]interface{}) model.TemplateBlock
 	Group(block model.ConfigBlock) []model.TemplateBlock
 }
@@ -32,7 +32,9 @@ func (b *Block) Job(
 	if len(chart) > 0 {
 		for k, v := range chart {
 			if k == "deploy_version" {
-				i := fmt.Sprintf(`deploy_version: "%s"`, v.(string))
+				i := make(map[string]interface{})
+				i[k] = v
+
 				job.Parameter = append(job.Parameter, i)
 			}
 		}
@@ -49,11 +51,17 @@ func (b *Block) Group(block model.ConfigBlock) []model.TemplateBlock {
 	for _, item := range group.Parameter {
 		for _, v := range item {
 			for _, i := range v.([]interface{}) {
-				group := structBuilder.Group(i)
+				group := structBuilder.Group(i.(map[string]interface{}))
 				blockList = append(blockList, group)
 			}
 		}
 	}
 
 	return blockList
+}
+
+func (b *Block) Artifact(block model.ConfigBlock) model.TemplateBlock {
+	artifactBlock := getBlockByName("artifact", block)
+	artifact := structBuilder.Artifact(artifactBlock.Parameter)
+	return artifact
 }

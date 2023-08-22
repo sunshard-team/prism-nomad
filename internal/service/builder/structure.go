@@ -1,71 +1,102 @@
 package builder
 
 import (
-	"fmt"
 	"prism/internal/model"
-	"strconv"
 )
 
 type StructureBuilder interface {
+	Artifact(block []map[string]interface{}) model.TemplateBlock
 	Job(block model.ConfigBlock) model.TemplateBlock
-	Group(block interface{}) model.TemplateBlock
+	Group(block map[string]interface{}) model.TemplateBlock
 }
 
 type Structure struct{}
 
+func (s *Structure) Artifact(block []map[string]interface{}) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
+	var internalBlock []model.TemplateBlock
+
+	for _, item := range block {
+		for k, v := range item {
+			i := make(map[string]interface{})
+			i[k] = v
+
+			switch k {
+			case "destination", "mode", "source":
+				parameters = append(parameters, i)
+			case "options":
+				options := s.artifactBlock(k, i)
+				internalBlock = append(internalBlock, options)
+			case "headers":
+				headers := s.artifactBlock(k, i)
+				internalBlock = append(internalBlock, headers)
+			}
+		}
+	}
+
+	templateBlock := model.TemplateBlock{
+		BlockName: "artifact",
+		Parameter: parameters,
+		Block:     internalBlock,
+	}
+
+	return templateBlock
+}
+
+func (s *Structure) artifactBlock(
+	name string,
+	block map[string]interface{},
+) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
+
+	for k, v := range block {
+		i := make(map[string]interface{})
+		i[k] = v
+
+		if k == name {
+			parameters = append(parameters, i)
+			break
+		}
+	}
+
+	templateBlock := model.TemplateBlock{
+		BlockName: name,
+		Parameter: parameters,
+	}
+
+	return templateBlock
+}
+
 func (s *Structure) Job(block model.ConfigBlock) model.TemplateBlock {
 	var name string
-	parameters := make([]string, 0)
+	parameters := make([]map[string]interface{}, 0)
+
+	parameterName := []string{
+		"all_at_once",
+		"datacenters",
+		"node_pool",
+		"namespace",
+		"priority",
+		"region",
+		"type",
+		"vault_token",
+		"consul_token",
+	}
 
 	for _, item := range block.Parameter {
 		for k, v := range item {
-			switch k {
-			case "name":
+			i := make(map[string]interface{})
+			i[k] = v
+
+			if k == "name" {
 				name = v.(string)
-			case "all_at_once":
-				i := fmt.Sprintf(`all_at_once: %v`, v.(bool))
-				parameters = append(parameters, i)
-			case "datacenters":
-				var datacenter []string
+			}
 
-				for i, item := range v.([]interface{}) {
-					var value string
-
-					if i+1 == len(v.([]interface{})) {
-						value = fmt.Sprintf(`"%v"`, item.(string))
-					} else {
-						value = fmt.Sprintf(`"%v",`, item.(string))
-					}
-
-					datacenter = append(datacenter, value)
+			for _, p := range parameterName {
+				switch k {
+				case p:
+					parameters = append(parameters, i)
 				}
-
-				i := fmt.Sprintf(`datacenters: %v`, datacenter)
-				parameters = append(parameters, i)
-			case "node_pool":
-				i := fmt.Sprintf(`node_pool: "%s"`, v.(string))
-				parameters = append(parameters, i)
-			case "namespace":
-				i := fmt.Sprintf(`namespace: "%s"`, v.(string))
-				parameters = append(parameters, i)
-			case "parameterized":
-				i := fmt.Sprintf(`parameterized: "%s"`, v.(string))
-				parameters = append(parameters, i)
-			case "priority":
-				i := fmt.Sprintf(`priopity: %v`, strconv.Itoa(v.(int)))
-				parameters = append(parameters, i)
-			case "region":
-				i := fmt.Sprintf(`region: "%s"`, v.(string))
-				parameters = append(parameters, i)
-			case "type":
-				i := fmt.Sprintf(`type: "%s"`, v.(string))
-				parameters = append(parameters, i)
-			case "vault_token":
-				i := fmt.Sprintf(`vault_token: "%s"`, v.(string))
-				parameters = append(parameters, i)
-			case "consul_token":
-				i := fmt.Sprintf(`consul_token: "%s"`, v.(string))
-				parameters = append(parameters, i)
 			}
 		}
 	}
@@ -79,26 +110,30 @@ func (s *Structure) Job(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (s *Structure) Group(block interface{}) model.TemplateBlock {
+func (s *Structure) Group(block map[string]interface{}) model.TemplateBlock {
 	var name string
-	parameters := make([]string, 0)
+	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block.(map[string]interface{}) {
-		switch k {
-		case "name":
+	parameterName := []string{
+		"count",
+		"shutdown_delay",
+		"stop_after_client_disconnect",
+		"max_client_disconnect",
+	}
+
+	for k, v := range block {
+		i := make(map[string]interface{})
+		i[k] = v
+
+		if k == "name" {
 			name = v.(string)
-		case "count":
-			i := fmt.Sprintf(`count: %v`, v.(int))
-			parameters = append(parameters, i)
-		case "shutdown_delay":
-			i := fmt.Sprintf(`shutdown_delay: "%s"`, v.(string))
-			parameters = append(parameters, i)
-		case "stop_after_client_disconnect":
-			i := fmt.Sprintf(`stop_after_client_disconnect: "%s"`, v.(string))
-			parameters = append(parameters, i)
-		case "max_client_disconnect":
-			i := fmt.Sprintf(`max_client_disconnect: "%s"`, v.(string))
-			parameters = append(parameters, i)
+		}
+
+		for _, p := range parameterName {
+			switch k {
+			case p:
+				parameters = append(parameters, i)
+			}
 		}
 	}
 

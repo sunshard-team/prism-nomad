@@ -25,6 +25,10 @@ func (s *Output) CreateNomadConfigFile(
 	// Add "include" function, to replace "template".
 
 	tmpl := template.New("config").Funcs(sprig.FuncMap())
+	tmpl.Funcs(template.FuncMap{
+		"getValue": getValue,
+	})
+
 	var funcMap template.FuncMap = map[string]interface{}{}
 
 	funcMap["include"] = func(name string, data interface{}) (string, error) {
@@ -45,18 +49,7 @@ func (s *Output) CreateNomadConfigFile(
 	}
 
 	// Create nomad config template.
-
-	jobTmpl, err := createTemplate(tmpl)
-	if err != nil {
-		return err
-	}
-
-	groupTmpl, err := createTemplate(jobTmpl)
-	if err != nil {
-		return err
-	}
-
-	taskGroup, err := createTemplate(groupTmpl)
+	configTemplate, err := createTemplate(tmpl)
 	if err != nil {
 		return err
 	}
@@ -71,7 +64,7 @@ func (s *Output) CreateNomadConfigFile(
 	defer file.Close()
 
 	// Write data into nomad configuration template file.
-	err = taskGroup.ExecuteTemplate(file, "block", config)
+	err = configTemplate.ExecuteTemplate(file, "block", config)
 	if err != nil {
 		return fmt.Errorf("error execute nomad configuration template, %v", err)
 	}
@@ -90,4 +83,42 @@ func createTemplate(tmpl *template.Template) (*template.Template, error) {
 	}
 
 	return t, nil
+}
+
+func getValue(value map[string]interface{}) string {
+	var parameter string
+
+	for k, v := range value {
+		switch v := v.(type) {
+		case string:
+			parameter = fmt.Sprintf(`%s = "%v"`, k, v)
+		case int:
+			parameter = fmt.Sprintf("%s = %v", k, v)
+		case bool:
+			parameter = fmt.Sprintf("%s = %v", k, v)
+		case []interface{}:
+			listValue := make([]string, 0)
+
+			for index, item := range v {
+				switch item := item.(type) {
+				case string:
+					if index+1 == len(v) {
+						listValue = append(listValue, fmt.Sprintf(`"%s"`, item))
+					} else {
+						listValue = append(listValue, fmt.Sprintf(`"%s",`, item))
+					}
+				case int:
+					if index+1 == len(v) {
+						listValue = append(listValue, fmt.Sprintf("%v", item))
+					} else {
+						listValue = append(listValue, fmt.Sprintf("%v,", item))
+					}
+				}
+			}
+
+			parameter = fmt.Sprintf("%s = %v", k, listValue)
+		}
+	}
+
+	return parameter
 }
