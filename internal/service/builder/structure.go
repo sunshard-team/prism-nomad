@@ -17,7 +17,10 @@ type StructureBuilder interface {
 	DispatchPayload(block []map[string]interface{}) model.TemplateBlock
 	Env(block []map[string]interface{}) model.TemplateBlock
 	EphemeralDisk(block []map[string]interface{}) model.TemplateBlock
-	Expose(block []map[string]interface{}) model.TemplateBlock
+
+	Expose() model.TemplateBlock
+	ExposePath(block map[string]interface{}) model.TemplateBlock
+
 	Gateway(block []map[string]interface{}) model.TemplateBlock
 	Group(block map[string]interface{}) model.TemplateBlock
 	Identity(block []map[string]interface{}) model.TemplateBlock
@@ -26,7 +29,10 @@ type StructureBuilder interface {
 	Logs(block []map[string]interface{}) model.TemplateBlock
 	Meta(block []map[string]interface{}) model.TemplateBlock
 	Migrate(block []map[string]interface{}) model.TemplateBlock
-	Multiregion(block []map[string]interface{}) model.TemplateBlock
+
+	Multiregion() model.TemplateBlock
+	MultiregionStrategy(block map[string]interface{}) model.TemplateBlock
+	MultiregionRegion(block map[string]interface{}) model.TemplateBlock
 
 	Network(block []map[string]interface{}) model.TemplateBlock
 	NetworkPort(block map[string]interface{}) model.TemplateBlock
@@ -81,7 +87,6 @@ func (s *Structure) customBlock(
 
 func (s *Structure) Artifact(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
-	var internalBlock []model.TemplateBlock
 
 	for _, item := range block {
 		for k, v := range item {
@@ -91,9 +96,6 @@ func (s *Structure) Artifact(block []map[string]interface{}) model.TemplateBlock
 			switch k {
 			case "destination", "mode", "source":
 				parameters = append(parameters, i)
-			case "options", "headers":
-				block := s.customBlock(k, i)
-				internalBlock = append(internalBlock, block)
 			}
 		}
 	}
@@ -101,7 +103,6 @@ func (s *Structure) Artifact(block []map[string]interface{}) model.TemplateBlock
 	templateBlock := model.TemplateBlock{
 		BlockName: "artifact",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
@@ -402,30 +403,15 @@ func (s *Structure) EphemeralDisk(block []map[string]interface{}) model.Template
 	return templateBlock
 }
 
-func (s *Structure) Expose(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
-
-	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			if k == "path" {
-				block := s.exposePath(i)
-				internalBlock = append(internalBlock, block)
-			}
-		}
-	}
-
+func (s *Structure) Expose() model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "expose",
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) exposePath(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) ExposePath(block map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for k, v := range block {
@@ -919,34 +905,15 @@ func (s *Structure) Migrate(block []map[string]interface{}) model.TemplateBlock 
 	return templateBlock
 }
 
-func (s *Structure) Multiregion(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
-
-	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			switch k {
-			case "strategy":
-				strategy := s.multiregionStrategy(i)
-				internalBlock = append(internalBlock, strategy)
-			case "region":
-				region := s.multiregionRegion(i)
-				internalBlock = append(internalBlock, region)
-			}
-		}
-	}
-
+func (s *Structure) Multiregion() model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "multiregion",
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) multiregionStrategy(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) MultiregionStrategy(block map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for k, v := range block {
@@ -967,7 +934,7 @@ func (s *Structure) multiregionStrategy(block map[string]interface{}) model.Temp
 	return templateBlock
 }
 
-func (s *Structure) multiregionRegion(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) MultiregionRegion(block map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for k, v := range block {
