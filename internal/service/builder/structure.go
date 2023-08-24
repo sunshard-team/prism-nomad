@@ -27,7 +27,10 @@ type StructureBuilder interface {
 	Meta(block []map[string]interface{}) model.TemplateBlock
 	Migrate(block []map[string]interface{}) model.TemplateBlock
 	Multiregion(block []map[string]interface{}) model.TemplateBlock
-	// Network(block []map[string]interface{}) model.TemplateBlock
+
+	Network(block []map[string]interface{}) model.TemplateBlock
+	NetworkPort(block map[string]interface{}) model.TemplateBlock
+	NetworkDNS(block map[string]interface{}) model.TemplateBlock
 
 	Parameterized(block []map[string]interface{}) model.TemplateBlock
 	Periodic(block []map[string]interface{}) model.TemplateBlock
@@ -985,82 +988,75 @@ func (s *Structure) multiregionRegion(block map[string]interface{}) model.Templa
 	return templateBlock
 }
 
-// func (s *Structure) Network(block []map[string]interface{}) model.TemplateBlock {
-// 	var internalBlock []model.TemplateBlock
-// 	parameters := make([]map[string]interface{}, 0)
+func (s *Structure) Network(block []map[string]interface{}) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
 
-// 	for _, item := range block {
-// 		for k, v := range item {
-// 			i := make(map[string]interface{})
-// 			i[k] = v
+	for _, item := range block {
+		for k, v := range item {
+			i := make(map[string]interface{})
+			i[k] = v
 
-// 			switch k {
-// 			case "mode":
-// 				// get mode.
-// 			case "hostname":
-// 				parameters = append(parameters, i)
-// 			case "port":
-// 				port := s.networkPort(i)
-// 				internalBlock = append(internalBlock, port)
-// 			case "dns":
-// 				DNS := s.networkDNS(i)
-// 				internalBlock = append(internalBlock, DNS)
-// 			}
-// 		}
-// 	}
+			switch k {
+			case "mode", "hostname":
+				// Get "mode" from group "network_mode".
+				// Get "hostname" from group "network_hostname".
+			}
+		}
+	}
 
-// 	templateBlock := model.TemplateBlock{
-// 		BlockName: "network",
-// 		Parameter: parameters,
-// 		Block:     internalBlock,
-// 	}
+	templateBlock := model.TemplateBlock{
+		BlockName: "network",
+		Parameter: parameters,
+	}
 
-// 	return templateBlock
-// }
+	return templateBlock
+}
 
-// func (s *Structure) networkPort(block map[string]interface{}) model.TemplateBlock {
-// 	var hostname string
-// 	parameters := make([]map[string]interface{}, 0)
+func (s *Structure) NetworkPort(block map[string]interface{}) model.TemplateBlock {
+	var name string
+	parameters := make([]map[string]interface{}, 0)
 
-// 	for k, v := range block {
-// 		i := make(map[string]interface{})
-// 		i[k] = v
+	for k, v := range block {
+		i := make(map[string]interface{})
+		i[k] = v
 
-// 		switch k {
-// 		case "static", "to", "host_network":
-// 			parameters = append(parameters, i)
-// 		}
-// 	}
+		switch k {
+		case "name":
+			name = v.(string)
+		case "static", "to", "host_network":
+			parameters = append(parameters, i)
+		}
+	}
 
-// 	templateBlock := model.TemplateBlock{
-// 		BlockName: "port",
-// 		Name:      hostname,
-// 		Parameter: parameters,
-// 	}
+	templateBlock := model.TemplateBlock{
+		BlockName: "port",
+		Name:      name,
+		Parameter: parameters,
+	}
 
-// 	return templateBlock
-// }
+	return templateBlock
+}
 
-// func (s *Structure) networkDNS(block map[string]interface{}) model.TemplateBlock {
-// 	parameters := make([]map[string]interface{}, 0)
+func (s *Structure) NetworkDNS(block map[string]interface{}) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
 
-// 	for k, v := range block {
-// 		i := make(map[string]interface{})
-// 		i[k] = v
+	for k, v := range block {
+		i := make(map[string]interface{})
+		i[k] = v
 
-// 		switch k {
-// 		case "server", "searches", "options":
-// 			parameters = append(parameters, i)
-// 		}
-// 	}
+		switch k {
+		case "server", "searches", "options":
+			parameters = append(parameters, i)
+		}
+	}
 
-// 	templateBlock := model.TemplateBlock{
-// 		BlockName: "dns",
-// 		Parameter: parameters,
-// 	}
+	templateBlock := model.TemplateBlock{
+		BlockName: "dns",
+		Parameter: parameters,
+	}
 
-// 	return templateBlock
-// }
+	return templateBlock
+}
 
 func (s *Structure) Parameterized(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
