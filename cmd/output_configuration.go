@@ -59,7 +59,7 @@ var createCmd = &cobra.Command{
 				log.Fatalf("error read file, %s", err)
 			}
 
-			jobConfig, err := parser.ParseJobConfig(jobfile)
+			jobConfig, err := parser.ParseJob(jobfile)
 			if err != nil {
 				log.Fatalln(err)
 			}

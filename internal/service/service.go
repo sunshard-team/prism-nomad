@@ -19,7 +19,7 @@ type Output interface {
 
 type Parser interface {
 	ParseChart(file []byte) (map[string]interface{}, error)
-	ParseJobConfig(file []byte) (model.ConfigBlock, error)
+	ParseJob(file []byte) (model.ConfigBlock, error)
 }
 
 type Builder interface {

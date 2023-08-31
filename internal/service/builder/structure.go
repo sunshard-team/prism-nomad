@@ -5,6 +5,8 @@ import (
 )
 
 type StructureBuilder interface {
+	CustomBlock(name string, block []map[string]interface{}) model.TemplateBlock
+
 	Artifact(block []map[string]interface{}) model.TemplateBlock
 	Affinity(block []map[string]interface{}) model.TemplateBlock
 	ChangeScript(block []map[string]interface{}) model.TemplateBlock
@@ -21,8 +23,20 @@ type StructureBuilder interface {
 	Expose() model.TemplateBlock
 	ExposePath(block map[string]interface{}) model.TemplateBlock
 
-	Gateway(block []map[string]interface{}) model.TemplateBlock
-	Group(block map[string]interface{}) model.TemplateBlock
+	Gateway() model.TemplateBlock
+	GatewayProxy(block []map[string]interface{}) model.TemplateBlock
+	GatewayProxyAddress(block []map[string]interface{}) model.TemplateBlock
+	GatewayIngress() model.TemplateBlock
+	GatewayIngressTLS(block []map[string]interface{}) model.TemplateBlock
+	GatewayIngressListener(block []map[string]interface{}) model.TemplateBlock
+	GatewayIngressListenerService(block []map[string]interface{}) model.TemplateBlock
+	GatewayTerminating() model.TemplateBlock
+	GatewayTerminatingService(block []map[string]interface{}) model.TemplateBlock
+	GatewayMesh() model.TemplateBlock
+
+	Group(block []map[string]interface{}) model.TemplateBlock
+	GroupConsul(block map[string]interface{}) model.TemplateBlock
+
 	Identity(block []map[string]interface{}) model.TemplateBlock
 	Job(block model.ConfigBlock) model.TemplateBlock
 	Lifecycle(block []map[string]interface{}) model.TemplateBlock
@@ -34,9 +48,9 @@ type StructureBuilder interface {
 	MultiregionStrategy(block map[string]interface{}) model.TemplateBlock
 	MultiregionRegion(block map[string]interface{}) model.TemplateBlock
 
-	Network(block []map[string]interface{}) model.TemplateBlock
-	NetworkPort(block map[string]interface{}) model.TemplateBlock
-	NetworkDNS(block map[string]interface{}) model.TemplateBlock
+	Network(group []map[string]interface{}) model.TemplateBlock
+	NetworkPort(block []map[string]interface{}) model.TemplateBlock
+	NetworkDNS(block []map[string]interface{}) model.TemplateBlock
 
 	Parameterized(block []map[string]interface{}) model.TemplateBlock
 	Periodic(block []map[string]interface{}) model.TemplateBlock
@@ -44,42 +58,50 @@ type StructureBuilder interface {
 	Reschedule(block []map[string]interface{}) model.TemplateBlock
 	Resources(block []map[string]interface{}) model.TemplateBlock
 	Restart(block []map[string]interface{}) model.TemplateBlock
-	Scaling(block map[string]interface{}) model.TemplateBlock
+	Scaling(block []map[string]interface{}) model.TemplateBlock
 	Service(block []map[string]interface{}) model.TemplateBlock
 	SidecarService(block []map[string]interface{}) model.TemplateBlock
 	SidecarTask(block []map[string]interface{}) model.TemplateBlock
+
 	Spread(block []map[string]interface{}) model.TemplateBlock
+	SpreadTarget(block map[string]interface{}) model.TemplateBlock
+
 	Task(block []map[string]interface{}) model.TemplateBlock
-	Template(block map[string]interface{}) model.TemplateBlock
+	Template(block []map[string]interface{}) model.TemplateBlock
 	Update(block []map[string]interface{}) model.TemplateBlock
+
 	Upstream(block []map[string]interface{}) model.TemplateBlock
+	MeshGateway(block []map[string]interface{}) model.TemplateBlock
+
 	Vault(block []map[string]interface{}) model.TemplateBlock
+
 	Volume(block []map[string]interface{}) model.TemplateBlock
-	VolumeMount(block map[string]interface{}) model.TemplateBlock
+	MountOptions(block map[string]interface{}) model.TemplateBlock
+
+	VolumeMount(block []map[string]interface{}) model.TemplateBlock
 }
 
 type Structure struct{}
 
-// Returns a simple block with key-value parameters.
-func (s *Structure) customBlock(
+// Returns a block with any key-value parameters.
+func (s *Structure) CustomBlock(
 	name string,
-	block map[string]interface{},
+	block []map[string]interface{},
 ) model.TemplateBlock {
-	parameters := make([]map[string]interface{}, 0)
+	// parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		if k == name {
-			parameters = append(parameters, i)
-			break
-		}
-	}
+	// for _, item := range block {
+	// 	for k := range item {
+	// 		if k == name {
+	// 			parameters = append(parameters, item)
+	// 			break
+	// 		}
+	// 	}
+	// }
 
 	templateBlock := model.TemplateBlock{
 		BlockName: name,
-		Parameter: parameters,
+		Parameter: block,
 	}
 
 	return templateBlock
@@ -89,13 +111,10 @@ func (s *Structure) Artifact(block []map[string]interface{}) model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "destination", "mode", "source":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -112,13 +131,10 @@ func (s *Structure) Affinity(block []map[string]interface{}) model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "attribute", "operator", "value", "weight":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -135,13 +151,10 @@ func (s *Structure) ChangeScript(block []map[string]interface{}) model.TemplateB
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "command", "args", "timeout", "fail_on_error":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -156,7 +169,6 @@ func (s *Structure) ChangeScript(block []map[string]interface{}) model.TemplateB
 
 func (s *Structure) Check(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
-	var internalBlock []model.TemplateBlock
 
 	parameterName := []string{
 		"address_mode",
@@ -184,19 +196,11 @@ func (s *Structure) Check(block []map[string]interface{}) model.TemplateBlock {
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			if k == "header" {
-				header := s.customBlock(k, i)
-				internalBlock = append(internalBlock, header)
-			}
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -205,7 +209,6 @@ func (s *Structure) Check(block []map[string]interface{}) model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "check",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
@@ -215,13 +218,10 @@ func (s *Structure) CheckRestart(block []map[string]interface{}) model.TemplateB
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "limit", "grace", "ignore_warnings":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -238,12 +238,9 @@ func (s *Structure) Connect(block []map[string]interface{}) model.TemplateBlock 
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			if k == "native" {
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -260,13 +257,10 @@ func (s *Structure) Constraint(block []map[string]interface{}) model.TemplateBlo
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "attribute", "operator", "value":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -290,14 +284,11 @@ func (s *Structure) CSIPlugin(block []map[string]interface{}) model.TemplateBloc
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -317,14 +308,11 @@ func (s *Structure) Device(block []map[string]interface{}) model.TemplateBlock {
 
 	for _, item := range block {
 		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
 			switch k {
 			case "name":
 				name = v.(string)
 			case "count":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -342,12 +330,9 @@ func (s *Structure) DispatchPayload(block []map[string]interface{}) model.Templa
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			if k == "file" {
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -361,20 +346,9 @@ func (s *Structure) DispatchPayload(block []map[string]interface{}) model.Templa
 }
 
 func (s *Structure) Env(block []map[string]interface{}) model.TemplateBlock {
-	parameters := make([]map[string]interface{}, 0)
-
-	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			parameters = append(parameters, i)
-		}
-	}
-
 	templateBlock := model.TemplateBlock{
 		BlockName: "env",
-		Parameter: parameters,
+		Parameter: block,
 	}
 
 	return templateBlock
@@ -384,13 +358,10 @@ func (s *Structure) EphemeralDisk(block []map[string]interface{}) model.Template
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "migrate", "size", "sticky":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -414,13 +385,10 @@ func (s *Structure) Expose() model.TemplateBlock {
 func (s *Structure) ExposePath(block map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
+	for k := range block {
 		switch k {
-		case "path", "protocol", "local_path_port":
-			parameters = append(parameters, i)
+		case "path", "protocol", "local_path_port", "listener_port":
+			parameters = append(parameters, block)
 		}
 	}
 
@@ -432,44 +400,16 @@ func (s *Structure) ExposePath(block map[string]interface{}) model.TemplateBlock
 	return templateBlock
 }
 
-func (s *Structure) Gateway(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
-
-	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			switch k {
-			case "proxy":
-				block := s.gatewayProxy(i)
-				internalBlock = append(internalBlock, block)
-			case "ingress":
-				block := s.gatewayIngress(i)
-				internalBlock = append(internalBlock, block)
-			case "terminating":
-				block := s.gatewayTerminating(i)
-				internalBlock = append(internalBlock, block)
-			case "mesh":
-				mesh := model.TemplateBlock{
-					BlockName: "mesh",
-				}
-				internalBlock = append(internalBlock, mesh)
-			}
-		}
-	}
-
+func (s *Structure) Gateway() model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "gateway",
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) gatewayProxy(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) GatewayProxy(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
-	var internalBlock []model.TemplateBlock
 
 	parameterName := []string{
 		"connect_timeout",
@@ -478,24 +418,13 @@ func (s *Structure) gatewayProxy(block map[string]interface{}) model.TemplateBlo
 		"envoy_dns_discovery_type",
 	}
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		if k == "envoy_gateway_bind_addresses" {
-			address := s.gatewayProxyAddress(i)
-			internalBlock = append(internalBlock, address)
-		}
-
-		if k == "config" {
-			config := s.customBlock(k, i)
-			internalBlock = append(internalBlock, config)
-		}
-
-		for _, p := range parameterName {
-			switch k {
-			case p:
-				parameters = append(parameters, i)
+	for _, item := range block {
+		for k := range item {
+			for _, p := range parameterName {
+				switch k {
+				case p:
+					parameters = append(parameters, item)
+				}
 			}
 		}
 	}
@@ -503,22 +432,20 @@ func (s *Structure) gatewayProxy(block map[string]interface{}) model.TemplateBlo
 	templateBlock := model.TemplateBlock{
 		BlockName: "proxy",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) gatewayProxyAddress(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) GatewayProxyAddress(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "address", "port":
-			parameters = append(parameters, i)
+	for _, item := range block {
+		for k := range item {
+			switch k {
+			case "address", "port":
+				parameters = append(parameters, item)
+			}
 		}
 	}
 
@@ -530,32 +457,15 @@ func (s *Structure) gatewayProxyAddress(block map[string]interface{}) model.Temp
 	return templateBlock
 }
 
-func (s *Structure) gatewayIngress(block map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
-
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "tls":
-			tls := s.gatewayIngressTLS(i)
-			internalBlock = append(internalBlock, tls)
-		case "listener":
-			listener := s.gatewayIngressListener(i)
-			internalBlock = append(internalBlock, listener)
-		}
-	}
-
+func (s *Structure) GatewayIngress() model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "ingress",
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) gatewayIngressTLS(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) GatewayIngressTLS(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -565,14 +475,13 @@ func (s *Structure) gatewayIngressTLS(block map[string]interface{}) model.Templa
 		"cipher_suites",
 	}
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		for _, p := range parameterName {
-			switch k {
-			case p:
-				parameters = append(parameters, i)
+	for _, item := range block {
+		for k := range item {
+			for _, p := range parameterName {
+				switch k {
+				case p:
+					parameters = append(parameters, item)
+				}
 			}
 		}
 	}
@@ -585,44 +494,37 @@ func (s *Structure) gatewayIngressTLS(block map[string]interface{}) model.Templa
 	return templateBlock
 }
 
-func (s *Structure) gatewayIngressListener(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) GatewayIngressListener(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
-	var internalBlock []model.TemplateBlock
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "port", "protocol":
-			parameters = append(parameters, i)
-		case "service":
-			service := s.gatewayIngressListenerService(i)
-			internalBlock = append(internalBlock, service)
+	for _, item := range block {
+		for k := range item {
+			switch k {
+			case "port", "protocol":
+				parameters = append(parameters, item)
+			}
 		}
 	}
 
 	templateBlock := model.TemplateBlock{
 		BlockName: "listener",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) gatewayIngressListenerService(
-	block map[string]interface{},
+func (s *Structure) GatewayIngressListenerService(
+	block []map[string]interface{},
 ) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "name", "hosts":
-			parameters = append(parameters, i)
+	for _, item := range block {
+		for k := range item {
+			switch k {
+			case "name", "hosts":
+				parameters = append(parameters, item)
+			}
 		}
 	}
 
@@ -634,39 +536,25 @@ func (s *Structure) gatewayIngressListenerService(
 	return templateBlock
 }
 
-func (s *Structure) gatewayTerminating(block map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
-
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		if k == "service" {
-			service := s.gatewayTerminatingService(i)
-			internalBlock = append(internalBlock, service)
-		}
-	}
-
+func (s *Structure) GatewayTerminating() model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "terminating",
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) gatewayTerminatingService(
-	block map[string]interface{},
+func (s *Structure) GatewayTerminatingService(
+	block []map[string]interface{},
 ) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "name", "ca_file", "cert_file", "key_file", "sni":
-			parameters = append(parameters, i)
+	for _, item := range block {
+		for k := range item {
+			switch k {
+			case "name", "ca_file", "cert_file", "key_file", "sni":
+				parameters = append(parameters, item)
+			}
 		}
 	}
 
@@ -678,9 +566,16 @@ func (s *Structure) gatewayTerminatingService(
 	return templateBlock
 }
 
-func (s *Structure) Group(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) GatewayMesh() model.TemplateBlock {
+	templateBlock := model.TemplateBlock{
+		BlockName: "mesh",
+	}
+
+	return templateBlock
+}
+
+func (s *Structure) Group(block []map[string]interface{}) model.TemplateBlock {
 	var name string
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -690,23 +585,17 @@ func (s *Structure) Group(block map[string]interface{}) model.TemplateBlock {
 		"max_client_disconnect",
 	}
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
+	for _, item := range block {
+		for k, v := range item {
+			if k == "name" {
+				name = v.(string)
+			}
 
-		if k == "name" {
-			name = v.(string)
-		}
-
-		if k == "consul" {
-			consul := s.groupConsul(i)
-			internalBlock = append(internalBlock, consul)
-		}
-
-		for _, p := range parameterName {
-			switch k {
-			case p:
-				parameters = append(parameters, i)
+			for _, p := range parameterName {
+				switch k {
+				case p:
+					parameters = append(parameters, item)
+				}
 			}
 		}
 	}
@@ -715,21 +604,17 @@ func (s *Structure) Group(block map[string]interface{}) model.TemplateBlock {
 		BlockName: "group",
 		Name:      name,
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) groupConsul(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) GroupConsul(block map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
+	for k := range block {
 		if k == "namespace" {
-			parameters = append(parameters, i)
+			parameters = append(parameters, block)
 		}
 	}
 
@@ -745,13 +630,10 @@ func (s *Structure) Identity(block []map[string]interface{}) model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "env", "file":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -782,9 +664,6 @@ func (s *Structure) Job(block model.ConfigBlock) model.TemplateBlock {
 
 	for _, item := range block.Parameter {
 		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
 			if k == "name" {
 				name = v.(string)
 			}
@@ -792,7 +671,7 @@ func (s *Structure) Job(block model.ConfigBlock) model.TemplateBlock {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -811,13 +690,10 @@ func (s *Structure) Lifecycle(block []map[string]interface{}) model.TemplateBloc
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "hook", "sidecar":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -834,13 +710,10 @@ func (s *Structure) Logs(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "max_files", "max_files_size", "disabled":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -854,20 +727,9 @@ func (s *Structure) Logs(block []map[string]interface{}) model.TemplateBlock {
 }
 
 func (s *Structure) Meta(block []map[string]interface{}) model.TemplateBlock {
-	parameters := make([]map[string]interface{}, 0)
-
-	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			parameters = append(parameters, i)
-		}
-	}
-
 	templateBlock := model.TemplateBlock{
 		BlockName: "meta",
-		Parameter: parameters,
+		Parameter: block,
 	}
 
 	return templateBlock
@@ -884,14 +746,11 @@ func (s *Structure) Migrate(block []map[string]interface{}) model.TemplateBlock 
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -916,13 +775,10 @@ func (s *Structure) Multiregion() model.TemplateBlock {
 func (s *Structure) MultiregionStrategy(block map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
+	for k := range block {
 		switch k {
 		case "max_parallel", "on_failure":
-			parameters = append(parameters, i)
+			parameters = append(parameters, block)
 		}
 	}
 
@@ -935,20 +791,21 @@ func (s *Structure) MultiregionStrategy(block map[string]interface{}) model.Temp
 }
 
 func (s *Structure) MultiregionRegion(block map[string]interface{}) model.TemplateBlock {
+	var name string
 	parameters := make([]map[string]interface{}, 0)
 
 	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
 		switch k {
+		case "name":
+			name = v.(string)
 		case "count", "datacenters", "node_pool":
-			parameters = append(parameters, i)
+			parameters = append(parameters, block)
 		}
 	}
 
 	templateBlock := model.TemplateBlock{
 		BlockName: "region",
+		Name:      name,
 		Parameter: parameters,
 	}
 
@@ -959,14 +816,12 @@ func (s *Structure) Network(block []map[string]interface{}) model.TemplateBlock 
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
-			case "mode", "hostname":
-				// Get "mode" from group "network_mode".
-				// Get "hostname" from group "network_hostname".
+			case "mode":
+				parameters = append(parameters, item)
+			case "hostname":
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -979,19 +834,18 @@ func (s *Structure) Network(block []map[string]interface{}) model.TemplateBlock 
 	return templateBlock
 }
 
-func (s *Structure) NetworkPort(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) NetworkPort(block []map[string]interface{}) model.TemplateBlock {
 	var name string
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "name":
-			name = v.(string)
-		case "static", "to", "host_network":
-			parameters = append(parameters, i)
+	for _, item := range block {
+		for k, v := range item {
+			switch k {
+			case "name":
+				name = v.(string)
+			case "static", "to", "host_network":
+				parameters = append(parameters, item)
+			}
 		}
 	}
 
@@ -1004,16 +858,15 @@ func (s *Structure) NetworkPort(block map[string]interface{}) model.TemplateBloc
 	return templateBlock
 }
 
-func (s *Structure) NetworkDNS(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) NetworkDNS(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "server", "searches", "options":
-			parameters = append(parameters, i)
+	for _, item := range block {
+		for k := range item {
+			switch k {
+			case "server", "searches", "options":
+				parameters = append(parameters, item)
+			}
 		}
 	}
 
@@ -1029,13 +882,10 @@ func (s *Structure) Parameterized(block []map[string]interface{}) model.Template
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "meta_optional", "meta_required", "payload":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -1052,13 +902,10 @@ func (s *Structure) Periodic(block []map[string]interface{}) model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "cron", "prohibit_overlap", "time_zone", "enabled":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -1072,20 +919,13 @@ func (s *Structure) Periodic(block []map[string]interface{}) model.TemplateBlock
 }
 
 func (s *Structure) Proxy(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "local_service_address", "local_service_port":
-				parameters = append(parameters, i)
-			case "config":
-				config := s.customBlock(k, i)
-				internalBlock = append(internalBlock, config)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -1093,7 +933,6 @@ func (s *Structure) Proxy(block []map[string]interface{}) model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "proxy",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
@@ -1112,14 +951,11 @@ func (s *Structure) Reschedule(block []map[string]interface{}) model.TemplateBlo
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -1137,13 +973,10 @@ func (s *Structure) Resources(block []map[string]interface{}) model.TemplateBloc
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "cpu", "cores", "memory", "memory_max":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -1160,13 +993,10 @@ func (s *Structure) Restart(block []map[string]interface{}) model.TemplateBlock 
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "attempts", "delay", "interval", "mode":
-				parameters = append(parameters, i)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -1179,24 +1009,18 @@ func (s *Structure) Restart(block []map[string]interface{}) model.TemplateBlock 
 	return templateBlock
 }
 
-// Add "name" parameter.
-func (s *Structure) Scaling(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) Scaling(block []map[string]interface{}) model.TemplateBlock {
 	var name string
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "name":
-			name = v.(string)
-		case "min", "max", "enabled":
-			parameters = append(parameters, i)
-		case "policy":
-			policy := s.customBlock(k, i)
-			internalBlock = append(internalBlock, policy)
+	for _, item := range block {
+		for k, v := range item {
+			switch k {
+			case "name":
+				name = v.(string)
+			case "min", "max", "enabled":
+				parameters = append(parameters, item)
+			}
 		}
 	}
 
@@ -1204,14 +1028,12 @@ func (s *Structure) Scaling(block map[string]interface{}) model.TemplateBlock {
 		BlockName: "scaling",
 		Name:      name,
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
 func (s *Structure) Service(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1228,20 +1050,11 @@ func (s *Structure) Service(block []map[string]interface{}) model.TemplateBlock 
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			switch k {
-			case "tagged_address", "meta", "canary_meta":
-				block := s.customBlock(k, i)
-				internalBlock = append(internalBlock, block)
-			}
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -1250,27 +1063,19 @@ func (s *Structure) Service(block []map[string]interface{}) model.TemplateBlock 
 	templateBlock := model.TemplateBlock{
 		BlockName: "service",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
 func (s *Structure) SidecarService(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "disable_default_tcp_check", "port", "tags":
-				parameters = append(parameters, i)
-			case "meta":
-				block := s.customBlock(k, i)
-				internalBlock = append(internalBlock, block)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -1278,14 +1083,12 @@ func (s *Structure) SidecarService(block []map[string]interface{}) model.Templat
 	templateBlock := model.TemplateBlock{
 		BlockName: "sidecar_service",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
 func (s *Structure) SidecarTask(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1298,20 +1101,11 @@ func (s *Structure) SidecarTask(block []map[string]interface{}) model.TemplateBl
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			switch k {
-			case "config", "env", "meta":
-				block := s.customBlock(k, i)
-				internalBlock = append(internalBlock, block)
-			}
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -1320,27 +1114,19 @@ func (s *Structure) SidecarTask(block []map[string]interface{}) model.TemplateBl
 	templateBlock := model.TemplateBlock{
 		BlockName: "sidecar_task",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
 func (s *Structure) Spread(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			switch k {
 			case "attribute", "weight":
-				parameters = append(parameters, i)
-			case "target":
-				target := s.spreadTarget(i)
-				internalBlock = append(internalBlock, target)
+				parameters = append(parameters, item)
 			}
 		}
 	}
@@ -1348,22 +1134,18 @@ func (s *Structure) Spread(block []map[string]interface{}) model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "spread",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) spreadTarget(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) SpreadTarget(block map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
+	for k := range block {
 		switch k {
 		case "value", "percent":
-			parameters = append(parameters, i)
+			parameters = append(parameters, block)
 		}
 	}
 
@@ -1377,7 +1159,6 @@ func (s *Structure) spreadTarget(block map[string]interface{}) model.TemplateBlo
 
 func (s *Structure) Task(block []map[string]interface{}) model.TemplateBlock {
 	var name string
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1392,21 +1173,15 @@ func (s *Structure) Task(block []map[string]interface{}) model.TemplateBlock {
 
 	for _, item := range block {
 		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
 			switch k {
 			case "name":
 				name = v.(string)
-			case "config":
-				block := s.customBlock(k, i)
-				internalBlock = append(internalBlock, block)
 			}
 
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -1416,13 +1191,12 @@ func (s *Structure) Task(block []map[string]interface{}) model.TemplateBlock {
 		BlockName: "task",
 		Name:      name,
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) Template(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) Template(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1438,23 +1212,21 @@ func (s *Structure) Template(block map[string]interface{}) model.TemplateBlock {
 		"right_delimiter",
 		"source",
 		"splay",
-		"wait",
 		"vault_grace",
 	}
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "name":
-			// read file and add data into "data" parameter.
-		}
-
-		for _, p := range parameterName {
+	for _, item := range block {
+		for k := range item {
 			switch k {
-			case p:
-				parameters = append(parameters, i)
+			case "data":
+				// read file and add data into "data" parameter.
+			}
+
+			for _, p := range parameterName {
+				switch k {
+				case p:
+					parameters = append(parameters, item)
+				}
 			}
 		}
 	}
@@ -1468,7 +1240,6 @@ func (s *Structure) Template(block map[string]interface{}) model.TemplateBlock {
 }
 
 func (s *Structure) Update(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1484,14 +1255,11 @@ func (s *Structure) Update(block []map[string]interface{}) model.TemplateBlock {
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -1500,14 +1268,12 @@ func (s *Structure) Update(block []map[string]interface{}) model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "update",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
 func (s *Structure) Upstream(block []map[string]interface{}) model.TemplateBlock {
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1518,23 +1284,11 @@ func (s *Structure) Upstream(block []map[string]interface{}) model.TemplateBlock
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
-			switch k {
-			case "config":
-				block := s.customBlock(k, i)
-				internalBlock = append(internalBlock, block)
-			case "mesh_gateway":
-				meshGateway := s.meshGateway(i)
-				internalBlock = append(internalBlock, meshGateway)
-			}
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -1543,22 +1297,20 @@ func (s *Structure) Upstream(block []map[string]interface{}) model.TemplateBlock
 	templateBlock := model.TemplateBlock{
 		BlockName: "upstream",
 		Parameter: parameters,
-		Block:     internalBlock,
 	}
 
 	return templateBlock
 }
 
-func (s *Structure) meshGateway(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) MeshGateway(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch k {
-		case "mode":
-			parameters = append(parameters, i)
+	for _, item := range block {
+		for k := range item {
+			switch k {
+			case "mode":
+				parameters = append(parameters, item)
+			}
 		}
 	}
 
@@ -1583,14 +1335,11 @@ func (s *Structure) Vault(block []map[string]interface{}) model.TemplateBlock {
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -1618,14 +1367,11 @@ func (s *Structure) Volume(block []map[string]interface{}) model.TemplateBlock {
 	}
 
 	for _, item := range block {
-		for k, v := range item {
-			i := make(map[string]interface{})
-			i[k] = v
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
-					parameters = append(parameters, i)
+					parameters = append(parameters, item)
 				}
 			}
 		}
@@ -1639,7 +1385,25 @@ func (s *Structure) Volume(block []map[string]interface{}) model.TemplateBlock {
 	return templateBlock
 }
 
-func (s *Structure) VolumeMount(block map[string]interface{}) model.TemplateBlock {
+func (s *Structure) MountOptions(block map[string]interface{}) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
+
+	for k := range block {
+		switch k {
+		case "fs_type", "mount_flags":
+			parameters = append(parameters, block)
+		}
+	}
+
+	templateBlock := model.TemplateBlock{
+		BlockName: "mount_options",
+		Parameter: parameters,
+	}
+
+	return templateBlock
+}
+
+func (s *Structure) VolumeMount(block []map[string]interface{}) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1649,14 +1413,13 @@ func (s *Structure) VolumeMount(block map[string]interface{}) model.TemplateBloc
 		"propagation_mode",
 	}
 
-	for k, v := range block {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		for _, p := range parameterName {
-			switch k {
-			case p:
-				parameters = append(parameters, i)
+	for _, item := range block {
+		for k := range item {
+			for _, p := range parameterName {
+				switch k {
+				case p:
+					parameters = append(parameters, item)
+				}
 			}
 		}
 	}

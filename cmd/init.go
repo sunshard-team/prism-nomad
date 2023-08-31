@@ -94,7 +94,7 @@ var initCmd = &cobra.Command{
 			log.Fatalf("error read file, %s", err)
 		}
 
-		defaultConfig, err := services.Parser.ParseJobConfig(file)
+		defaultConfig, err := services.Parser.ParseJob(file)
 		if err != nil {
 			log.Fatalln(err)
 		}

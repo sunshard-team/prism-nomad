@@ -20,7 +20,8 @@ job:
         access_mode: "multi-node-multi-writer"
 
       network:
-        - name: "grafana_ui"
+        - port:
+            name: "grafana_ui"
 
       task:
         name: "grafana"

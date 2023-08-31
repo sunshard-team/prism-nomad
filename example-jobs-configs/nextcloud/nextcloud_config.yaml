@@ -61,8 +61,9 @@ job:
       network_mode: "bridge"
 
       network:
-        - name: "http"
-          to: 80
+        - port:
+            name: "http"
+            to: 80
 
       update:
         min_healthy_time: "10s"

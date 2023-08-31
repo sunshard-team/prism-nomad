@@ -2,8 +2,8 @@ package parser
 
 import (
 	"fmt"
+	"log"
 	"prism/internal/model"
-	"reflect"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,6 +14,7 @@ func NewParser() *Parser {
 	return &Parser{}
 }
 
+// Parsing the chart configuration file.
 func (p *Parser) ParseChart(file []byte) (map[string]interface{}, error) {
 	var config map[string]interface{}
 
@@ -25,47 +26,23 @@ func (p *Parser) ParseChart(file []byte) (map[string]interface{}, error) {
 	return config, nil
 }
 
-func (p *Parser) ParseJobConfig(file []byte) (model.ConfigBlock, error) {
+// Parsing the job configuration file.
+func (p *Parser) ParseJob(file []byte) (model.ConfigBlock, error) {
 	var config map[string]interface{}
-
-	job := model.ConfigBlock{
-		Name: "job",
-	}
 
 	err := yaml.Unmarshal(file, &config)
 	if err != nil {
-		return job, fmt.Errorf("error unmarshal file %s", err)
+		return model.ConfigBlock{}, fmt.Errorf(
+			"error unmarshal file %s",
+			err,
+		)
 	}
 
-	for k, v := range config["job"].(map[string]interface{}) {
-		i := make(map[string]interface{})
-		i[k] = v
-
-		switch v.(type) {
-		case string:
-			job.Parameter = append(job.Parameter, i)
-		case int:
-			job.Parameter = append(job.Parameter, i)
-		case float32:
-			job.Parameter = append(job.Parameter, i)
-		case float64:
-			job.Parameter = append(job.Parameter, i)
-		case bool:
-			job.Parameter = append(job.Parameter, i)
-		case []interface{}:
-			check := checkBlock(v)
-			if check {
-				job.Block = append(job.Block, parseBlock(k, i))
-				continue
-			}
-
-			job.Parameter = append(job.Parameter, i)
-		case map[string]interface{}:
-			job.Block = append(job.Block, parseBlock(k, i))
-		default:
-			continue
-		}
+	if len(config) == 0 {
+		log.Fatalf("empty job config file")
 	}
+
+	job := parseBlock("job", config["job"].(map[string]interface{}))
 
 	return job, nil
 }
@@ -85,36 +62,32 @@ func checkBlock(value interface{}) bool {
 	return false
 }
 
-func parseBlock(name string, blockMap map[string]interface{}) model.ConfigBlock {
+// Parsing the configuration block.
+func parseBlock(name string, config map[string]interface{}) model.ConfigBlock {
 	block := model.ConfigBlock{
 		Name: name,
 	}
 
-	for _, value := range blockMap {
-		rt := reflect.TypeOf(value)
+	for key, value := range config {
+		parameter := make(map[string]interface{})
+		parameter[key] = value
 
-		switch rt.Kind() {
-		case reflect.String:
-			block.Parameter = append(block.Parameter, blockMap)
-		case reflect.Int:
-			block.Parameter = append(block.Parameter, blockMap)
-		case reflect.Float32:
-			block.Parameter = append(block.Parameter, blockMap)
-		case reflect.Float64:
-			block.Parameter = append(block.Parameter, blockMap)
-		case reflect.Bool:
-			block.Parameter = append(block.Parameter, blockMap)
-		case reflect.Slice:
-			block.Parameter = append(block.Parameter, blockMap)
-		case reflect.Map:
-			for k, v := range value.(map[string]interface{}) {
-				i := make(map[string]interface{})
-				i[k] = v
-
-				block.Block = append(block.Block, parseBlock(k, i))
+		switch v := value.(type) {
+		case string, int, float32, float64, bool:
+			block.Parameter = append(block.Parameter, parameter)
+		case []interface{}:
+			if checkBlock(value) {
+				for _, item := range value.([]interface{}) {
+					block.Block = append(block.Block, parseBlock(
+						key,
+						item.(map[string]interface{})),
+					)
+				}
+			} else {
+				block.Parameter = append(block.Parameter, parameter)
 			}
-		default:
-			continue
+		case map[string]interface{}:
+			block.Block = append(block.Block, parseBlock(key, v))
 		}
 	}
 

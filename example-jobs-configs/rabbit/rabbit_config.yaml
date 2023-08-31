@@ -13,11 +13,13 @@ job:
       network_mode: "bridge" # network config block - mode = "bridge")
 
       network:
-        - name: "rabbitmq_amqp"
-          static: 5672
-          to: 5672
-        - name: "rabbit_ui"
-          to: 15672
+        - port:
+            name: "rabbitmq_amqp"
+            static: 5672
+            to: 5672
+        - port:
+            name: "rabbit_ui"
+            to: 15672
 
       task:
         name: "rabbit" 

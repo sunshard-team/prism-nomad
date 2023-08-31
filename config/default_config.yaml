@@ -11,15 +11,18 @@ job:
     - name: "nginx"
       count: 1
       network_mode: "bridge"
+
       network:
-        - name: "http"
-          static: 80
-          to: 80
-        - name: "https"
-          to: 443
-        - name: "test"
-          static: 81
-        - name: "test1"
+        - port:
+            name: "http"
+            static: 80
+            to: 80
+        - port:
+            name: "https"
+            to: 443
+        - port:
+            name: "test"
+            static: 81
 
       scaling:
         enabled: true
@@ -76,9 +79,9 @@ job:
             change_signal: "SIGHUP"
 
         env:
-          - WORDPRESS_DB_HOST = "${NOMAD_UPSTREAM_IP_mysql-server}"
-          - WORDPRESS_CONFIG_EXTRA = "define('WP_HOME','wp.sunshard.ru:443')"
-          - WORDPRESS_CONFIG_EXTRA = "define('WP_ALLOW_REPAIR', true );\ndefine('WP_HOME','https://wp.sunshard.space');\ndefine('WP_SITEURL','https://wp.sunshard.space');"
+          - WORDPRESS_DB_HOST: "${NOMAD_UPSTREAM_IP_mysql-server}"
+          - WORDPRESS_CONFIG_HOME: "define('WP_HOME','wp.sunshard.ru:443')"
+          - WORDPRESS_CONFIG_ALLOW_REPAIR: "define('WP_ALLOW_REPAIR', true );\ndefine('WP_HOME','https://wp.sunshard.space');\ndefine('WP_SITEURL','https://wp.sunshard.space');"
 
         resources:
           cpu: 1000
