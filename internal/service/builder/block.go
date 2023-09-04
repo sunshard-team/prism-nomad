@@ -101,23 +101,7 @@ func (b *Block) CSIPlugin(block model.ConfigBlock) model.TemplateBlock {
 }
 
 func (b *Block) Device(block model.ConfigBlock) model.TemplateBlock {
-	device := structBuilder.Device(block.Parameter)
-
-	for _, p := range block.Parameter {
-		for k, v := range p {
-			if k == "constraint" {
-				constraint := structBuilder.Constraint(v.([]map[string]interface{}))
-				device.Block = append(device.Block, constraint)
-			}
-
-			if k == "affinity" {
-				affinity := structBuilder.Affinity(v.([]map[string]interface{}))
-				device.Block = append(device.Block, affinity)
-			}
-		}
-	}
-
-	return device
+	return structBuilder.Device(block.Parameter)
 }
 
 func (b *Block) DispatchPayload(block model.ConfigBlock) model.TemplateBlock {

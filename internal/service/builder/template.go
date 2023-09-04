@@ -383,8 +383,18 @@ func resourcesTemplate(config model.ConfigBlock) model.TemplateBlock {
 	resources := blockBuilder.Resources(config)
 
 	// device.
-	block := []string{"device"}
-	resources.Block = append(resources.Block, getBlockList(block, config)...)
+	deviceConfig := getBlockByName("device", config)
+	device := deviceTemplate(deviceConfig)
 
+	resources.Block = append(resources.Block, device)
 	return resources
+}
+
+func deviceTemplate(config model.ConfigBlock) model.TemplateBlock {
+	device := blockBuilder.Device(config)
+
+	block := []string{"affinity", "constraint"}
+	device.Block = append(device.Block, getBlockList(block, config)...)
+
+	return device
 }
