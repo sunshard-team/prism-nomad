@@ -386,7 +386,9 @@ func resourcesTemplate(config model.ConfigBlock) model.TemplateBlock {
 	deviceConfig := getBlockByName("device", config)
 	device := deviceTemplate(deviceConfig)
 
-	resources.Block = append(resources.Block, device)
+	if len(deviceConfig.Parameter) != 0 || len(deviceConfig.Block) != 0 {
+		resources.Block = append(resources.Block, device)
+	}
 	return resources
 }
 
