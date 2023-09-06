@@ -99,7 +99,11 @@ var initCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		template := services.Builder.BuildConfigTemplate(defaultConfig, chartConfig)
+		template := services.Builder.BuildConfigTemplate(
+			defaultConfig,
+			chartConfig,
+			projectPath,
+		)
 
 		err = services.Output.CreateNomadConfigFile(
 			"default_config",

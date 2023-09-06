@@ -55,10 +55,10 @@ job:
             destination: "local/dashboards/nomad-autoscaler.yaml"
 
         env:
-          - GF_SECURITY_ADMIN_USER: "admin"
-          - GF_SECURITY_ADMIN_PASSWORD: "Lqrs15d7"
-          - GF_SERVER_HTTP_PORT: "${NOMAD_PORT_grafana_ui}"
-          - GF_INSTALL_PLUGINS: "natel-discrete-panel"
+          GF_SECURITY_ADMIN_USER: "admin"
+          GF_SECURITY_ADMIN_PASSWORD: "Lqrs15d7"
+          GF_SERVER_HTTP_PORT: "${NOMAD_PORT_grafana_ui}"
+          GF_INSTALL_PLUGINS: "natel-discrete-panel"
 
         service:
           - name: "grafana"

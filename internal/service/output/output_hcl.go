@@ -85,13 +85,21 @@ func createTemplate(tmpl *template.Template) (*template.Template, error) {
 	return t, nil
 }
 
-func getValue(value map[string]interface{}) string {
+func getValue(block string, value map[string]interface{}) string {
 	var parameter string
 
 	for k, v := range value {
 		switch v := v.(type) {
 		case string:
-			parameter = fmt.Sprintf(`%s = "%v"`, k, v)
+			if block == "template" {
+				if k == "data" {
+					parameter = fmt.Sprintf("%s = <<EOH\n%v\nEOH", k, v)
+				} else {
+					parameter = fmt.Sprintf(`%s = "%v"`, k, v)
+				}
+			} else {
+				parameter = fmt.Sprintf(`%s = "%v"`, k, v)
+			}
 		case int:
 			parameter = fmt.Sprintf("%s = %v", k, v)
 		case bool:

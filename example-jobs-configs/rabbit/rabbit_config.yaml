@@ -30,8 +30,8 @@ job:
           force_pull: true
 
         env:
-          - RABBITMQ_DEFAULT_USER: "test"
-          - RABBITMQ_DEFAULT_PASS: "test"
+          RABBITMQ_DEFAULT_USER: "test"
+          RABBITMQ_DEFAULT_PASS: "test"
 
         service:
           - name: "rabbit-ui"

@@ -1,12 +1,16 @@
 {{ define "block" -}}
-{{.BlockName}} {{- if .Name }} "{{.Name}}"{{- end }} {
-    {{- range $index, $item := .Parameter }}
-    {{ $item | getValue }}
-    {{- end }}
+{{ $bn := .BlockName }}{{ $bn }} {{- if .Name }} "{{.Name}}"{{- end }} {
+  {{- range $index, $item := .Parameter }}
+  {{- if eq $bn "template" }}
+  {{ $item | getValue $bn -}}
+  {{ else }}
+  {{ $item | getValue "" }}
+  {{- end }}
+  {{- end }}
 
-    {{- range $index, $item := .Block }}
-    {{ "\n" }}
-    {{- include "block" . | indent 4 }}
-    {{- end }}
+  {{- range $index, $item := .Block }}
+  {{ "\n" }}
+  {{- include "block" . | indent 2 }}
+  {{- end }}
 }
 {{- end }}

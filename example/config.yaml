@@ -11,15 +11,18 @@ job:
     - name: "nginx"
       count: 1
       network_mode: "bridge"
+
       network:
-        - name: "http"
-          static: 80
-          to: 80
-        - name: "https"
-          to: 443
-        - name: "test"
-          static: 81
-        - name: "test1"
+        - port:
+            name: "http"
+            static: 80
+            to: 80
+        - port:
+            name: "https"
+            to: 443
+        - port:
+            name: "test"
+            static: 81
 
       scaling:
         enabled: true
@@ -31,18 +34,22 @@ job:
           provider: "consul"
           port: "http"
           tags: ["nginx", "test"]
+
           check:
             name: "alive"
             type: "http"
             path: "/"
             interval: "10s"
             timeout: "2s"
+
           connect:
-            sidecar_service: true
+            open_sidecar_service: true
+
         - name: "nginx-https"
           provider: "consul"
           port: "https"
           tags: ["nginx", "test"]
+
           connect:
             sidecar_service:
               proxy:
@@ -64,21 +71,22 @@ job:
           image: "nginx"
           force_pull: true
           ports: ["http"]
+
           volumes:
             - "local:/etc/nginx/conf.d"
             - "local/test.conf:/etc/nginx/conf.d/test.conf"
             - "custom_path:/custom_path_in_container"
 
         template:
-          - name: load-balancer.conf
-            destination: "local/load-balancer.conf"
+          - name: load_balancer.conf
+            destination: "local/load_balancer.conf"
             change_mode: "signal"
             change_signal: "SIGHUP"
 
         env:
-          - WORDPRESS_DB_HOST = "${NOMAD_UPSTREAM_IP_mysql-server}"
-          - WORDPRESS_CONFIG_EXTRA = "define('WP_HOME','wp.sunshard.ru:443')"
-          - WORDPRESS_CONFIG_EXTRA = "define('WP_ALLOW_REPAIR', true );\ndefine('WP_HOME','https://wp.sunshard.space');\ndefine('WP_SITEURL','https://wp.sunshard.space');"
+          WORDPRESS_DB_HOST: "${NOMAD_UPSTREAM_IP_mysql-server}"
+          WORDPRESS_CONFIG_HOME: "define('WP_HOME','wp.sunshard.ru:443')"
+          WORDPRESS_CONFIG_ALLOW_REPAIR: "define('WP_ALLOW_REPAIR', true); define('WP_HOME','https://wp.sunshard.space'); define('WP_SITEURL','https://wp.sunshard.space');"
 
         resources:
           cpu: 1000

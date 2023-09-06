@@ -26,6 +26,7 @@ type Builder interface {
 	BuildConfigTemplate(
 		jobConfig model.ConfigBlock,
 		chartConfig map[string]interface{},
+		projectPath string,
 	) model.TemplateBlock
 }
 

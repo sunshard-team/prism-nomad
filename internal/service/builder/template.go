@@ -23,7 +23,7 @@ func getBlockByName(name string, config model.ConfigBlock) model.ConfigBlock {
 
 // Get configuration template list by nomad block name.
 func getBlockList(name []string, config model.ConfigBlock) []model.TemplateBlock {
-	builder := blockBuilder
+	builder := structBuilder
 	var block []model.TemplateBlock
 
 	f := make(map[string]func(model.ConfigBlock) model.TemplateBlock)
@@ -47,7 +47,7 @@ func getBlockList(name []string, config model.ConfigBlock) []model.TemplateBlock
 	f["migrate"] = builder.Migrate
 	f["multiregion"] = builder.Multiregion
 	f["network"] = builder.Network
-	f["parameteried"] = builder.Parameterized
+	f["parameterized"] = builder.Parameterized
 	f["periodic"] = builder.Periodic
 	f["reschedule"] = builder.Reschedule
 	f["restart"] = builder.Restart
@@ -78,9 +78,11 @@ func getBlockList(name []string, config model.ConfigBlock) []model.TemplateBlock
 func (b *TemplateBuilder) BuildConfigTemplate(
 	jobConfig model.ConfigBlock,
 	chartConfig map[string]interface{},
+	projectPath string,
 ) model.TemplateBlock {
 	config := jobConfig
 	chart := chartConfig
+	pathProject = projectPath
 
 	job := jobTemplate(config, chart)
 	return job
@@ -93,13 +95,14 @@ func jobTemplate(
 	config := jobConfig
 	chart := chartConfig
 
-	job := blockBuilder.Job(config, chart)
+	job := structBuilder.Job(config)
+	job = changes.Job(job, chart)
 
 	block := []string{
 		"affinity",
 		"constraint",
 		"multiregion",
-		"parameteried",
+		"parameterized",
 		"periodic",
 		"migrate",
 		"reschedule",
@@ -110,7 +113,13 @@ func jobTemplate(
 	}
 
 	blockList := getBlockList(block, config)
-	job.Block = append(job.Block, blockList...)
+	for _, item := range blockList {
+		if item.BlockName == "meta" {
+			item = changes.Meta(item, chart)
+		}
+
+		job.Block = append(job.Block, item)
+	}
 
 	// Group.
 	group := groupTemplate(config)
@@ -124,17 +133,20 @@ func groupTemplate(config model.ConfigBlock) []model.TemplateBlock {
 
 	for _, item := range config.Block {
 		if item.Name == "group" {
-			group := blockBuilder.Group(item)
+			group := structBuilder.Group(item)
 
 			block := []string{"affinity", "constraint", "meta"}
 			group.Block = append(group.Block, getBlockList(block, item)...)
 
 			// service block.
-			serviceConfig := getBlockByName("service", item)
-			service := blockBuilder.Service(serviceConfig)
+			for _, block := range item.Block {
+				if block.Name == "service" {
+					service := serviceTemplate(block)
 
-			if len(service.Parameter) != 0 || len(service.Block) != 0 {
-				group.Block = append(group.Block, service)
+					if len(service.Parameter) != 0 || len(service.Block) != 0 {
+						group.Block = append(group.Block, service)
+					}
+				}
 			}
 
 			block = []string{"restart", "scaling"}
@@ -211,12 +223,12 @@ func networkTeplate(config model.ConfigBlock) model.TemplateBlock {
 		Block:     networkBlock,
 	}
 
-	network = blockBuilder.Network(networkConfig)
+	network = structBuilder.Network(networkConfig)
 	return network
 }
 
 func taskTemplate(config model.ConfigBlock) model.TemplateBlock {
-	task := blockBuilder.Task(config)
+	task := structBuilder.Task(config)
 
 	block := []string{
 		"affinity",
@@ -239,19 +251,26 @@ func taskTemplate(config model.ConfigBlock) model.TemplateBlock {
 	task.Block = append(task.Block, getBlockList(block, config)...)
 
 	// template.
-	templateConfig := getBlockByName("template", config)
-	template := templateTemplate(templateConfig)
+	for _, item := range config.Block {
+		if item.Name == "template" {
+			template := templateTemplate(item, pathProject)
 
-	if len(template.Parameter) != 0 || len(template.Block) != 0 {
-		task.Block = append(task.Block, template)
+			if len(template.Parameter) != 0 || len(template.Block) != 0 {
+				task.Block = append(task.Block, template)
+			}
+		}
 	}
 
 	// service.
-	serviceConfig := getBlockByName("service", config)
-	service := serviceTemplate(serviceConfig)
+	for _, block := range config.Block {
+		if block.Name == "service" {
+			service := serviceTemplate(block)
 
-	if len(service.Parameter) != 0 || len(service.Block) != 0 {
-		task.Block = append(task.Block, service)
+			if len(service.Parameter) != 0 || len(service.Block) != 0 {
+				task.Block = append(task.Block, service)
+			}
+		}
+
 	}
 
 	// resources.
@@ -265,8 +284,11 @@ func taskTemplate(config model.ConfigBlock) model.TemplateBlock {
 	return task
 }
 
-func templateTemplate(config model.ConfigBlock) model.TemplateBlock {
-	template := blockBuilder.Template(config)
+func templateTemplate(
+	config model.ConfigBlock,
+	projectPath string,
+) model.TemplateBlock {
+	template := structBuilder.Template(config, projectPath)
 
 	// change script.
 	block := []string{"change_script"}
@@ -276,7 +298,7 @@ func templateTemplate(config model.ConfigBlock) model.TemplateBlock {
 }
 
 func serviceTemplate(config model.ConfigBlock) model.TemplateBlock {
-	service := blockBuilder.Service(config)
+	service := structBuilder.Service(config)
 
 	// check.
 	checkConfig := getBlockByName("check", config)
@@ -302,7 +324,7 @@ func serviceTemplate(config model.ConfigBlock) model.TemplateBlock {
 }
 
 func checkTemplate(config model.ConfigBlock) model.TemplateBlock {
-	check := blockBuilder.Check(config)
+	check := structBuilder.Check(config)
 
 	// check restart.
 	block := []string{"check_restart"}
@@ -312,7 +334,26 @@ func checkTemplate(config model.ConfigBlock) model.TemplateBlock {
 }
 
 func connectTemplate(config model.ConfigBlock) model.TemplateBlock {
-	connect := blockBuilder.Connect(config)
+	connect := structBuilder.Connect(config)
+
+	for _, item := range connect.Parameter {
+		for k, v := range item {
+			if k == "open_sidecar_service" {
+				if v.(bool) {
+					connect := model.TemplateBlock{
+						BlockName: "connect",
+					}
+
+					sidecarService := model.TemplateBlock{
+						BlockName: "sidecar_service",
+					}
+
+					connect.Block = append(connect.Block, sidecarService)
+					return connect
+				}
+			}
+		}
+	}
 
 	// sidecar service.
 	sidecarServiceConfig := getBlockByName("sidecar_service", config)
@@ -338,7 +379,7 @@ func connectTemplate(config model.ConfigBlock) model.TemplateBlock {
 }
 
 func sidecarServiceTemplate(config model.ConfigBlock) model.TemplateBlock {
-	sidecarService := blockBuilder.SidecarService(config)
+	sidecarService := structBuilder.SidecarService(config)
 
 	// proxy.
 	proxyConfig := getBlockByName("proxy", config)
@@ -352,7 +393,7 @@ func sidecarServiceTemplate(config model.ConfigBlock) model.TemplateBlock {
 }
 
 func proxyTemplate(config model.ConfigBlock) model.TemplateBlock {
-	proxy := blockBuilder.Proxy(config)
+	proxy := structBuilder.Proxy(config)
 
 	// expose, upstream.
 	block := []string{"expose", "upstream"}
@@ -362,14 +403,14 @@ func proxyTemplate(config model.ConfigBlock) model.TemplateBlock {
 }
 
 func sidecarTaskTemplate(config model.ConfigBlock) model.TemplateBlock {
-	sidecarTask := blockBuilder.SidecarTask(config)
+	sidecarTask := structBuilder.SidecarTask(config)
 
 	// logs.
 	block := []string{"logs"}
 	sidecarTask.Block = append(sidecarTask.Block, getBlockList(block, config)...)
 
 	// resources.
-	resourcesConfig := getBlockByName("resouces", config)
+	resourcesConfig := getBlockByName("resources", config)
 	resources := resourcesTemplate(resourcesConfig)
 
 	if len(resources.Parameter) != 0 || len(resources.Block) != 0 {
@@ -380,7 +421,7 @@ func sidecarTaskTemplate(config model.ConfigBlock) model.TemplateBlock {
 }
 
 func resourcesTemplate(config model.ConfigBlock) model.TemplateBlock {
-	resources := blockBuilder.Resources(config)
+	resources := structBuilder.Resources(config)
 
 	// device.
 	deviceConfig := getBlockByName("device", config)
@@ -394,7 +435,7 @@ func resourcesTemplate(config model.ConfigBlock) model.TemplateBlock {
 }
 
 func deviceTemplate(config model.ConfigBlock) model.TemplateBlock {
-	device := blockBuilder.Device(config)
+	device := structBuilder.Device(config)
 
 	block := []string{"affinity", "constraint"}
 	device.Block = append(device.Block, getBlockList(block, config)...)

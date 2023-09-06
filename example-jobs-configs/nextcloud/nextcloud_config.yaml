@@ -30,7 +30,7 @@ job:
           tags: ["database"]
           # Если открываем сервис для консул коннекта
           connect:
-            sidecar_service: true
+            open_sidecar_service: true
 
       restart:
         attempts: 2
@@ -46,11 +46,11 @@ job:
           image: "mariadb:10.6.4-focal"
           force_pull: true
 
-          env:
-            - MYSQL_ROOT_PASSWORD: "test"
-            - MYSQL_DATABASE: "nextcloud"
-            - MYSQL_USER: "nextcloud"
-            - MYSQL_PASSWORD: "lqrs15d7"
+        env:
+          MYSQL_ROOT_PASSWORD: "test"
+          MYSQL_DATABASE: "nextcloud"
+          MYSQL_USER: "nextcloud"
+          MYSQL_PASSWORD: "lqrs15d7"
 
         resources:
           cpu: 1000
@@ -96,12 +96,12 @@ job:
         config:
           image: "nextcloud"
 
-          env:
-            - MYSQL_HOST: "${NOMAD_UPSTREAM_ADDR_mariadb-nextcloud}"
-            - MYSQL_PASSWORD: "test"
-            - MYSQL_DATABASE: "nextcloud"
-            - MYSQL_USER: "nextcloud"
-            - NEXTCLOUD_TRUSTED_DOMAINS: "next.site.ru"
+        env:
+          MYSQL_HOST: "${NOMAD_UPSTREAM_ADDR_mariadb-nextcloud}"
+          MYSQL_PASSWORD: "test"
+          MYSQL_DATABASE: "nextcloud"
+          MYSQL_USER: "nextcloud"
+          NEXTCLOUD_TRUSTED_DOMAINS: "next.site.ru"
 
         resources:
           cpu: 1000
