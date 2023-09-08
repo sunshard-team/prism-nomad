@@ -17,13 +17,43 @@ func NewOutput() *Output {
 	return &Output{}
 }
 
-func (s *Output) CreateNomadConfigFile(
+// Returns the formated job configuration of the nomad.
+// If the createFile parameter is true,
+// will be created a configuration file in .nomad.hcl format.
+func (s *Output) OutputConfig(
 	name, path string,
+	createFile bool,
 	config model.TemplateBlock,
-) error {
+) (string, error) {
+	var buf bytes.Buffer
+
+	configTemplate, err := createTemplate(config)
+	if err != nil {
+		return "", err
+	}
+
+	// Write data to buffer.
+	err = configTemplate.ExecuteTemplate(&buf, "block", config)
+	if err != nil {
+		return "", fmt.Errorf(
+			"error write template to buffer, %v", err,
+		)
+	}
+
+	if createFile {
+		err := createConfigFile(name, path, config, configTemplate)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return buf.String(), nil
+}
+
+// Creates a nomad configuration template.
+func createTemplate(config model.TemplateBlock) (*template.Template, error) {
 	// Add dynamic indentation.
 	// Add "include" function, to replace "template".
-
 	tmpl := template.New("config").Funcs(sprig.FuncMap())
 	tmpl.Funcs(template.FuncMap{
 		"getValue": getValue,
@@ -45,15 +75,32 @@ func (s *Output) CreateNomadConfigFile(
 	)
 
 	if err != nil {
-		return fmt.Errorf("error create include function for templates %s", err)
+		return nil, fmt.Errorf(
+			"error when creating include function for templates %s", err,
+		)
 	}
 
-	// Create nomad config template.
-	configTemplate, err := createTemplate(tmpl)
+	// Create nomad configuration template.
+	configTemplate, err := template.Must(tmpl.Clone()).ParseFS(
+		templates.TemplateFile,
+		"nomad_block_config.tmpl",
+	)
+
 	if err != nil {
-		return err
+		return nil, fmt.Errorf(
+			"error when creating nomad configuration template %s", err,
+		)
 	}
 
+	return configTemplate, nil
+}
+
+// Creates a nomad configuration file in .nomad.hcl format.
+func createConfigFile(
+	name, path string,
+	config model.TemplateBlock,
+	configTemplate *template.Template,
+) error {
 	// Create new .nomad.hcl file.
 	filePath := fmt.Sprintf("%s/%s.nomad.hcl", path, name)
 	file, err := os.Create(filePath)
@@ -70,19 +117,6 @@ func (s *Output) CreateNomadConfigFile(
 	}
 
 	return nil
-}
-
-func createTemplate(tmpl *template.Template) (*template.Template, error) {
-	t, err := template.Must(tmpl.Clone()).ParseFS(
-		templates.TemplateFile,
-		"nomad_block_config.tmpl",
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("error create template %s", err)
-	}
-
-	return t, nil
 }
 
 func getValue(block string, value map[string]interface{}) string {

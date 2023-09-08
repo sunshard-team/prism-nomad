@@ -105,9 +105,10 @@ var initCmd = &cobra.Command{
 			projectPath,
 		)
 
-		err = services.Output.CreateNomadConfigFile(
+		_, err = services.Output.OutputConfig(
 			"default_config",
 			projectPath,
+			true,
 			template,
 		)
 		if err != nil {

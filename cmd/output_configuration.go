@@ -66,7 +66,7 @@ var createCmd = &cobra.Command{
 
 			template := builder.BuildConfigTemplate(jobConfig, chartConfig, "")
 
-			err = output.CreateNomadConfigFile(name, path, template)
+			_, err = output.OutputConfig(name, path, true, template)
 			if err != nil {
 				log.Fatalln(err)
 			}

@@ -14,7 +14,13 @@ type Project interface {
 }
 
 type Output interface {
-	CreateNomadConfigFile(name, path string, config model.TemplateBlock) error
+
+	// Returns the formated job configuration of the nomad.
+	// If the createFile parameter is true,
+	// will be created a configuration file in .nomad.hcl format.
+	OutputConfig(
+		name, path string, createFile bool, config model.TemplateBlock,
+	) (string, error)
 }
 
 type Parser interface {
