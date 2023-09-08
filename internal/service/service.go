@@ -29,7 +29,7 @@ type Parser interface {
 }
 
 type Builder interface {
-	BuildConfigTemplate(
+	BuildConfigStructure(
 		jobConfig model.ConfigBlock,
 		chartConfig map[string]interface{},
 		projectPath string,
@@ -48,6 +48,6 @@ func NewService() *Service {
 		Project: project.NewProject(),
 		Output:  output.NewOutput(),
 		Parser:  parser.NewParser(),
-		Builder: builder.NewTemplateBuilder(),
+		Builder: builder.NewStructureBuilder(),
 	}
 }

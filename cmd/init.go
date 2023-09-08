@@ -99,7 +99,7 @@ var initCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		template := services.Builder.BuildConfigTemplate(
+		template := services.Builder.BuildConfigStructure(
 			defaultConfig,
 			chartConfig,
 			projectPath,

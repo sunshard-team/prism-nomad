@@ -64,7 +64,7 @@ var createCmd = &cobra.Command{
 				log.Fatalln(err)
 			}
 
-			template := builder.BuildConfigTemplate(jobConfig, chartConfig, "")
+			template := builder.BuildConfigStructure(jobConfig, chartConfig, "")
 
 			_, err = output.OutputConfig(name, path, true, template)
 			if err != nil {
