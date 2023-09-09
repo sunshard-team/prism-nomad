@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var services = service.NewService()
+var services *service.Service
 
 var rootCmd = &cobra.Command{
 	Use:   "prism",
@@ -15,7 +15,9 @@ var rootCmd = &cobra.Command{
 	Long:  `Prism creates a deployment template and configures the nomad.`,
 }
 
-func Execute() {
+func Execute(service *service.Service) {
+	services = service
+
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
