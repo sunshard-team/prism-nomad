@@ -1,9 +1,9 @@
 package builder
 
 import (
-	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"prism/internal/model"
 )
 
@@ -1431,7 +1431,7 @@ func (b *Block) Template(
 			switch k {
 			case "name":
 				// read file and add data into "data" parameter.
-				filePath := fmt.Sprintf("%s/files/%s", projectPath, v)
+				filePath := filepath.Join(projectPath, "files", v.(string))
 
 				file, err := os.ReadFile(filePath)
 				if err != nil {
