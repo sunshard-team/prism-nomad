@@ -1,7 +1,11 @@
 package main
 
-import "prism/cmd"
+import (
+	"prism/cmd"
+	"prism/internal/service"
+)
 
 func main() {
-	cmd.Execute()
+	service := service.NewService()
+	cmd.Execute(service)
 }

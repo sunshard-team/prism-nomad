@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"prism/config"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -30,18 +32,26 @@ var initCmd = &cobra.Command{
 		}
 
 		// Create project directories.
-		projectDir := "prism-default"
+		projectDir := "prism"
 		if name != "" {
 			projectDir = name
 		}
 
-		projectFileDir := "files"
-		projectPath := fmt.Sprintf("%s/%s", rootDir, projectDir)
+		projectPath := filepath.Join(rootDir, projectDir)
 
-		dirStat, err := os.Stat(fmt.Sprintf("%s/%s", rootDir, projectDir))
+		projectFileDir := "files"
+		fileDirPath := filepath.Join(projectPath, projectFileDir)
+
+		chartName := strings.ReplaceAll(projectDir, "-", "_")
+		chartFileName := fmt.Sprintf("%s.yaml", chartName)
+
+		configName := "config"
+		configFileName := fmt.Sprintf("%s.yaml", configName)
+
+		dirStat, err := os.Stat(projectPath)
 		if err != nil || !dirStat.IsDir() {
 			err = os.MkdirAll(
-				fmt.Sprintf("%s/%s", projectDir, projectFileDir),
+				filepath.Join(projectDir, projectFileDir),
 				0700,
 			)
 			if err != nil {
@@ -50,22 +60,33 @@ var initCmd = &cobra.Command{
 		}
 
 		// Create default project files.
-		defaultFiles := []string{"prism.yaml", "default_config.yaml"}
-		for _, file := range defaultFiles {
-			err = services.Project.CreateDefautlFile(
-				config.ConfigFile,
-				file,
-				projectPath,
-			)
-
-			if err != nil {
-				log.Fatalln(err)
-			}
-		}
-
-		fileDirPath := fmt.Sprintf("%s/%s", projectPath, projectFileDir)
+		// chart.
 		err = services.Project.CreateDefautlFile(
 			config.ConfigFile,
+			"prism.yaml",
+			chartFileName,
+			projectPath,
+		)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// config.
+		err = services.Project.CreateDefautlFile(
+			config.ConfigFile,
+			"config.yaml",
+			configFileName,
+			projectPath,
+		)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = services.Project.CreateDefautlFile(
+			config.ConfigFile,
+			"load_balancer.conf",
 			"load_balancer.conf",
 			fileDirPath,
 		)
@@ -76,7 +97,11 @@ var initCmd = &cobra.Command{
 
 		// Create .nomad.hcl configuration file.
 		// Parse chart config file.
-		chartPath := fmt.Sprintf("%s/prism.yaml", projectPath)
+		chartPath := filepath.Join(
+			projectPath,
+			chartFileName,
+		)
+
 		chartFile, err := os.ReadFile(chartPath)
 		if err != nil {
 			log.Fatalf("error read file, %s", err)
@@ -88,8 +113,12 @@ var initCmd = &cobra.Command{
 		}
 
 		// Parse job config file.
-		defaultConfigFile := fmt.Sprintf("%s/default_config.yaml", projectPath)
-		file, err := os.ReadFile(defaultConfigFile)
+		configFile := filepath.Join(
+			projectPath,
+			configFileName,
+		)
+
+		file, err := os.ReadFile(configFile)
 		if err != nil {
 			log.Fatalf("error read file, %s", err)
 		}
@@ -105,10 +134,9 @@ var initCmd = &cobra.Command{
 			projectPath,
 		)
 
-		_, err = services.Output.OutputConfig(
-			"default_config",
+		err = services.Output.CreateConfigFile(
+			configName,
 			projectPath,
-			true,
 			template,
 		)
 		if err != nil {

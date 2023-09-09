@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"prism/internal/model"
 	"prism/internal/templates"
 	"text/template"
@@ -18,13 +19,7 @@ func NewOutput() *Output {
 }
 
 // Returns the formated job configuration of the nomad.
-// If the createFile parameter is true,
-// will be created a configuration file in .nomad.hcl format.
-func (s *Output) OutputConfig(
-	name, path string,
-	createFile bool,
-	config model.TemplateBlock,
-) (string, error) {
+func (s *Output) OutputConfig(config model.TemplateBlock) (string, error) {
 	var buf bytes.Buffer
 
 	configTemplate, err := createTemplate(config)
@@ -40,14 +35,36 @@ func (s *Output) OutputConfig(
 		)
 	}
 
-	if createFile {
-		err := createConfigFile(name, path, config, configTemplate)
-		if err != nil {
-			return "", err
-		}
+	return buf.String(), nil
+}
+
+// Creates a nomad configuration file in .nomad.hcl format.
+func (s *Output) CreateConfigFile(
+	name, path string,
+	config model.TemplateBlock,
+) error {
+	configTemplate, err := createTemplate(config)
+	if err != nil {
+		return err
 	}
 
-	return buf.String(), nil
+	// Create new .nomad.hcl file.
+	fileName := fmt.Sprintf("%s.nomad.hcl", name)
+	filePath := filepath.Join(path, fileName)
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("error create nomad configuration file, %s", err)
+	}
+
+	defer file.Close()
+
+	// Write data into nomad configuration template file.
+	err = configTemplate.ExecuteTemplate(file, "block", config)
+	if err != nil {
+		return fmt.Errorf("error execute nomad configuration template, %v", err)
+	}
+
+	return nil
 }
 
 // Creates a nomad configuration template.
@@ -93,30 +110,6 @@ func createTemplate(config model.TemplateBlock) (*template.Template, error) {
 	}
 
 	return configTemplate, nil
-}
-
-// Creates a nomad configuration file in .nomad.hcl format.
-func createConfigFile(
-	name, path string,
-	config model.TemplateBlock,
-	configTemplate *template.Template,
-) error {
-	// Create new .nomad.hcl file.
-	filePath := fmt.Sprintf("%s/%s.nomad.hcl", path, name)
-	file, err := os.Create(filePath)
-	if err != nil {
-		return fmt.Errorf("error create nomad configuration file, %s", err)
-	}
-
-	defer file.Close()
-
-	// Write data into nomad configuration template file.
-	err = configTemplate.ExecuteTemplate(file, "block", config)
-	if err != nil {
-		return fmt.Errorf("error execute nomad configuration template, %v", err)
-	}
-
-	return nil
 }
 
 func getValue(block string, value map[string]interface{}) string {
