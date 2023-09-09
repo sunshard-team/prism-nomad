@@ -105,10 +105,9 @@ var initCmd = &cobra.Command{
 			projectPath,
 		)
 
-		_, err = services.Output.OutputConfig(
+		err = services.Output.CreateConfigFile(
 			"default_config",
 			projectPath,
-			true,
 			template,
 		)
 		if err != nil {
