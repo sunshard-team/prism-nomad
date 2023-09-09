@@ -10,7 +10,10 @@ import (
 )
 
 type Project interface {
-	CreateDefautlFile(embedFile embed.FS, fileName, path string) error
+	CreateDefautlFile(
+		embedFile embed.FS,
+		embedFileName, fileName, path string,
+	) error
 }
 
 type Output interface {

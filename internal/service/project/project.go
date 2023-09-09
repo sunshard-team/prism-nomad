@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 type Project struct{}
@@ -13,15 +14,18 @@ func NewProject() *Project {
 	return &Project{}
 }
 
-func (p *Project) CreateDefautlFile(embedFile embed.FS, fileName, path string) error {
-	file, err := embedFile.Open(fileName)
+func (p *Project) CreateDefautlFile(
+	embedFile embed.FS,
+	embedFileName, fileName, path string,
+) error {
+	file, err := embedFile.Open(embedFileName)
 	if err != nil {
 		return fmt.Errorf("error create file %s, %s", fileName, err)
 	}
 
 	defer file.Close()
 
-	filePath := fmt.Sprintf("%s/%s", path, fileName)
+	filePath := filepath.Join(path, fileName)
 
 	createdFile, err := os.Create(filePath)
 	if err != nil {
