@@ -1,7 +1,7 @@
 package builder
 
 var (
-	blockBuilder BlockBuilder     = &Block{}
-	changes      ChangesStructure = &Changes{}
-	pathProject  string
+	blockBuilder   BlockBuilder     = &Block{}
+	changes        ChangesStructure = &Changes{}
+	pathProjectDir string
 )

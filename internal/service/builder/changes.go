@@ -3,19 +3,20 @@ package builder
 import "prism/internal/model"
 
 type ChangesStructure interface {
-	Job(block model.TemplateBlock, chart map[string]interface{}) model.TemplateBlock
-	Meta(block model.TemplateBlock, chart map[string]interface{}) model.TemplateBlock
+	Job(block model.TemplateBlock, chart model.ConfigBlock) model.TemplateBlock
+	Meta(block model.TemplateBlock, chart model.ConfigBlock) model.TemplateBlock
 }
 
 type Changes struct{}
 
 func (c *Changes) Job(
 	block model.TemplateBlock,
-	chart map[string]interface{},
+	chart model.ConfigBlock,
 ) model.TemplateBlock {
-	if len(chart) > 0 {
-	Loop:
-		for key, value := range chart {
+Loop:
+	for _, p := range chart.Parameter {
+		for key, value := range p {
+
 			if key == "type" {
 				for i := range block.Parameter {
 					for k := range block.Parameter[i] {
@@ -34,11 +35,12 @@ func (c *Changes) Job(
 
 func (c *Changes) Meta(
 	block model.TemplateBlock,
-	chart map[string]interface{},
+	chart model.ConfigBlock,
 ) model.TemplateBlock {
-	if len(chart) > 0 {
-	Loop:
-		for key, value := range chart {
+Loop:
+	for _, p := range chart.Parameter {
+		for key, value := range p {
+
 			if key == "deploy_version" {
 				for i := range block.Parameter {
 					for k := range block.Parameter[i] {

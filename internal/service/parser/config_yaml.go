@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"log"
 	"prism/internal/model"
 
 	"gopkg.in/yaml.v3"
@@ -15,15 +14,24 @@ func NewParser() *Parser {
 }
 
 // Parsing the chart configuration file.
-func (p *Parser) ParseChart(file []byte) (map[string]interface{}, error) {
+func (p *Parser) ParseChart(file []byte) (model.ConfigBlock, error) {
 	var config map[string]interface{}
 
 	err := yaml.Unmarshal(file, &config)
 	if err != nil {
-		return config, fmt.Errorf("error unmarshal file %s", err)
+		return model.ConfigBlock{}, fmt.Errorf(
+			"error unmarshal file %s", err,
+		)
 	}
 
-	return config, nil
+	if len(config) == 0 {
+		return model.ConfigBlock{}, fmt.Errorf(
+			"empty chart config file",
+		)
+	}
+
+	chart := parseBlock("chart", config)
+	return chart, nil
 }
 
 // Parsing the job configuration file.
@@ -33,17 +41,15 @@ func (p *Parser) ParseJob(file []byte) (model.ConfigBlock, error) {
 	err := yaml.Unmarshal(file, &config)
 	if err != nil {
 		return model.ConfigBlock{}, fmt.Errorf(
-			"error unmarshal file %s",
-			err,
+			"error unmarshal file %s", err,
 		)
 	}
 
 	if len(config) == 0 {
-		log.Fatalf("empty job config file")
+		return model.ConfigBlock{}, fmt.Errorf("empty job config file")
 	}
 
 	job := parseBlock("job", config["job"].(map[string]interface{}))
-
 	return job, nil
 }
 

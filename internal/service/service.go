@@ -18,7 +18,6 @@ type Project interface {
 }
 
 type Output interface {
-
 	// Returns the formated job configuration of the nomad.
 	OutputConfig(config model.TemplateBlock) (string, error)
 
@@ -27,22 +26,22 @@ type Output interface {
 }
 
 type Parser interface {
-	ParseChart(file []byte) (map[string]interface{}, error)
+	// Parsing the chart configuration file.
+	ParseChart(file []byte) (model.ConfigBlock, error)
+
+	// Parsing the job configuration file.
 	ParseJob(file []byte) (model.ConfigBlock, error)
 }
 
 type Builder interface {
-
 	// Builds and returns a job configuration structure.
 	BuildConfigStructure(
-		jobConfig model.ConfigBlock,
-		chartConfig map[string]interface{},
-		projectPath string,
+		job, chart model.ConfigBlock,
+		projectDirPath string,
 	) model.TemplateBlock
 }
 
 type Deployment interface {
-
 	// Returns the configuration structure.
 	CreateConfigStructure(
 		parameter model.ConfigParameter,
