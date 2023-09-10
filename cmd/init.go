@@ -37,10 +37,10 @@ var initCmd = &cobra.Command{
 			projectDir = name
 		}
 
-		projectPath := filepath.Join(rootDir, projectDir)
+		projectDirPath := filepath.Join(rootDir, projectDir)
 
 		projectFileDir := "files"
-		fileDirPath := filepath.Join(projectPath, projectFileDir)
+		fileDirPath := filepath.Join(projectDirPath, projectFileDir)
 
 		chartName := strings.ReplaceAll(projectDir, "-", "_")
 		chartFileName := fmt.Sprintf("%s.yaml", chartName)
@@ -48,7 +48,7 @@ var initCmd = &cobra.Command{
 		configName := "config"
 		configFileName := fmt.Sprintf("%s.yaml", configName)
 
-		dirStat, err := os.Stat(projectPath)
+		dirStat, err := os.Stat(projectDirPath)
 		if err != nil || !dirStat.IsDir() {
 			err = os.MkdirAll(
 				filepath.Join(projectDir, projectFileDir),
@@ -65,7 +65,7 @@ var initCmd = &cobra.Command{
 			config.ConfigFile,
 			"prism.yaml",
 			chartFileName,
-			projectPath,
+			projectDirPath,
 		)
 
 		if err != nil {
@@ -77,7 +77,7 @@ var initCmd = &cobra.Command{
 			config.ConfigFile,
 			"config.yaml",
 			configFileName,
-			projectPath,
+			projectDirPath,
 		)
 
 		if err != nil {
@@ -98,7 +98,7 @@ var initCmd = &cobra.Command{
 		// Create .nomad.hcl configuration file.
 		// Parse chart config file.
 		chartPath := filepath.Join(
-			projectPath,
+			projectDirPath,
 			chartFileName,
 		)
 
@@ -114,7 +114,7 @@ var initCmd = &cobra.Command{
 
 		// Parse job config file.
 		configFile := filepath.Join(
-			projectPath,
+			projectDirPath,
 			configFileName,
 		)
 
@@ -123,21 +123,21 @@ var initCmd = &cobra.Command{
 			log.Fatalf("error read file, %s", err)
 		}
 
-		defaultConfig, err := services.Parser.ParseJob(file)
+		jobConfig, err := services.Parser.ParseJob(file)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		template := services.Builder.BuildConfigStructure(
-			defaultConfig,
+		configStructure := services.Builder.BuildConfigStructure(
+			jobConfig,
 			chartConfig,
-			projectPath,
+			projectDirPath,
 		)
 
 		err = services.Output.CreateConfigFile(
 			configName,
-			projectPath,
-			template,
+			projectDirPath,
+			configStructure,
 		)
 		if err != nil {
 			log.Fatalln(err)
