@@ -4,6 +4,7 @@ import (
 	"embed"
 	"prism/internal/model"
 	"prism/internal/service/builder"
+	"prism/internal/service/deployment"
 	"prism/internal/service/output"
 	"prism/internal/service/parser"
 	"prism/internal/service/project"
@@ -31,6 +32,8 @@ type Parser interface {
 }
 
 type Builder interface {
+
+	// Builds and returns a job configuration structure.
 	BuildConfigStructure(
 		jobConfig model.ConfigBlock,
 		chartConfig map[string]interface{},
@@ -38,18 +41,31 @@ type Builder interface {
 	) model.TemplateBlock
 }
 
-type Service struct {
-	Project Project
-	Output  Output
-	Parser  Parser
-	Builder Builder
+type Deployment interface {
+
+	// Returns the configuration structure.
+	CreateConfigStructure(
+		parameter model.ConfigParameter,
+	) (model.TemplateBlock, error)
 }
 
-func NewService() *Service {
+type Service struct {
+	Project    Project
+	Output     Output
+	Parser     Parser
+	Builder    Builder
+	Deployment Deployment
+}
+
+func NewService(
+	p *parser.Parser,
+	b *builder.StructureBuilder,
+) *Service {
 	return &Service{
-		Project: project.NewProject(),
-		Output:  output.NewOutput(),
-		Parser:  parser.NewParser(),
-		Builder: builder.NewStructureBuilder(),
+		Project:    project.NewProject(),
+		Output:     output.NewOutput(),
+		Parser:     parser.NewParser(),
+		Builder:    builder.NewStructureBuilder(),
+		Deployment: deployment.NewDeployment(*p, *b),
 	}
 }

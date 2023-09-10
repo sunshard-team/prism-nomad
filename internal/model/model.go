@@ -16,3 +16,12 @@ type TemplateBlock struct {
 	Parameter []map[string]interface{} // parameter list
 	Block     []TemplateBlock          // list of configuration blocks
 }
+
+type ConfigParameter struct {
+	ProjectDir     string
+	ProjectDirPath string
+	Version        string
+	Namespace      string
+	Release        string
+	Files          []string
+}
