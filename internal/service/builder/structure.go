@@ -75,26 +75,16 @@ func getBlockList(name []string, config model.ConfigBlock) []model.TemplateBlock
 	return block
 }
 
+// Builds and returns a job configuration structure.
 func (s *StructureBuilder) BuildConfigStructure(
-	jobConfig model.ConfigBlock,
-	chartConfig map[string]interface{},
-	projectPath string,
+	job, chart model.ConfigBlock,
+	projectDirPath string,
 ) model.TemplateBlock {
-	config := jobConfig
-	chart := chartConfig
-	pathProject = projectPath
-
-	job := jobStructure(config, chart)
-	return job
+	pathProjectDir = projectDirPath
+	return jobStructure(job, chart)
 }
 
-func jobStructure(
-	jobConfig model.ConfigBlock,
-	chartConfig map[string]interface{},
-) model.TemplateBlock {
-	config := jobConfig
-	chart := chartConfig
-
+func jobStructure(config, chart model.ConfigBlock) model.TemplateBlock {
 	job := blockBuilder.Job(config)
 	job = changes.Job(job, chart)
 
@@ -253,7 +243,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 	// template.
 	for _, item := range config.Block {
 		if item.Name == "template" {
-			template := templateStructure(item, pathProject)
+			template := templateStructure(item, pathProjectDir)
 
 			if len(template.Parameter) != 0 || len(template.Block) != 0 {
 				task.Block = append(task.Block, template)
