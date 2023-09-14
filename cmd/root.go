@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"prism/internal/service"
 
@@ -20,6 +21,7 @@ func Execute(service *service.Service) {
 
 	err := rootCmd.Execute()
 	if err != nil {
+		fmt.Printf("failed to execute prism, %s", err)
 		os.Exit(1)
 	}
 }

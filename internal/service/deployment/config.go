@@ -38,13 +38,14 @@ func (s *Deployment) CreateConfigStructure(
 
 	chartFile, err := os.ReadFile(chartPath)
 	if err != nil {
-		return config, fmt.Errorf("failed to read chart file")
+		return config, fmt.Errorf("error to read chart file, %s", err)
 	}
 
 	parsedChartConfig, err := s.parser.ParseYAML(chartFile)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		if err != nil {
+			return config, fmt.Errorf("failed to parsing chart file, %s", err)
+		}
 	}
 
 	chartConfig := s.parser.ParseConfig("chart", parsedChartConfig)
@@ -55,13 +56,12 @@ func (s *Deployment) CreateConfigStructure(
 
 	jobFile, err := os.ReadFile(jobPath)
 	if err != nil {
-		return config, fmt.Errorf("failed to read job file")
+		return config, fmt.Errorf("error to read job file, %s", err)
 	}
 
 	parsedJobConfig, err := s.parser.ParseYAML(jobFile)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return config, fmt.Errorf("failed to parsing job file, %s", err)
 	}
 
 	jobConfig := s.parser.ParseConfig(
