@@ -1,7 +1,6 @@
 package service
 
 import (
-	"embed"
 	"prism/internal/model"
 	"prism/internal/service/builder"
 	"prism/internal/service/deployment"
@@ -11,10 +10,8 @@ import (
 )
 
 type Project interface {
-	CreateDefautlFile(
-		embedFile embed.FS,
-		embedFileName, fileName, path string,
-	) error
+	// Creates a project.
+	Create(name string) (string, error)
 }
 
 type Output interface {
@@ -59,9 +56,10 @@ type Service struct {
 func NewService(
 	p *parser.Parser,
 	b *builder.StructureBuilder,
+	o *output.Output,
 ) *Service {
 	return &Service{
-		Project:    project.NewProject(),
+		Project:    project.NewProject(*p, *b, *o),
 		Output:     output.NewOutput(),
 		Parser:     parser.NewParser(),
 		Builder:    builder.NewStructureBuilder(),
