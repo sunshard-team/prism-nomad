@@ -19,11 +19,11 @@ func (p *Parser) ParseYAML(file []byte) (map[string]interface{}, error) {
 
 	err := yaml.Unmarshal(file, &config)
 	if err != nil {
-		return config, fmt.Errorf("parsing file error %s", err)
+		return config, fmt.Errorf("parsing file error, %s", err)
 	}
 
 	if len(config) == 0 {
-		return config, fmt.Errorf("config file is empty")
+		return config, fmt.Errorf("file is empty")
 	}
 
 	return config, nil

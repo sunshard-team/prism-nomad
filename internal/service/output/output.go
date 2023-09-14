@@ -24,14 +24,16 @@ func (s *Output) OutputConfig(config model.TemplateBlock) (string, error) {
 
 	configTemplate, err := createTemplate(config)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf(
+			"error write template to buffer, %s", err,
+		)
 	}
 
 	// Write data to buffer.
 	err = configTemplate.ExecuteTemplate(&buf, "block", config)
 	if err != nil {
 		return "", fmt.Errorf(
-			"error write template to buffer, %v", err,
+			"error write template to buffer, %s", err,
 		)
 	}
 
@@ -45,7 +47,7 @@ func (s *Output) CreateConfigFile(
 ) error {
 	configTemplate, err := createTemplate(config)
 	if err != nil {
-		return err
+		return fmt.Errorf("error create nomad configuration file, %s", err)
 	}
 
 	// Create new .nomad.hcl file.

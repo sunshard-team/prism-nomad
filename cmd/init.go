@@ -22,13 +22,15 @@ var initCmd = &cobra.Command{
 		// Get flags.
 		name, err := cmd.Flags().GetString("name")
 		if err != nil {
-			log.Fatalf(`error read flag "name", %s`, err)
+			fmt.Printf("failed to read flag \"name\", %s\n", err)
+			os.Exit(1)
 		}
 
 		// Get root dir path.
 		rootDir, err := os.Getwd()
 		if err != nil {
-			log.Fatalf("project initialization error, %s", err)
+			fmt.Printf("failed project initialization, %s\n", err)
+			os.Exit(1)
 		}
 
 		// Create project directories.
@@ -54,8 +56,10 @@ var initCmd = &cobra.Command{
 				filepath.Join(projectDir, projectFileDir),
 				0700,
 			)
+
 			if err != nil {
-				log.Fatalf("project initialization error, %s", err)
+				fmt.Printf("failed project initialization, %s\n", err)
+				os.Exit(1)
 			}
 		}
 
@@ -69,7 +73,8 @@ var initCmd = &cobra.Command{
 		)
 
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
 		// config.
@@ -81,7 +86,8 @@ var initCmd = &cobra.Command{
 		)
 
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
 		err = services.Project.CreateDefautlFile(
@@ -92,43 +98,38 @@ var initCmd = &cobra.Command{
 		)
 
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
 		// Create .nomad.hcl configuration file.
 		// Parse chart config file.
-		chartFilePath := filepath.Join(
-			projectDirPath,
-			chartFileName,
-		)
-
+		chartFilePath := filepath.Join(projectDirPath, chartFileName)
 		chartFile, err := os.ReadFile(chartFilePath)
 		if err != nil {
-			log.Fatalf("error read file, %s", err)
+			fmt.Printf("failed to read chart file, %s\n", err)
+			os.Exit(1)
 		}
 
 		parsedChartConfig, err := services.Parser.ParseYAML(chartFile)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("failed to parsing chart file, %s\n", err)
 			os.Exit(1)
 		}
 
 		chartConfig := services.Parser.ParseConfig("chart", parsedChartConfig)
 
 		// Parse job config file.
-		jobFilePath := filepath.Join(
-			projectDirPath,
-			configFileName,
-		)
-
+		jobFilePath := filepath.Join(projectDirPath, configFileName)
 		jobFile, err := os.ReadFile(jobFilePath)
 		if err != nil {
-			log.Fatalf("error read file, %s", err)
+			fmt.Printf("failed to read job file, %s\n", err)
+			os.Exit(1)
 		}
 
 		parsedJobConfig, err := services.Parser.ParseYAML(jobFile)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("failed to parsing job file, %s\n", err)
 			os.Exit(1)
 		}
 

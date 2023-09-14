@@ -24,7 +24,7 @@ var installCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		path, err := cmd.Flags().GetString("path")
 		if err != nil {
-			fmt.Printf("error read flag \"path\", %s\n", err)
+			fmt.Printf("failed to read flag \"path\", %s\n", err)
 			os.Exit(1)
 		}
 
@@ -32,61 +32,62 @@ var installCmd = &cobra.Command{
 
 		version, err := cmd.Flags().GetString("version")
 		if err != nil {
-			fmt.Printf("error read flag \"version\", %s\n", err)
+			fmt.Printf("failed to read flag \"version\", %s\n", err)
 			os.Exit(1)
 		}
 
 		namespace, err := cmd.Flags().GetString("namespace")
 		if err != nil {
-			fmt.Printf("error read flag \"namespace\", %s\n", err)
+			fmt.Printf("failed to read flag \"namespace\", %s\n", err)
 			os.Exit(1)
 		}
 
 		release, err := cmd.Flags().GetString("release")
 		if err != nil {
-			fmt.Printf("error read flag \"release\", %s\n", err)
+			fmt.Printf("failed to read flag \"release\", %s\n", err)
 			os.Exit(1)
 		}
 
 		file, err := cmd.Flags().GetStringSlice("file")
 		if err != nil {
-			fmt.Printf("error read flag \"output\", %s\n", err)
+			fmt.Printf("failed to read flag \"output\", %s\n", err)
 			os.Exit(1)
 		}
 
 		dryRun, err := cmd.Flags().GetBool("dry-run")
 		if err != nil {
-			fmt.Printf("error read flag \"dry-run\", %s\n", err)
+			fmt.Printf("failed to read flag \"dry-run\", %s\n", err)
 			os.Exit(1)
 		}
 
 		outputPath, err := cmd.Flags().GetString("output")
 		if err != nil {
-			fmt.Printf("error read flag \"output\", %s\n", err)
+			fmt.Printf("failed to read flag \"output\", %s\n", err)
 			os.Exit(1)
 		}
 
 		// address, err := cmd.Flags().GetString("address")
 		// if err != nil {
-		// 	fmt.Printf("error read flag \"address\", %s\n", err)
+		// 	fmt.Printf("failed to read flag \"address\", %s\n", err)
 		// 	os.Exit(1)
 		// }
 
 		// token, err := cmd.Flags().GetString("token")
 		// if err != nil {
-		// 	fmt.Printf("error read flag \"token\", %s\n", err)
+		// 	fmt.Printf("failed to read flag \"token\", %s\n", err)
 		// 	os.Exit(1)
 		// }
 
 		// createNamespace, err := cmd.Flags().GetBool("create-namespace")
 		// if err != nil {
-		// 	fmt.Printf("error read flag \"create-namespace\", %s\n", err)
+		// 	fmt.Printf("failed to read flag \"create-namespace\", %s\n", err)
 		// 	os.Exit(1)
 		// }
 
 		if path == "" || version == "" || namespace == "" {
 			fmt.Printf(
-				"%s %s\n",
+				"%s %s %s\n",
+				"failed execute install command,",
 				"one of the required flags is not specified:",
 				"path, version, namespace",
 			)
@@ -98,8 +99,8 @@ var installCmd = &cobra.Command{
 		dirFormat, err := regexp.Compile(`.+\/(\w+\S+\w+)$`)
 		if err != nil {
 			fmt.Printf(
-				"%s, %s\n",
-				"error execute install command",
+				"%s %s\n",
+				"error execute install command,",
 				"failed get project directory path",
 			)
 
@@ -132,7 +133,7 @@ var installCmd = &cobra.Command{
 		)
 
 		if err != nil {
-			fmt.Printf("error execute install command, %s\n", err)
+			fmt.Println(err)
 			os.Exit(1)
 		}
 
@@ -141,19 +142,20 @@ var installCmd = &cobra.Command{
 			if outputPath != "" {
 				projectName := strings.ReplaceAll(projectDir, "-", "_")
 				fileName := fmt.Sprintf("%s_config", projectName)
+
 				err := services.Output.CreateConfigFile(
 					fileName, outputPath, configStructure,
 				)
 
 				if err != nil {
-					fmt.Printf("error execute install command, %s\n", err)
+					fmt.Println(err)
 					os.Exit(1)
 				}
 			}
 
 			outputConfig, err := services.Output.OutputConfig(configStructure)
 			if err != nil {
-				fmt.Printf("error execute install command, %s\n", err)
+				fmt.Println(err)
 				os.Exit(1)
 			}
 
