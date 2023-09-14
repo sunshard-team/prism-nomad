@@ -26,11 +26,11 @@ type Output interface {
 }
 
 type Parser interface {
-	// Parsing the chart configuration file.
-	ParseChart(file []byte) (model.ConfigBlock, error)
+	// Parsing the YAML configuration file.
+	ParseYAML(file []byte) (map[string]interface{}, error)
 
-	// Parsing the job configuration file.
-	ParseJob(file []byte) (model.ConfigBlock, error)
+	// Parsing the configuration map. Assembles a block structure.
+	ParseConfig(name string, config map[string]interface{}) model.ConfigBlock
 }
 
 type Builder interface {

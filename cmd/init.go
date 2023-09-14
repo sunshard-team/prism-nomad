@@ -97,36 +97,45 @@ var initCmd = &cobra.Command{
 
 		// Create .nomad.hcl configuration file.
 		// Parse chart config file.
-		chartPath := filepath.Join(
+		chartFilePath := filepath.Join(
 			projectDirPath,
 			chartFileName,
 		)
 
-		chartFile, err := os.ReadFile(chartPath)
+		chartFile, err := os.ReadFile(chartFilePath)
 		if err != nil {
 			log.Fatalf("error read file, %s", err)
 		}
 
-		chartConfig, err := services.Parser.ParseChart(chartFile)
+		parsedChartConfig, err := services.Parser.ParseYAML(chartFile)
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
+		chartConfig := services.Parser.ParseConfig("chart", parsedChartConfig)
+
 		// Parse job config file.
-		configFile := filepath.Join(
+		jobFilePath := filepath.Join(
 			projectDirPath,
 			configFileName,
 		)
 
-		file, err := os.ReadFile(configFile)
+		jobFile, err := os.ReadFile(jobFilePath)
 		if err != nil {
 			log.Fatalf("error read file, %s", err)
 		}
 
-		jobConfig, err := services.Parser.ParseJob(file)
+		parsedJobConfig, err := services.Parser.ParseYAML(jobFile)
 		if err != nil {
-			log.Fatalln(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
+
+		jobConfig := services.Parser.ParseConfig(
+			"job",
+			parsedJobConfig["job"].(map[string]interface{}),
+		)
 
 		configStructure := services.Builder.BuildConfigStructure(
 			jobConfig,
@@ -139,6 +148,7 @@ var initCmd = &cobra.Command{
 			projectDirPath,
 			configStructure,
 		)
+
 		if err != nil {
 			log.Fatalln(err)
 		}
