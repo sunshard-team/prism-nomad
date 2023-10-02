@@ -83,7 +83,7 @@ func (s *Deployment) CreateConfigStructure(
 	var files []model.TemplateBlock
 
 	for _, file := range parameter.Files {
-		filePath := filepath.Join(parameter.ProjectDirPath, "files", file)
+		filePath := filepath.Join(file)
 
 		readFile, err := os.ReadFile(filePath)
 		if err != nil {
