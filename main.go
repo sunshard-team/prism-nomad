@@ -10,9 +10,11 @@ import (
 
 func main() {
 	p := parser.NewParser()
-	b := builder.NewStructureBuilder()
+	bb := builder.NewBlockBuilder()
+	sb := builder.NewStructureBuilder(*bb)
 	o := output.NewOutput()
-	s := service.NewService(p, b, o)
+	c := builder.NewChanges()
+	s := service.NewService(p, bb, sb, c, o)
 
 	cmd.Execute(s)
 }
