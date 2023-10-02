@@ -13,15 +13,18 @@ import (
 type Deployment struct {
 	parser  parser.Parser
 	builder builder.StructureBuilder
+	changes builder.Changes
 }
 
 func NewDeployment(
 	parser parser.Parser,
 	builder builder.StructureBuilder,
+	changes builder.Changes,
 ) *Deployment {
 	return &Deployment{
 		parser:  parser,
 		builder: builder,
+		changes: changes,
 	}
 }
 
@@ -70,9 +73,54 @@ func (s *Deployment) CreateConfigStructure(
 	)
 
 	// Config structure.
-	config = s.builder.BuildConfigStructure(
-		jobConfig, chartConfig, parameter.ProjectDirPath,
-	)
+	buildStructure := model.BuildStructure{
+		Config:         jobConfig,
+		ProjectDirPath: parameter.ProjectDirPath,
+	}
+	config = s.builder.BuildConfigStructure(buildStructure)
+
+	//  Set changes.
+	var files []model.TemplateBlock
+
+	for _, file := range parameter.Files {
+		filePath := filepath.Join(parameter.ProjectDirPath, "files", file)
+
+		readFile, err := os.ReadFile(filePath)
+		if err != nil {
+			return config, fmt.Errorf("error to read job file, %s", err)
+		}
+
+		parsedFile, err := s.parser.ParseYAML(readFile)
+		if err != nil {
+			return config, fmt.Errorf("failed to parsing job file, %s", err)
+		}
+
+		fileConfig := s.parser.ParseConfig(
+			"job",
+			parsedFile["job"].(map[string]interface{}),
+		)
+
+		buildStructure := model.BuildStructure{
+			Config:         fileConfig,
+			ProjectDirPath: parameter.ProjectDirPath,
+		}
+
+		fileConfigStructure := s.builder.BuildConfigStructure(buildStructure)
+		files = append(files, fileConfigStructure)
+	}
+
+	changes := model.Changes{
+		ProjectDirPath: parameter.ProjectDirPath,
+		Release:        parameter.Release,
+		Namespace:      parameter.Namespace,
+		Files:          files,
+		Chart:          chartConfig,
+	}
+
+	err = s.changes.SetChanges(&config, &changes)
+	if err != nil {
+		return config, fmt.Errorf("failed to make changes, %s", err)
+	}
 
 	return config, nil
 }

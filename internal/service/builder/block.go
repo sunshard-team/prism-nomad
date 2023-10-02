@@ -7,99 +7,23 @@ import (
 	"prism/internal/model"
 )
 
-type BlockBuilder interface {
-	CustomBlock(name string, block []map[string]interface{}) model.TemplateBlock
+type BlockBuilder struct{}
 
-	Artifact(block model.ConfigBlock) model.TemplateBlock
-	Affinity(block model.ConfigBlock) model.TemplateBlock
-	ChangeScript(block model.ConfigBlock) model.TemplateBlock
-	Check(block model.ConfigBlock) model.TemplateBlock
-	CheckRestart(block model.ConfigBlock) model.TemplateBlock
-	Connect(block model.ConfigBlock) model.TemplateBlock
-	Constraint(block model.ConfigBlock) model.TemplateBlock
-	CSIPlugin(block model.ConfigBlock) model.TemplateBlock
-	Device(block model.ConfigBlock) model.TemplateBlock
-	DispatchPayload(block model.ConfigBlock) model.TemplateBlock
-	Env(block model.ConfigBlock) model.TemplateBlock
-	EphemeralDisk(block model.ConfigBlock) model.TemplateBlock
-
-	Expose(block model.ConfigBlock) model.TemplateBlock
-	ExposePath(block model.ConfigBlock) model.TemplateBlock
-
-	Gateway(model.ConfigBlock) model.TemplateBlock
-	GatewayProxy(block model.ConfigBlock) model.TemplateBlock
-	GatewayProxyAddress(block model.ConfigBlock) model.TemplateBlock
-	GatewayIngress(model.ConfigBlock) model.TemplateBlock
-	GatewayIngressTLS(block model.ConfigBlock) model.TemplateBlock
-	GatewayIngressListener(block model.ConfigBlock) model.TemplateBlock
-	GatewayIngressListenerService(block model.ConfigBlock) model.TemplateBlock
-	GatewayTerminating(model.ConfigBlock) model.TemplateBlock
-	GatewayTerminatingService(block model.ConfigBlock) model.TemplateBlock
-	GatewayMesh() model.TemplateBlock
-
-	Group(block model.ConfigBlock) model.TemplateBlock
-	GroupConsul(block model.ConfigBlock) model.TemplateBlock
-
-	Identity(block model.ConfigBlock) model.TemplateBlock
-	Job(block model.ConfigBlock) model.TemplateBlock
-	Lifecycle(block model.ConfigBlock) model.TemplateBlock
-	Logs(block model.ConfigBlock) model.TemplateBlock
-	Meta(block model.ConfigBlock) model.TemplateBlock
-	Migrate(block model.ConfigBlock) model.TemplateBlock
-
-	Multiregion(model.ConfigBlock) model.TemplateBlock
-	MultiregionStrategy(block model.ConfigBlock) model.TemplateBlock
-	MultiregionRegion(block model.ConfigBlock) model.TemplateBlock
-
-	Network(group model.ConfigBlock) model.TemplateBlock
-	NetworkPort(block model.ConfigBlock) model.TemplateBlock
-	NetworkDNS(block model.ConfigBlock) model.TemplateBlock
-
-	Parameterized(block model.ConfigBlock) model.TemplateBlock
-	Periodic(block model.ConfigBlock) model.TemplateBlock
-	Proxy(block model.ConfigBlock) model.TemplateBlock
-	Reschedule(block model.ConfigBlock) model.TemplateBlock
-	Resources(block model.ConfigBlock) model.TemplateBlock
-	Restart(block model.ConfigBlock) model.TemplateBlock
-	Scaling(block model.ConfigBlock) model.TemplateBlock
-	Service(block model.ConfigBlock) model.TemplateBlock
-	SidecarService(block model.ConfigBlock) model.TemplateBlock
-	SidecarTask(block model.ConfigBlock) model.TemplateBlock
-
-	Spread(block model.ConfigBlock) model.TemplateBlock
-	SpreadTarget(block model.ConfigBlock) model.TemplateBlock
-
-	Task(block model.ConfigBlock) model.TemplateBlock
-	Template(block model.ConfigBlock, projectPath string) model.TemplateBlock
-	Update(block model.ConfigBlock) model.TemplateBlock
-
-	Upstream(block model.ConfigBlock) model.TemplateBlock
-	UpstreamMeshGateway(block model.ConfigBlock) model.TemplateBlock
-
-	Vault(block model.ConfigBlock) model.TemplateBlock
-
-	Volume(block model.ConfigBlock) model.TemplateBlock
-	VolumeMountOptions(block model.ConfigBlock) model.TemplateBlock
-
-	VolumeMount(block model.ConfigBlock) model.TemplateBlock
+func NewBlockBuilder() *BlockBuilder {
+	return &BlockBuilder{}
 }
 
-type Block struct{}
-
 // Returns a block with any key-value parameters.
-func (b *Block) CustomBlock(
-	name string,
-	block []map[string]interface{},
-) model.TemplateBlock {
+func (b *BlockBuilder) CustomBlock(block model.ConfigBlock) model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
-		BlockName: name,
-		Parameter: block,
+		BlockName: block.Name,
+		Parameter: block.Parameter,
 	}
 
 	return templateBlock
 }
 
-func (b *Block) Artifact(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Artifact(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -114,7 +38,7 @@ func (b *Block) Artifact(block model.ConfigBlock) model.TemplateBlock {
 
 	for _, item := range block.Block {
 		if item.Name == "options" || item.Name == "headers" {
-			block := b.CustomBlock(item.Name, item.Parameter)
+			block := b.CustomBlock(item)
 			internalBlock = append(internalBlock, block)
 		}
 	}
@@ -128,7 +52,7 @@ func (b *Block) Artifact(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Affinity(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Affinity(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -148,7 +72,7 @@ func (b *Block) Affinity(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) ChangeScript(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) ChangeScript(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -168,7 +92,7 @@ func (b *Block) ChangeScript(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Check(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Check(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -210,7 +134,7 @@ func (b *Block) Check(block model.ConfigBlock) model.TemplateBlock {
 
 	for _, item := range block.Block {
 		if item.Name == "header" {
-			header := b.CustomBlock(item.Name, item.Parameter)
+			header := b.CustomBlock(item)
 			internalBlock = append(internalBlock, header)
 		}
 	}
@@ -224,7 +148,7 @@ func (b *Block) Check(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) CheckRestart(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) CheckRestart(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -244,7 +168,7 @@ func (b *Block) CheckRestart(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Connect(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Connect(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -264,7 +188,7 @@ func (b *Block) Connect(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Constraint(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Constraint(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -284,7 +208,7 @@ func (b *Block) Constraint(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) CSIPlugin(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) CSIPlugin(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 	parameterName := []string{
 		"id",
@@ -313,7 +237,7 @@ func (b *Block) CSIPlugin(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Device(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Device(block model.ConfigBlock) model.TemplateBlock {
 	var name string
 	parameters := make([]map[string]interface{}, 0)
 
@@ -337,7 +261,7 @@ func (b *Block) Device(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) DispatchPayload(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) DispatchPayload(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -356,7 +280,7 @@ func (b *Block) DispatchPayload(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Env(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Env(block model.ConfigBlock) model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "env",
 		Parameter: block.Parameter,
@@ -365,7 +289,7 @@ func (b *Block) Env(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) EphemeralDisk(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) EphemeralDisk(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -385,7 +309,7 @@ func (b *Block) EphemeralDisk(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Expose(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Expose(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 
 	for _, item := range block.Block {
@@ -403,7 +327,7 @@ func (b *Block) Expose(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) ExposePath(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) ExposePath(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -423,7 +347,7 @@ func (b *Block) ExposePath(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Gateway(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Gateway(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 
 	for _, item := range block.Block {
@@ -451,7 +375,7 @@ func (b *Block) Gateway(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) GatewayProxy(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) GatewayProxy(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -479,7 +403,7 @@ func (b *Block) GatewayProxy(block model.ConfigBlock) model.TemplateBlock {
 			address := b.GatewayProxyAddress(item)
 			internalBlock = append(internalBlock, address)
 		case "config":
-			config := b.CustomBlock(item.Name, item.Parameter)
+			config := b.CustomBlock(item)
 			internalBlock = append(internalBlock, config)
 		}
 	}
@@ -493,12 +417,15 @@ func (b *Block) GatewayProxy(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) GatewayProxyAddress(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) GatewayProxyAddress(block model.ConfigBlock) model.TemplateBlock {
+	var name string
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
-		for k := range item {
+		for k, v := range item {
 			switch k {
+			case "name":
+				name = v.(string)
 			case "address", "port":
 				parameters = append(parameters, item)
 			}
@@ -507,13 +434,14 @@ func (b *Block) GatewayProxyAddress(block model.ConfigBlock) model.TemplateBlock
 
 	templateBlock := model.TemplateBlock{
 		BlockName: "envoy_gateway_bind_addresses",
+		Name:      name,
 		Parameter: parameters,
 	}
 
 	return templateBlock
 }
 
-func (b *Block) GatewayIngress(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) GatewayIngress(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 
 	for _, item := range block.Block {
@@ -535,7 +463,7 @@ func (b *Block) GatewayIngress(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) GatewayIngressTLS(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) GatewayIngressTLS(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -564,7 +492,7 @@ func (b *Block) GatewayIngressTLS(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) GatewayIngressListener(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) GatewayIngressListener(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -593,7 +521,7 @@ func (b *Block) GatewayIngressListener(block model.ConfigBlock) model.TemplateBl
 	return templateBlock
 }
 
-func (b *Block) GatewayIngressListenerService(
+func (b *BlockBuilder) GatewayIngressListenerService(
 	block model.ConfigBlock,
 ) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
@@ -615,7 +543,7 @@ func (b *Block) GatewayIngressListenerService(
 	return templateBlock
 }
 
-func (b *Block) GatewayTerminating(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) GatewayTerminating(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 
 	for _, item := range block.Block {
@@ -633,7 +561,7 @@ func (b *Block) GatewayTerminating(block model.ConfigBlock) model.TemplateBlock 
 	return templateBlock
 }
 
-func (b *Block) GatewayTerminatingService(
+func (b *BlockBuilder) GatewayTerminatingService(
 	block model.ConfigBlock,
 ) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
@@ -655,7 +583,7 @@ func (b *Block) GatewayTerminatingService(
 	return templateBlock
 }
 
-func (b *Block) GatewayMesh() model.TemplateBlock {
+func (b *BlockBuilder) GatewayMesh() model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "mesh",
 	}
@@ -663,7 +591,7 @@ func (b *Block) GatewayMesh() model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Group(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Group(block model.ConfigBlock) model.TemplateBlock {
 	var name string
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
@@ -707,7 +635,7 @@ func (b *Block) Group(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) GroupConsul(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) GroupConsul(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -726,7 +654,7 @@ func (b *Block) GroupConsul(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Identity(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Identity(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -746,7 +674,7 @@ func (b *Block) Identity(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Job(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Job(block model.ConfigBlock) model.TemplateBlock {
 	var name string
 	parameters := make([]map[string]interface{}, 0)
 
@@ -786,7 +714,7 @@ func (b *Block) Job(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Lifecycle(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Lifecycle(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -806,7 +734,7 @@ func (b *Block) Lifecycle(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Logs(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Logs(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -826,7 +754,7 @@ func (b *Block) Logs(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Meta(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Meta(block model.ConfigBlock) model.TemplateBlock {
 	templateBlock := model.TemplateBlock{
 		BlockName: "meta",
 		Parameter: block.Parameter,
@@ -835,7 +763,7 @@ func (b *Block) Meta(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Migrate(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Migrate(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -864,7 +792,7 @@ func (b *Block) Migrate(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Multiregion(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Multiregion(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 
 	for _, item := range block.Block {
@@ -886,7 +814,7 @@ func (b *Block) Multiregion(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) MultiregionStrategy(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) MultiregionStrategy(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -906,7 +834,7 @@ func (b *Block) MultiregionStrategy(block model.ConfigBlock) model.TemplateBlock
 	return templateBlock
 }
 
-func (b *Block) MultiregionRegion(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) MultiregionRegion(block model.ConfigBlock) model.TemplateBlock {
 	var name string
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
@@ -924,7 +852,7 @@ func (b *Block) MultiregionRegion(block model.ConfigBlock) model.TemplateBlock {
 
 	for _, item := range block.Block {
 		if item.Name == "meta" {
-			meta := b.CustomBlock(item.Name, item.Parameter)
+			meta := b.CustomBlock(item)
 			internalBlock = append(internalBlock, meta)
 		}
 	}
@@ -939,7 +867,7 @@ func (b *Block) MultiregionRegion(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Network(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Network(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -974,7 +902,7 @@ func (b *Block) Network(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) NetworkPort(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) NetworkPort(block model.ConfigBlock) model.TemplateBlock {
 	var name string
 	parameters := make([]map[string]interface{}, 0)
 
@@ -998,7 +926,7 @@ func (b *Block) NetworkPort(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) NetworkDNS(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) NetworkDNS(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -1018,7 +946,7 @@ func (b *Block) NetworkDNS(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Parameterized(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Parameterized(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -1038,7 +966,7 @@ func (b *Block) Parameterized(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Periodic(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Periodic(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -1058,7 +986,7 @@ func (b *Block) Periodic(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Proxy(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Proxy(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -1073,7 +1001,7 @@ func (b *Block) Proxy(block model.ConfigBlock) model.TemplateBlock {
 
 	for _, item := range block.Block {
 		if item.Name == "config" {
-			config := b.CustomBlock(item.Name, item.Parameter)
+			config := b.CustomBlock(item)
 			internalBlock = append(internalBlock, config)
 		}
 	}
@@ -1087,7 +1015,7 @@ func (b *Block) Proxy(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Reschedule(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Reschedule(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1118,7 +1046,7 @@ func (b *Block) Reschedule(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Resources(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Resources(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -1138,7 +1066,7 @@ func (b *Block) Resources(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Restart(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Restart(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -1158,7 +1086,7 @@ func (b *Block) Restart(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Scaling(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Scaling(block model.ConfigBlock) model.TemplateBlock {
 	var name string
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
@@ -1176,7 +1104,7 @@ func (b *Block) Scaling(block model.ConfigBlock) model.TemplateBlock {
 
 	for _, item := range block.Block {
 		if item.Name == "policy" {
-			policy := b.CustomBlock(item.Name, item.Parameter)
+			policy := b.CustomBlock(item)
 			internalBlock = append(internalBlock, policy)
 		}
 	}
@@ -1191,7 +1119,7 @@ func (b *Block) Scaling(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Service(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Service(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -1222,7 +1150,7 @@ func (b *Block) Service(block model.ConfigBlock) model.TemplateBlock {
 	for _, item := range block.Block {
 		switch item.Name {
 		case "tagged_addresses", "meta", "canary_meta":
-			block := b.CustomBlock(item.Name, item.Parameter)
+			block := b.CustomBlock(item)
 			internalBlock = append(internalBlock, block)
 		}
 	}
@@ -1236,7 +1164,7 @@ func (b *Block) Service(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) SidecarService(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) SidecarService(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -1251,7 +1179,7 @@ func (b *Block) SidecarService(block model.ConfigBlock) model.TemplateBlock {
 
 	for _, item := range block.Block {
 		if item.Name == "meta" {
-			meta := b.CustomBlock(item.Name, item.Parameter)
+			meta := b.CustomBlock(item)
 			internalBlock = append(internalBlock, meta)
 		}
 	}
@@ -1265,7 +1193,7 @@ func (b *Block) SidecarService(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) SidecarTask(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) SidecarTask(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -1292,7 +1220,7 @@ func (b *Block) SidecarTask(block model.ConfigBlock) model.TemplateBlock {
 	for _, item := range block.Block {
 		switch item.Name {
 		case "config", "env", "meta":
-			block := b.CustomBlock(item.Name, item.Parameter)
+			block := b.CustomBlock(item)
 			internalBlock = append(internalBlock, block)
 		}
 	}
@@ -1306,7 +1234,7 @@ func (b *Block) SidecarTask(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Spread(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Spread(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -1335,13 +1263,16 @@ func (b *Block) Spread(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) SpreadTarget(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) SpreadTarget(block model.ConfigBlock) model.TemplateBlock {
+	var name string
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
-		for k := range item {
+		for k, v := range item {
 			switch k {
-			case "value", "percent":
+			case "value":
+				name = v.(string)
+			case "percent":
 				parameters = append(parameters, item)
 			}
 		}
@@ -1349,13 +1280,14 @@ func (b *Block) SpreadTarget(block model.ConfigBlock) model.TemplateBlock {
 
 	templateBlock := model.TemplateBlock{
 		BlockName: "target",
+		Name:      name,
 		Parameter: parameters,
 	}
 
 	return templateBlock
 }
 
-func (b *Block) Task(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Task(block model.ConfigBlock) model.TemplateBlock {
 	var name string
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
@@ -1388,7 +1320,7 @@ func (b *Block) Task(block model.ConfigBlock) model.TemplateBlock {
 
 	for _, item := range block.Block {
 		if item.Name == "config" {
-			config := b.CustomBlock(item.Name, item.Parameter)
+			config := b.CustomBlock(item)
 			internalBlock = append(internalBlock, config)
 		}
 	}
@@ -1403,7 +1335,7 @@ func (b *Block) Task(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Template(
+func (b *BlockBuilder) Template(
 	block model.ConfigBlock,
 	projectPath string,
 ) model.TemplateBlock {
@@ -1454,7 +1386,7 @@ func (b *Block) Template(
 
 	for _, item := range block.Block {
 		if item.Name == "wait" {
-			wait := b.CustomBlock(item.Name, item.Parameter)
+			wait := b.CustomBlock(item)
 			internalBlock = append(internalBlock, wait)
 		}
 	}
@@ -1468,7 +1400,7 @@ func (b *Block) Template(
 	return templateBlock
 }
 
-func (b *Block) Update(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Update(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1502,7 +1434,7 @@ func (b *Block) Update(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Upstream(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Upstreams(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -1530,13 +1462,13 @@ func (b *Block) Upstream(block model.ConfigBlock) model.TemplateBlock {
 			meshGateway := b.UpstreamMeshGateway(item)
 			internalBlock = append(internalBlock, meshGateway)
 		case "config":
-			config := b.CustomBlock(item.Name, item.Parameter)
+			config := b.CustomBlock(item)
 			internalBlock = append(internalBlock, config)
 		}
 	}
 
 	templateBlock := model.TemplateBlock{
-		BlockName: "upstream",
+		BlockName: "upstreams",
 		Parameter: parameters,
 		Block:     internalBlock,
 	}
@@ -1544,7 +1476,7 @@ func (b *Block) Upstream(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) UpstreamMeshGateway(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) UpstreamMeshGateway(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -1564,7 +1496,7 @@ func (b *Block) UpstreamMeshGateway(block model.ConfigBlock) model.TemplateBlock
 	return templateBlock
 }
 
-func (b *Block) Vault(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Vault(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -1595,7 +1527,8 @@ func (b *Block) Vault(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) Volume(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) Volume(block model.ConfigBlock) model.TemplateBlock {
+	var name string
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
@@ -1610,7 +1543,11 @@ func (b *Block) Volume(block model.ConfigBlock) model.TemplateBlock {
 	}
 
 	for _, item := range block.Parameter {
-		for k := range item {
+		for k, v := range item {
+			if k == "name" {
+				name = v.(string)
+			}
+
 			for _, p := range parameterName {
 				switch k {
 				case p:
@@ -1629,6 +1566,7 @@ func (b *Block) Volume(block model.ConfigBlock) model.TemplateBlock {
 
 	templateBlock := model.TemplateBlock{
 		BlockName: "volume",
+		Name:      name,
 		Parameter: parameters,
 		Block:     internalBlock,
 	}
@@ -1636,7 +1574,7 @@ func (b *Block) Volume(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *Block) VolumeMountOptions(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) VolumeMountOptions(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	for _, item := range block.Parameter {
@@ -1656,7 +1594,7 @@ func (b *Block) VolumeMountOptions(block model.ConfigBlock) model.TemplateBlock 
 	return templateBlock
 }
 
-func (b *Block) VolumeMount(block model.ConfigBlock) model.TemplateBlock {
+func (b *BlockBuilder) VolumeMount(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{

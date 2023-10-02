@@ -5,23 +5,21 @@ job:
   namespace: "default"
 
   meta:
-    run_uuid: "${uuidv4()}" # chart deploy_version
+    run_uuid: "uuid4" # chart deploy_version
 
   group:
     - name: "nginx"
       count: 1
-      network_mode: "bridge"
 
       network:
-        - port:
-            name: "http"
+        mode: "bridge"
+        port:
+          - name: "http"
             static: 80
             to: 80
-        - port:
-            name: "https"
+          - name: "https"
             to: 443
-        - port:
-            name: "test"
+          - name: "test"
             static: 81
 
       scaling:
@@ -64,30 +62,29 @@ job:
         mode: "delay"
 
       task:
-        name: "nginx"
-        driver: "docker"
+        - name: "nginx"
+          driver: "docker"
 
-        config:
-          image: "nginx"
-          force_pull: true
-          ports: ["http"]
+          config:
+            image: "nginx"
+            force_pull: true
+            ports: ["http"]
+            volumes:
+              - "local:/etc/nginx/conf.d"
+              - "local/test.conf:/etc/nginx/conf.d/test.conf"
+              - "custom_path:/custom_path_in_container"
 
-          volumes:
-            - "local:/etc/nginx/conf.d"
-            - "local/test.conf:/etc/nginx/conf.d/test.conf"
-            - "custom_path:/custom_path_in_container"
+          template:
+            - name: load_balancer.conf
+              destination: "local/load_balancer.conf"
+              change_mode: "signal"
+              change_signal: "SIGHUP"
 
-        template:
-          - name: load_balancer.conf
-            destination: "local/load_balancer.conf"
-            change_mode: "signal"
-            change_signal: "SIGHUP"
+          env:
+            WORDPRESS_DB_HOST: "${NOMAD_UPSTREAM_IP_mysql-server}"
+            WORDPRESS_CONFIG_HOME: "define('WP_HOME','wp.sunshard.ru:443')"
+            WORDPRESS_CONFIG_ALLOW_REPAIR: "define('WP_ALLOW_REPAIR', true); define('WP_HOME','https://wp.sunshard.space'); define('WP_SITEURL','https://wp.sunshard.space');"
 
-        env:
-          WORDPRESS_DB_HOST: "${NOMAD_UPSTREAM_IP_mysql-server}"
-          WORDPRESS_CONFIG_HOME: "define('WP_HOME','wp.sunshard.ru:443')"
-          WORDPRESS_CONFIG_ALLOW_REPAIR: "define('WP_ALLOW_REPAIR', true); define('WP_HOME','https://wp.sunshard.space'); define('WP_SITEURL','https://wp.sunshard.space');"
-
-        resources:
-          cpu: 1000
-          memory: 1000
+          resources:
+            cpu: 1000
+            memory: 1000

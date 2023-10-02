@@ -17,10 +17,24 @@ type TemplateBlock struct {
 	Block     []TemplateBlock          // list of configuration blocks
 }
 
+type BuildStructure struct {
+	Config         ConfigBlock
+	ProjectDirPath string
+}
+
 type ConfigParameter struct {
 	ProjectDir     string
 	ProjectDirPath string
 	Namespace      string
 	Release        string
 	Files          []string
+}
+
+type Changes struct {
+	ProjectDirPath string
+	Release        string
+	Namespace      string
+	EnvFile        string
+	Files          []TemplateBlock
+	Chart          ConfigBlock
 }
