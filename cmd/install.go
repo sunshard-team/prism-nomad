@@ -165,7 +165,7 @@ func init() {
 		"file",
 		"f",
 		[]string{},
-		"file to update configuration",
+		"full path to file to update configuration",
 	)
 
 	installCmd.Flags().Bool(
