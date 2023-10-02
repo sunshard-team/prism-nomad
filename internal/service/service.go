@@ -59,7 +59,7 @@ func NewService(
 	o *output.Output,
 ) *Service {
 	return &Service{
-		Project:    project.NewProject(*p, *b, *o),
+		Project:    project.NewProject(),
 		Output:     output.NewOutput(),
 		Parser:     parser.NewParser(),
 		Builder:    builder.NewStructureBuilder(),

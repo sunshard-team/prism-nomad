@@ -7,28 +7,13 @@ import (
 	"os"
 	"path/filepath"
 	"prism/config"
-	"prism/internal/service/builder"
-	"prism/internal/service/output"
-	"prism/internal/service/parser"
 	"strings"
 )
 
-type Project struct {
-	parser  parser.Parser
-	builder builder.StructureBuilder
-	output  output.Output
-}
+type Project struct{}
 
-func NewProject(
-	parser parser.Parser,
-	builder builder.StructureBuilder,
-	output output.Output,
-) *Project {
-	return &Project{
-		parser:  parser,
-		builder: builder,
-		output:  output,
-	}
+func NewProject() *Project {
+	return &Project{}
 }
 
 // Creates a new project.
@@ -88,54 +73,6 @@ func (s *Project) Create(name string) (string, error) {
 		"load_balancer.conf",
 		"load_balancer.conf",
 		fileDirPath,
-	)
-
-	if err != nil {
-		return "", fmt.Errorf(err.Error())
-	}
-
-	// Create .nomad.hcl configuration file.
-	// Parse chart config file.
-	chartFilePath := filepath.Join(projectDirPath, chartFileName)
-	chartFile, err := os.ReadFile(chartFilePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read chart file, %s", err)
-	}
-
-	parsedChartConfig, err := s.parser.ParseYAML(chartFile)
-	if err != nil {
-		return "", fmt.Errorf("failed to parsing chart file, %s", err)
-	}
-
-	chartConfig := s.parser.ParseConfig("chart", parsedChartConfig)
-
-	// Parse job config file.
-	jobFilePath := filepath.Join(projectDirPath, configFileName)
-	jobFile, err := os.ReadFile(jobFilePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read job file, %s", err)
-	}
-
-	parsedJobConfig, err := s.parser.ParseYAML(jobFile)
-	if err != nil {
-		return "", fmt.Errorf("failed to parsing job file, %s", err)
-	}
-
-	jobConfig := s.parser.ParseConfig(
-		"job",
-		parsedJobConfig["job"].(map[string]interface{}),
-	)
-
-	configStructure := s.builder.BuildConfigStructure(
-		jobConfig,
-		chartConfig,
-		projectDirPath,
-	)
-
-	err = s.output.CreateConfigFile(
-		configName,
-		projectDirPath,
-		configStructure,
 	)
 
 	if err != nil {
