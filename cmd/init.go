@@ -11,15 +11,15 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Create prism project",
 	Long: fmt.Sprintf(
-		"Create new deployment project.\n%s.",
+		"Create new deployment project.\n%s",
 		"Creates a project directory with default configuration files.",
 	),
 	Run: func(cmd *cobra.Command, args []string) {
-		// Get flags.
-		name, err := cmd.Flags().GetString("name")
-		if err != nil {
-			fmt.Printf("failed to read flag \"name\", %s\n", err)
-			os.Exit(1)
+		// Project name.
+		var name string
+
+		if len(args) > 0 {
+			name = args[0]
 		}
 
 		// Create a project.
@@ -35,7 +35,4 @@ var initCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(initCmd)
-
-	// Flags.
-	initCmd.Flags().StringP("name", "n", "", "project name")
 }
