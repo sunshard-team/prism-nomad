@@ -34,7 +34,14 @@ type Changes struct {
 	ProjectDirPath string
 	Release        string
 	Namespace      string
-	EnvFile        string
 	Files          []TemplateBlock
+	Chart          ConfigBlock
+}
+
+type BlockChanges struct {
+	ProjectDirPath string
+	Release        string
+	Namespace      string
+	File           TemplateBlock
 	Chart          ConfigBlock
 }
