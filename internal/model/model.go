@@ -20,7 +20,6 @@ type TemplateBlock struct {
 type ConfigParameter struct {
 	ProjectDir     string
 	ProjectDirPath string
-	Version        string
 	Namespace      string
 	Release        string
 	Files          []string

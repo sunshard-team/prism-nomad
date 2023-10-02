@@ -30,12 +30,6 @@ var installCmd = &cobra.Command{
 
 		path = filepath.Join(path)
 
-		version, err := cmd.Flags().GetString("version")
-		if err != nil {
-			fmt.Printf("failed to read flag \"version\", %s\n", err)
-			os.Exit(1)
-		}
-
 		namespace, err := cmd.Flags().GetString("namespace")
 		if err != nil {
 			fmt.Printf("failed to read flag \"namespace\", %s\n", err)
@@ -84,7 +78,7 @@ var installCmd = &cobra.Command{
 		// 	os.Exit(1)
 		// }
 
-		if path == "" || version == "" || namespace == "" {
+		if path == "" || namespace == "" {
 			fmt.Printf(
 				"%s %s %s\n",
 				"failed execute install command,",
@@ -110,22 +104,13 @@ var installCmd = &cobra.Command{
 		findProjectDir := dirFormat.FindStringSubmatch(path)
 		projectDir := findProjectDir[1]
 
-		// List of files (formatting the path to project files).
-		files := make([]string, 0)
-		if len(file) > 0 {
-			for _, f := range file {
-				files = append(files, filepath.Join(f))
-			}
-		}
-
 		// Create a configuration structure.
 		parameter := model.ConfigParameter{
 			ProjectDirPath: path,
 			ProjectDir:     projectDir,
-			Version:        version,
 			Namespace:      namespace,
 			Release:        release,
-			Files:          files,
+			Files:          file,
 		}
 
 		configStructure, err := services.Deployment.CreateConfigStructure(
@@ -159,7 +144,7 @@ var installCmd = &cobra.Command{
 				os.Exit(1)
 			}
 
-			fmt.Println(outputConfig)
+			fmt.Printf("\nOutput config:\n\n%v\n", outputConfig)
 			return
 		}
 
@@ -171,7 +156,6 @@ func init() {
 	rootCmd.AddCommand(installCmd)
 
 	installCmd.Flags().StringP("path", "p", "", "path to project directory") // required
-	installCmd.Flags().StringP("version", "v", "", "chart version")          // required
 	installCmd.Flags().StringP("namespace", "n", "", "namespace name")       // required
 	installCmd.Flags().StringP("release", "r", "", "release name")
 	installCmd.Flags().StringP("address", "a", "", "cluster address")
@@ -181,7 +165,7 @@ func init() {
 		"file",
 		"f",
 		[]string{},
-		"list of files to update configuration",
+		"file to update configuration",
 	)
 
 	installCmd.Flags().Bool(
