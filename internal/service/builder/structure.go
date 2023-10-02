@@ -4,14 +4,28 @@ import (
 	"prism/internal/model"
 )
 
-type StructureBuilder struct{}
+type StructureBuilder struct {
+	blockBuilder BlockBuilder
+}
 
-func NewStructureBuilder() *StructureBuilder {
-	return &StructureBuilder{}
+func NewStructureBuilder(blockBuilder BlockBuilder) *StructureBuilder {
+	return &StructureBuilder{blockBuilder: blockBuilder}
+}
+
+// Builds and returns a job configuration structure.
+func (s *StructureBuilder) BuildConfigStructure(
+	buildStructure model.BuildStructure,
+) model.TemplateBlock {
+	blockBuilder = s.blockBuilder
+	projectDirPath = buildStructure.ProjectDirPath
+	return jobStructure(buildStructure.Config)
 }
 
 // Get configuration block by nomad block name.
-func getBlockByName(name string, config model.ConfigBlock) model.ConfigBlock {
+func getBlockByName(
+	name string,
+	config model.ConfigBlock,
+) model.ConfigBlock {
 	for _, block := range config.Block {
 		if block.Name == name {
 			return block
@@ -22,190 +36,213 @@ func getBlockByName(name string, config model.ConfigBlock) model.ConfigBlock {
 }
 
 // Get configuration template list by nomad block name.
-func getBlockList(name []string, config model.ConfigBlock) []model.TemplateBlock {
-	builder := blockBuilder
+func getConfigBlock(
+	config model.ConfigBlock,
+	configBlock map[string]func(model.ConfigBlock) model.TemplateBlock,
+) []model.TemplateBlock {
 	var block []model.TemplateBlock
 
-	f := make(map[string]func(model.ConfigBlock) model.TemplateBlock)
+	for k, v := range configBlock {
+		b := getBlockByName(k, config)
+		t := v(b)
 
-	f["artifact"] = builder.Artifact
-	f["affinity"] = builder.Affinity
-	f["change_script"] = builder.ChangeScript
-	f["check_restart"] = builder.CheckRestart
-	f["constraint"] = builder.Constraint
-	f["csi_plugin"] = builder.CSIPlugin
-	f["device"] = builder.Device
-	f["dispatch_payload"] = builder.DispatchPayload
-	f["env"] = builder.Env
-	f["ephemeral_disk"] = builder.EphemeralDisk
-	f["expose"] = builder.Expose
-	f["gateway"] = builder.Gateway
-	f["identity"] = builder.Identity
-	f["lifecycle"] = builder.Lifecycle
-	f["logs"] = builder.Logs
-	f["meta"] = builder.Meta
-	f["migrate"] = builder.Migrate
-	f["multiregion"] = builder.Multiregion
-	f["network"] = builder.Network
-	f["parameterized"] = builder.Parameterized
-	f["periodic"] = builder.Periodic
-	f["reschedule"] = builder.Reschedule
-	f["restart"] = builder.Restart
-	f["scaling"] = builder.Scaling
-	f["spread"] = builder.Spread
-	f["update"] = builder.Update
-	f["upstream"] = builder.Upstream
-	f["vault"] = builder.Vault
-	f["volume"] = builder.Volume
-	f["volume_mount"] = builder.VolumeMount
-
-	for _, n := range name {
-		for k, v := range f {
-			if n == k {
-				b := getBlockByName(n, config)
-				t := v(b)
-
-				if len(t.Parameter) != 0 || len(t.Block) != 0 {
-					block = append(block, t)
-				}
-			}
+		if len(t.Parameter) != 0 || len(t.Block) != 0 {
+			block = append(block, t)
 		}
 	}
 
 	return block
 }
 
-func (s *StructureBuilder) BuildConfigStructure(
-	jobConfig model.ConfigBlock,
-	chartConfig map[string]interface{},
-	projectPath string,
-) model.TemplateBlock {
-	config := jobConfig
-	chart := chartConfig
-	pathProject = projectPath
-
-	job := jobStructure(config, chart)
-	return job
-}
-
-func jobStructure(
-	jobConfig model.ConfigBlock,
-	chartConfig map[string]interface{},
-) model.TemplateBlock {
-	config := jobConfig
-	chart := chartConfig
-
+func jobStructure(config model.ConfigBlock) model.TemplateBlock {
 	job := blockBuilder.Job(config)
-	job = changes.Job(job, chart)
 
-	block := []string{
-		"affinity",
-		"constraint",
-		"multiregion",
-		"parameterized",
-		"periodic",
-		"migrate",
-		"reschedule",
-		"spread",
-		"update",
-		"meta",
-		"vault",
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["affinity"] = blockBuilder.Affinity
+	configBlock["constraint"] = blockBuilder.Constraint
+	configBlock["meta"] = blockBuilder.Meta
+	configBlock["parameterized"] = blockBuilder.Parameterized
+	configBlock["periodic"] = blockBuilder.Periodic
+	configBlock["migrate"] = blockBuilder.Migrate
+	configBlock["reschedule"] = blockBuilder.Reschedule
+	configBlock["update"] = blockBuilder.Update
+	configBlock["vault"] = blockBuilder.Vault
+
+	blockList := getConfigBlock(config, configBlock)
+	job.Block = append(job.Block, blockList...)
+
+	// multiregion, set job block.
+	multiregion := multiregionStructure(config)
+	if len(multiregion.Block) != 0 {
+		job.Block = append(job.Block, multiregion)
 	}
 
-	blockList := getBlockList(block, config)
-	for _, item := range blockList {
-		if item.BlockName == "meta" {
-			item = changes.Meta(item, chart)
+	// spread, set job block.
+	spread := spreadStructure(config)
+	if len(spread.Block) != 0 {
+		job.Block = append(job.Block, spread)
+	}
+
+	// group.
+	for _, block := range config.Block {
+		if block.Name == "group" {
+			group := groupStructure(block)
+			job.Block = append(job.Block, group)
 		}
-
-		job.Block = append(job.Block, item)
 	}
-
-	// Group.
-	group := groupStructure(config)
-	job.Block = append(job.Block, group...)
 
 	return job
 }
 
-func groupStructure(config model.ConfigBlock) []model.TemplateBlock {
-	var groupList []model.TemplateBlock
+func multiregionStructure(config model.ConfigBlock) model.TemplateBlock {
+	var multiregionBlock []model.ConfigBlock
 
-	for _, item := range config.Block {
-		if item.Name == "group" {
-			group := blockBuilder.Group(item)
-
-			block := []string{"affinity", "constraint", "meta"}
-			group.Block = append(group.Block, getBlockList(block, item)...)
-
-			// service block.
-			for _, block := range item.Block {
-				if block.Name == "service" {
-					service := serviceStructure(block)
-
-					if len(service.Parameter) != 0 || len(service.Block) != 0 {
-						group.Block = append(group.Block, service)
-					}
+	for _, block := range config.Block {
+		if block.Name == "multiregion" {
+			for _, item := range block.Block {
+				configBlock := model.ConfigBlock{
+					Name:      item.Name,
+					Parameter: item.Parameter,
+					Block:     item.Block,
 				}
+
+				multiregionBlock = append(multiregionBlock, configBlock)
 			}
+		}
+	}
 
-			block = []string{"restart", "scaling"}
-			group.Block = append(group.Block, getBlockList(block, item)...)
+	multiregionConfig := model.ConfigBlock{
+		Name:  "multiregion",
+		Block: multiregionBlock,
+	}
 
-			// task block.
-			taskConfig := getBlockByName("task", item)
-			task := taskStructure(taskConfig)
+	multiregion := blockBuilder.Multiregion(multiregionConfig)
+	return multiregion
+}
+
+func groupStructure(config model.ConfigBlock) model.TemplateBlock {
+	group := blockBuilder.Group(config)
+
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["affinity"] = blockBuilder.Affinity
+	configBlock["constraint"] = blockBuilder.Constraint
+	configBlock["meta"] = blockBuilder.Meta
+	configBlock["restart"] = blockBuilder.Restart
+	configBlock["vault"] = blockBuilder.Vault
+	configBlock["ephemeral_disk"] = blockBuilder.EphemeralDisk
+	configBlock["migrate"] = blockBuilder.Migrate
+	configBlock["reschedule"] = blockBuilder.Reschedule
+	configBlock["update"] = blockBuilder.Update
+
+	group.Block = append(
+		group.Block,
+		getConfigBlock(config, configBlock)...,
+	)
+
+	// scaling.
+	for _, block := range config.Block {
+		if block.Name == "scaling" {
+			scaling := blockBuilder.Scaling(block)
+
+			if len(scaling.Parameter) != 0 || len(scaling.Block) != 0 {
+				group.Block = append(group.Block, scaling)
+			}
+		}
+	}
+
+	// volume block.
+	for _, block := range config.Block {
+		if block.Name == "volume" {
+			volume := blockBuilder.Volume(block)
+
+			if len(volume.Parameter) != 0 || len(volume.Block) != 0 {
+				group.Block = append(group.Block, volume)
+			}
+		}
+	}
+
+	// service block.
+	for _, block := range config.Block {
+		if block.Name == "service" {
+			service := serviceStructure(block)
+
+			if len(service.Parameter) != 0 || len(service.Block) != 0 {
+				group.Block = append(group.Block, service)
+			}
+		}
+	}
+
+	// task block.
+	for _, block := range config.Block {
+		if block.Name == "task" {
+			task := taskStructure(block)
 
 			if len(task.Parameter) != 0 || len(task.Block) != 0 {
 				group.Block = append(group.Block, task)
 			}
-
-			block = []string{
-				"vault",
-				"volume",
-				"migrate",
-				"reschedule",
-				"spread",
-				"update",
-			}
-			group.Block = append(group.Block, getBlockList(block, item)...)
-
-			network := networkStructure(item)
-			if len(network.Block) != 0 {
-				group.Block = append(group.Block, network)
-			}
-
-			groupList = append(groupList, group)
 		}
 	}
 
-	return groupList
+	// network, set group block.
+	network := networkStructure(config)
+	if len(network.Block) != 0 {
+		group.Block = append(group.Block, network)
+	}
+
+	// spread, set group block.
+	spread := spreadStructure(config)
+	if len(spread.Block) != 0 {
+		group.Block = append(group.Block, network)
+	}
+
+	return group
+}
+
+func spreadStructure(config model.ConfigBlock) model.TemplateBlock {
+	var spreadParameter []map[string]interface{}
+	var spreadBlock []model.ConfigBlock
+
+	for _, block := range config.Block {
+		if block.Name == "spread" {
+			spreadParameter = append(spreadParameter, block.Parameter...)
+
+			for _, item := range block.Block {
+				configBlock := model.ConfigBlock{
+					Name:      item.Name,
+					Parameter: item.Parameter,
+					Block:     item.Block,
+				}
+
+				spreadBlock = append(spreadBlock, configBlock)
+			}
+		}
+	}
+
+	spreadConfig := model.ConfigBlock{
+		Name:      "spread",
+		Parameter: spreadParameter,
+		Block:     spreadBlock,
+	}
+
+	spread := blockBuilder.Spread(spreadConfig)
+	return spread
 }
 
 func networkStructure(config model.ConfigBlock) model.TemplateBlock {
-	var network model.TemplateBlock
 	var networkParameter []map[string]interface{}
 	var networkBlock []model.ConfigBlock
 
-	for _, p := range config.Parameter {
-		for k, v := range p {
-			switch k {
-			case "network_mode":
-				i := make(map[string]interface{})
-				i["mode"] = v
-				networkParameter = append(networkParameter, i)
-			case "network_hostname":
-				i := make(map[string]interface{})
-				i["hostname"] = v
-				networkParameter = append(networkParameter, i)
-			}
+	for _, block := range config.Block {
+		if block.Name == "network" {
+			networkParameter = append(networkParameter, block.Parameter...)
 
-		}
-	}
-
-	for _, b := range config.Block {
-		if b.Name == "network" {
-			for _, item := range b.Block {
+			for _, item := range block.Block {
 				configBlock := model.ConfigBlock{
 					Name:      item.Name,
 					Parameter: item.Parameter,
@@ -223,37 +260,61 @@ func networkStructure(config model.ConfigBlock) model.TemplateBlock {
 		Block:     networkBlock,
 	}
 
-	network = blockBuilder.Network(networkConfig)
+	network := blockBuilder.Network(networkConfig)
 	return network
 }
 
 func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 	task := blockBuilder.Task(config)
 
-	block := []string{
-		"affinity",
-		"artifact",
-		"constraint",
-		"csi_plugin",
-		"dispatch_payload",
-		"env",
-		"ephemeral_disk",
-		"identity",
-		"lifecycle",
-		"logs",
-		"meta",
-		"restart",
-		"scaling",
-		"vault",
-		"volume_mount",
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["artifact"] = blockBuilder.Artifact
+	configBlock["affinity"] = blockBuilder.Affinity
+	configBlock["constraint"] = blockBuilder.Constraint
+	configBlock["csi_plugin"] = blockBuilder.CSIPlugin
+	configBlock["dispatch_payload"] = blockBuilder.DispatchPayload
+	configBlock["env"] = blockBuilder.Env
+	configBlock["identity"] = blockBuilder.Identity
+	configBlock["lifecycle"] = blockBuilder.Lifecycle
+	configBlock["logs"] = blockBuilder.Logs
+	configBlock["meta"] = blockBuilder.Meta
+	configBlock["restart"] = blockBuilder.Restart
+	configBlock["vault"] = blockBuilder.Vault
+
+	task.Block = append(
+		task.Block,
+		getConfigBlock(config, configBlock)...,
+	)
+
+	// scaling.
+	for _, block := range config.Block {
+		if block.Name == "scaling" {
+			scaling := blockBuilder.Scaling(block)
+
+			if len(scaling.Parameter) != 0 || len(scaling.Block) != 0 {
+				task.Block = append(task.Block, scaling)
+			}
+		}
 	}
 
-	task.Block = append(task.Block, getBlockList(block, config)...)
+	// volume mount.
+	for _, block := range config.Block {
+		if block.Name == "volume_mount" {
+			volumeMount := blockBuilder.VolumeMount(block)
+
+			if len(volumeMount.Parameter) != 0 || len(volumeMount.Block) != 0 {
+				task.Block = append(task.Block, volumeMount)
+			}
+		}
+	}
 
 	// template.
-	for _, item := range config.Block {
-		if item.Name == "template" {
-			template := templateStructure(item, pathProject)
+	for _, block := range config.Block {
+		if block.Name == "template" {
+			template := templateStructure(block, projectDirPath)
 
 			if len(template.Parameter) != 0 || len(template.Block) != 0 {
 				task.Block = append(task.Block, template)
@@ -270,7 +331,6 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 				task.Block = append(task.Block, service)
 			}
 		}
-
 	}
 
 	// resources.
@@ -291,8 +351,16 @@ func templateStructure(
 	template := blockBuilder.Template(config, projectPath)
 
 	// change script.
-	block := []string{"change_script"}
-	template.Block = append(template.Block, getBlockList(block, config)...)
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["change_script"] = blockBuilder.ChangeScript
+
+	template.Block = append(
+		template.Block,
+		getConfigBlock(config, configBlock)...,
+	)
 
 	return template
 }
@@ -301,16 +369,27 @@ func serviceStructure(config model.ConfigBlock) model.TemplateBlock {
 	service := blockBuilder.Service(config)
 
 	// check.
-	checkConfig := getBlockByName("check", config)
-	check := checkStructure(checkConfig)
+	for _, block := range config.Block {
+		if block.Name == "check" {
+			check := checkStructure(block)
 
-	if len(check.Parameter) != 0 || len(check.Block) != 0 {
-		service.Block = append(service.Block, check)
+			if len(check.Parameter) != 0 || len(check.Block) != 0 {
+				service.Block = append(service.Block, check)
+			}
+		}
 	}
 
 	// check restart.
-	block := []string{"check_restart"}
-	service.Block = append(service.Block, getBlockList(block, config)...)
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["check_restart"] = blockBuilder.CheckRestart
+
+	service.Block = append(
+		service.Block,
+		getConfigBlock(config, configBlock)...,
+	)
 
 	// connect.
 	connectConfig := getBlockByName("connect", config)
@@ -327,8 +406,16 @@ func checkStructure(config model.ConfigBlock) model.TemplateBlock {
 	check := blockBuilder.Check(config)
 
 	// check restart.
-	block := []string{"check_restart"}
-	check.Block = append(check.Block, getBlockList(block, config)...)
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["check_restart"] = blockBuilder.CheckRestart
+
+	check.Block = append(
+		check.Block,
+		getConfigBlock(config, configBlock)...,
+	)
 
 	return check
 }
@@ -372,8 +459,16 @@ func connectStructure(config model.ConfigBlock) model.TemplateBlock {
 	}
 
 	// gateway.
-	block := []string{"gateway"}
-	connect.Block = append(connect.Block, getBlockList(block, config)...)
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["gateway"] = blockBuilder.Gateway
+
+	connect.Block = append(
+		connect.Block,
+		getConfigBlock(config, configBlock)...,
+	)
 
 	return connect
 }
@@ -395,9 +490,18 @@ func sidecarServiceStructure(config model.ConfigBlock) model.TemplateBlock {
 func proxyStructure(config model.ConfigBlock) model.TemplateBlock {
 	proxy := blockBuilder.Proxy(config)
 
-	// expose, upstream.
-	block := []string{"expose", "upstream"}
-	proxy.Block = append(proxy.Block, getBlockList(block, config)...)
+	// expose, upstreams.
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["expose"] = blockBuilder.Expose
+	configBlock["upstreams"] = blockBuilder.Upstreams
+
+	proxy.Block = append(
+		proxy.Block,
+		getConfigBlock(config, configBlock)...,
+	)
 
 	return proxy
 }
@@ -406,8 +510,16 @@ func sidecarTaskStructure(config model.ConfigBlock) model.TemplateBlock {
 	sidecarTask := blockBuilder.SidecarTask(config)
 
 	// logs.
-	block := []string{"logs"}
-	sidecarTask.Block = append(sidecarTask.Block, getBlockList(block, config)...)
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["logs"] = blockBuilder.Logs
+
+	sidecarTask.Block = append(
+		sidecarTask.Block,
+		getConfigBlock(config, configBlock)...,
+	)
 
 	// resources.
 	resourcesConfig := getBlockByName("resources", config)
@@ -424,11 +536,14 @@ func resourcesStructure(config model.ConfigBlock) model.TemplateBlock {
 	resources := blockBuilder.Resources(config)
 
 	// device.
-	deviceConfig := getBlockByName("device", config)
-	device := deviceStructure(deviceConfig)
+	for _, block := range config.Block {
+		if block.Name == "device" {
+			device := deviceStructure(block)
 
-	if len(deviceConfig.Parameter) != 0 || len(deviceConfig.Block) != 0 {
-		resources.Block = append(resources.Block, device)
+			if len(device.Parameter) != 0 || len(device.Block) != 0 {
+				resources.Block = append(resources.Block, device)
+			}
+		}
 	}
 
 	return resources
@@ -437,8 +552,17 @@ func resourcesStructure(config model.ConfigBlock) model.TemplateBlock {
 func deviceStructure(config model.ConfigBlock) model.TemplateBlock {
 	device := blockBuilder.Device(config)
 
-	block := []string{"affinity", "constraint"}
-	device.Block = append(device.Block, getBlockList(block, config)...)
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["affinity"] = blockBuilder.Affinity
+	configBlock["constraint"] = blockBuilder.Constraint
+
+	device.Block = append(
+		device.Block,
+		getConfigBlock(config, configBlock)...,
+	)
 
 	return device
 }
