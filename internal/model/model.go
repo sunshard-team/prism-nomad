@@ -18,8 +18,8 @@ type TemplateBlock struct {
 }
 
 type BuildStructure struct {
-	Config         ConfigBlock
-	ProjectDirPath string
+	Config       ConfigBlock
+	FilesDirPath string
 }
 
 type ConfigParameter struct {
@@ -31,17 +31,15 @@ type ConfigParameter struct {
 }
 
 type Changes struct {
-	ProjectDirPath string
-	Release        string
-	Namespace      string
-	Files          []TemplateBlock
-	Chart          ConfigBlock
+	Release   string
+	Namespace string
+	Files     []TemplateBlock
+	Chart     ConfigBlock
 }
 
 type BlockChanges struct {
-	ProjectDirPath string
-	Release        string
-	Namespace      string
-	File           TemplateBlock
-	Chart          ConfigBlock
+	Release   string
+	Namespace string
+	File      TemplateBlock
+	Chart     ConfigBlock
 }

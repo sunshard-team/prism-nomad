@@ -1,6 +1,6 @@
 package builder
 
 var (
-	blockBuilder   BlockBuilder
-	projectDirPath string
+	blockBuilder BlockBuilder
+	filesDirPath string
 )

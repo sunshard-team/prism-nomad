@@ -90,7 +90,7 @@ var installCmd = &cobra.Command{
 		}
 
 		// Get the project directory name.
-		dirFormat, err := regexp.Compile(`.+\/(\w+\S+\w+)$`)
+		dirFormat, err := regexp.Compile(`([\w+-]+)$`)
 		if err != nil {
 			fmt.Printf(
 				"%s %s\n",

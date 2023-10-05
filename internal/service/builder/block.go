@@ -1,10 +1,11 @@
 package builder
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"path/filepath"
 	"prism/internal/model"
+	"regexp"
 )
 
 type BlockBuilder struct{}
@@ -1337,12 +1338,13 @@ func (b *BlockBuilder) Task(block model.ConfigBlock) model.TemplateBlock {
 
 func (b *BlockBuilder) Template(
 	block model.ConfigBlock,
-	projectPath string,
+	fileDirPath string,
 ) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
+		"name",
 		"change_mode",
 		"change_signal",
 		"destination",
@@ -1361,13 +1363,29 @@ func (b *BlockBuilder) Template(
 	for _, item := range block.Parameter {
 		for k, v := range item {
 			switch k {
-			case "name":
-				// read file and add data into "data" parameter.
-				filePath := filepath.Join(projectPath, "files", v.(string))
+			case "file":
+				var fileFullPath string
 
-				file, err := os.ReadFile(filePath)
+				// Check the full file path or file name.
+				separatorFormat, err := regexp.Compile(`\\|\/`)
 				if err != nil {
-					log.Fatalf("error read template files - %v", err)
+					fmt.Printf("failed check OS separator in file path, %s", err)
+					os.Exit(1)
+				}
+
+				findSeparator := separatorFormat.FindStringSubmatch(v.(string))
+
+				if len(findSeparator) > 0 {
+					fileFullPath = v.(string)
+				} else {
+					fileFullPath = filepath.Join(fileDirPath, v.(string))
+				}
+
+				// Read the file and add data to the "data" parameter.
+				file, err := os.ReadFile(fileFullPath)
+				if err != nil {
+					fmt.Printf("error read template files - %v\n", err)
+					os.Exit(1)
 				}
 
 				i := make(map[string]interface{})
