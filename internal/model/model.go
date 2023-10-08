@@ -4,15 +4,15 @@ package model
 // Any structure in a file configuration that is not a variable
 // and contains variables and block structures.
 type ConfigBlock struct {
-	Name      string                   // "job", "group", "task" etc.
+	Type      string                   // "job", "group", "task" etc.
 	Parameter []map[string]interface{} // parameter list
 	Block     []ConfigBlock            // list of configuration blocks
 }
 
 // Structure for creating a nomad configuration template.
 type TemplateBlock struct {
-	BlockName string                   // "job", "group", "task" etc.
-	Name      string                   // job "name", group "name" etc.
+	Type      string                   // "job", "group", "task" etc.
+	Label     string                   // job "name", group "name" etc.
 	Parameter []map[string]interface{} // parameter list
 	Block     []TemplateBlock          // list of configuration blocks
 }

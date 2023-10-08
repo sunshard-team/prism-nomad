@@ -4,6 +4,11 @@ import (
 	"prism/internal/model"
 )
 
+var (
+	blockBuilder BlockBuilder
+	filesDirPath string
+)
+
 type StructureBuilder struct {
 	blockBuilder BlockBuilder
 }
@@ -22,12 +27,12 @@ func (s *StructureBuilder) BuildConfigStructure(
 }
 
 // Get configuration block by nomad block name.
-func getBlockByName(
-	name string,
+func getBlockByType(
+	blockType string,
 	config model.ConfigBlock,
 ) model.ConfigBlock {
 	for _, block := range config.Block {
-		if block.Name == name {
+		if block.Type == blockType {
 			return block
 		}
 	}
@@ -43,7 +48,7 @@ func getConfigBlock(
 	var block []model.TemplateBlock
 
 	for k, v := range configBlock {
-		b := getBlockByName(k, config)
+		b := getBlockByType(k, config)
 		t := v(b)
 
 		if len(t.Parameter) != 0 || len(t.Block) != 0 {
@@ -88,7 +93,7 @@ func jobStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// group.
 	for _, block := range config.Block {
-		if block.Name == "group" {
+		if block.Type == "group" {
 			group := groupStructure(block)
 			job.Block = append(job.Block, group)
 		}
@@ -101,10 +106,10 @@ func multiregionStructure(config model.ConfigBlock) model.TemplateBlock {
 	var multiregionBlock []model.ConfigBlock
 
 	for _, block := range config.Block {
-		if block.Name == "multiregion" {
+		if block.Type == "multiregion" {
 			for _, item := range block.Block {
 				configBlock := model.ConfigBlock{
-					Name:      item.Name,
+					Type:      item.Type,
 					Parameter: item.Parameter,
 					Block:     item.Block,
 				}
@@ -115,7 +120,7 @@ func multiregionStructure(config model.ConfigBlock) model.TemplateBlock {
 	}
 
 	multiregionConfig := model.ConfigBlock{
-		Name:  "multiregion",
+		Type:  "multiregion",
 		Block: multiregionBlock,
 	}
 
@@ -147,7 +152,7 @@ func groupStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// scaling.
 	for _, block := range config.Block {
-		if block.Name == "scaling" {
+		if block.Type == "scaling" {
 			scaling := blockBuilder.Scaling(block)
 
 			if len(scaling.Parameter) != 0 || len(scaling.Block) != 0 {
@@ -158,7 +163,7 @@ func groupStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// volume block.
 	for _, block := range config.Block {
-		if block.Name == "volume" {
+		if block.Type == "volume" {
 			volume := blockBuilder.Volume(block)
 
 			if len(volume.Parameter) != 0 || len(volume.Block) != 0 {
@@ -169,7 +174,7 @@ func groupStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// service block.
 	for _, block := range config.Block {
-		if block.Name == "service" {
+		if block.Type == "service" {
 			service := serviceStructure(block)
 
 			if len(service.Parameter) != 0 || len(service.Block) != 0 {
@@ -180,7 +185,7 @@ func groupStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// task block.
 	for _, block := range config.Block {
-		if block.Name == "task" {
+		if block.Type == "task" {
 			task := taskStructure(block)
 
 			if len(task.Parameter) != 0 || len(task.Block) != 0 {
@@ -209,12 +214,12 @@ func spreadStructure(config model.ConfigBlock) model.TemplateBlock {
 	var spreadBlock []model.ConfigBlock
 
 	for _, block := range config.Block {
-		if block.Name == "spread" {
+		if block.Type == "spread" {
 			spreadParameter = append(spreadParameter, block.Parameter...)
 
 			for _, item := range block.Block {
 				configBlock := model.ConfigBlock{
-					Name:      item.Name,
+					Type:      item.Type,
 					Parameter: item.Parameter,
 					Block:     item.Block,
 				}
@@ -225,7 +230,7 @@ func spreadStructure(config model.ConfigBlock) model.TemplateBlock {
 	}
 
 	spreadConfig := model.ConfigBlock{
-		Name:      "spread",
+		Type:      "spread",
 		Parameter: spreadParameter,
 		Block:     spreadBlock,
 	}
@@ -239,12 +244,12 @@ func networkStructure(config model.ConfigBlock) model.TemplateBlock {
 	var networkBlock []model.ConfigBlock
 
 	for _, block := range config.Block {
-		if block.Name == "network" {
+		if block.Type == "network" {
 			networkParameter = append(networkParameter, block.Parameter...)
 
 			for _, item := range block.Block {
 				configBlock := model.ConfigBlock{
-					Name:      item.Name,
+					Type:      item.Type,
 					Parameter: item.Parameter,
 					Block:     item.Block,
 				}
@@ -255,7 +260,7 @@ func networkStructure(config model.ConfigBlock) model.TemplateBlock {
 	}
 
 	networkConfig := model.ConfigBlock{
-		Name:      "network",
+		Type:      "network",
 		Parameter: networkParameter,
 		Block:     networkBlock,
 	}
@@ -291,7 +296,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// scaling.
 	for _, block := range config.Block {
-		if block.Name == "scaling" {
+		if block.Type == "scaling" {
 			scaling := blockBuilder.Scaling(block)
 
 			if len(scaling.Parameter) != 0 || len(scaling.Block) != 0 {
@@ -302,7 +307,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// volume mount.
 	for _, block := range config.Block {
-		if block.Name == "volume_mount" {
+		if block.Type == "volume_mount" {
 			volumeMount := blockBuilder.VolumeMount(block)
 
 			if len(volumeMount.Parameter) != 0 || len(volumeMount.Block) != 0 {
@@ -313,7 +318,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// template.
 	for _, block := range config.Block {
-		if block.Name == "template" {
+		if block.Type == "template" {
 			template := templateStructure(block, filesDirPath)
 
 			if len(template.Parameter) != 0 || len(template.Block) != 0 {
@@ -324,7 +329,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// service.
 	for _, block := range config.Block {
-		if block.Name == "service" {
+		if block.Type == "service" {
 			service := serviceStructure(block)
 
 			if len(service.Parameter) != 0 || len(service.Block) != 0 {
@@ -334,7 +339,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 	}
 
 	// resources.
-	resourcesConfig := getBlockByName("resources", config)
+	resourcesConfig := getBlockByType("resources", config)
 	resources := resourcesStructure(resourcesConfig)
 
 	if len(resources.Parameter) != 0 || len(resources.Block) != 0 {
@@ -370,7 +375,7 @@ func serviceStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// check.
 	for _, block := range config.Block {
-		if block.Name == "check" {
+		if block.Type == "check" {
 			check := checkStructure(block)
 
 			if len(check.Parameter) != 0 || len(check.Block) != 0 {
@@ -392,7 +397,7 @@ func serviceStructure(config model.ConfigBlock) model.TemplateBlock {
 	)
 
 	// connect.
-	connectConfig := getBlockByName("connect", config)
+	connectConfig := getBlockByType("connect", config)
 	connect := connectStructure(connectConfig)
 
 	if len(connect.Parameter) != 0 || len(connect.Block) != 0 {
@@ -428,11 +433,11 @@ func connectStructure(config model.ConfigBlock) model.TemplateBlock {
 			if k == "open_sidecar_service" {
 				if v.(bool) {
 					connect := model.TemplateBlock{
-						BlockName: "connect",
+						Type: "connect",
 					}
 
 					sidecarService := model.TemplateBlock{
-						BlockName: "sidecar_service",
+						Type: "sidecar_service",
 					}
 
 					connect.Block = append(connect.Block, sidecarService)
@@ -443,7 +448,7 @@ func connectStructure(config model.ConfigBlock) model.TemplateBlock {
 	}
 
 	// sidecar service.
-	sidecarServiceConfig := getBlockByName("sidecar_service", config)
+	sidecarServiceConfig := getBlockByType("sidecar_service", config)
 	sidecarService := sidecarServiceStructure(sidecarServiceConfig)
 
 	if len(sidecarService.Parameter) != 0 || len(sidecarService.Block) != 0 {
@@ -451,7 +456,7 @@ func connectStructure(config model.ConfigBlock) model.TemplateBlock {
 	}
 
 	// sidecar task.
-	sidecarTaskConfig := getBlockByName("sidecar_task", config)
+	sidecarTaskConfig := getBlockByType("sidecar_task", config)
 	sidecarTask := sidecarTaskStructure(sidecarTaskConfig)
 
 	if len(sidecarTask.Parameter) != 0 || len(sidecarTask.Block) != 0 {
@@ -477,7 +482,7 @@ func sidecarServiceStructure(config model.ConfigBlock) model.TemplateBlock {
 	sidecarService := blockBuilder.SidecarService(config)
 
 	// proxy.
-	proxyConfig := getBlockByName("proxy", config)
+	proxyConfig := getBlockByType("proxy", config)
 	proxy := proxyStructure(proxyConfig)
 
 	if len(proxy.Parameter) != 0 || len(proxy.Block) != 0 {
@@ -522,7 +527,7 @@ func sidecarTaskStructure(config model.ConfigBlock) model.TemplateBlock {
 	)
 
 	// resources.
-	resourcesConfig := getBlockByName("resources", config)
+	resourcesConfig := getBlockByType("resources", config)
 	resources := resourcesStructure(resourcesConfig)
 
 	if len(resources.Parameter) != 0 || len(resources.Block) != 0 {
@@ -537,7 +542,7 @@ func resourcesStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// device.
 	for _, block := range config.Block {
-		if block.Name == "device" {
+		if block.Type == "device" {
 			device := deviceStructure(block)
 
 			if len(device.Parameter) != 0 || len(device.Block) != 0 {
