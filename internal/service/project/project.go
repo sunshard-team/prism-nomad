@@ -36,8 +36,8 @@ func (s *Project) Create(name string) (string, error) {
 	projectFileDir := "files"
 	fileDirPath := filepath.Join(projectDirPath, projectFileDir)
 
-	chartName := strings.ReplaceAll(projectName, "-", "_")
-	chartFileName := fmt.Sprintf("%s.yaml", chartName)
+	topicName := strings.ReplaceAll(projectName, "-", "_")
+	topicFileName := fmt.Sprintf("%s.yaml", topicName)
 
 	configName := "config"
 	configFileName := fmt.Sprintf("%s.yaml", configName)
@@ -56,7 +56,7 @@ func (s *Project) Create(name string) (string, error) {
 
 	// Create default project files.
 	defaultFile := map[string]string{
-		"prism.yaml":  chartFileName,
+		"prism.yaml":  topicFileName,
 		"config.yaml": configFileName,
 	}
 

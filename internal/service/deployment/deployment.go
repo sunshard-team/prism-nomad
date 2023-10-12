@@ -28,6 +28,9 @@ func NewDeployment(
 	}
 }
 
+// Checks whether the namespace exists in the cluster.
+// If the --create-namespace flag is specified and
+// the specified namespace does not exist, then it will be created.
 func (s *Deployment) CheckNamespace(namespace model.CheckNamespace) error {
 	var namespaces []string
 	client := namespace.Client
@@ -56,6 +59,11 @@ func (s *Deployment) CheckNamespace(namespace model.CheckNamespace) error {
 				return fmt.Errorf("error create namespace %s", err)
 			}
 
+			fmt.Printf(
+				"Namespace \"%s\" was successfully created.\n",
+				namespace.Namespace,
+			)
+
 			return nil
 		}
 
@@ -69,6 +77,7 @@ func (s *Deployment) CheckNamespace(namespace model.CheckNamespace) error {
 	return nil
 }
 
+// Job configuration deployment in the nomad cluster.
 func (s *Deployment) Deployment(client *api.Client, config string) (string, error) {
 	job, _ := client.Jobs().ParseHCL(config, true)
 

@@ -32,22 +32,22 @@ type ConfigParameter struct {
 	Files          []string
 }
 
+type CheckNamespace struct {
+	Client          *api.Client
+	Namespace       string
+	CreateNamespace bool
+}
+
 type Changes struct {
 	Release   string
 	Namespace string
 	Files     []TemplateBlock
-	Chart     ConfigBlock
+	Topic     ConfigBlock
 }
 
 type BlockChanges struct {
 	Release   string
 	Namespace string
 	File      TemplateBlock
-	Chart     ConfigBlock
-}
-
-type CheckNamespace struct {
-	Client          *api.Client
-	Namespace       string
-	CreateNamespace bool
+	Topic     ConfigBlock
 }
