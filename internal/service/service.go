@@ -7,6 +7,8 @@ import (
 	"prism/internal/service/output"
 	"prism/internal/service/parser"
 	"prism/internal/service/project"
+
+	"github.com/hashicorp/nomad/api"
 )
 
 type Project interface {
@@ -96,6 +98,12 @@ type Deployment interface {
 	CreateConfigStructure(
 		parameter model.ConfigParameter,
 	) (model.TemplateBlock, error)
+
+	// Checking if the namespace exists in the nomad cluster.
+	CheckNamespace(namespace model.CheckNamespace) error
+
+	// Job configuration deployment in the nomad cluster.
+	Deployment(client *api.Client, config string) (string, error)
 }
 
 type Changes interface {

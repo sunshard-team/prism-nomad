@@ -1,5 +1,7 @@
 package model
 
+import "github.com/hashicorp/nomad/api"
+
 // Yaml configuration block.
 // Any structure in a file configuration that is not a variable
 // and contains variables and block structures.
@@ -42,4 +44,10 @@ type BlockChanges struct {
 	Namespace string
 	File      TemplateBlock
 	Chart     ConfigBlock
+}
+
+type CheckNamespace struct {
+	Client          *api.Client
+	Namespace       string
+	CreateNamespace bool
 }

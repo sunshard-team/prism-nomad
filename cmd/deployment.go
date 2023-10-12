@@ -8,19 +8,20 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/nomad/api"
 	"github.com/spf13/cobra"
 )
 
-var installLongDescription = fmt.Sprintf(
+var deployLongDescription = fmt.Sprintf(
 	"%s\n%s",
 	"Deploying a configuration on a remote cluster,",
 	"or outputting the configuration to the console or file.",
 )
 
-var installCmd = &cobra.Command{
-	Use:   "install",
+var deployCmd = &cobra.Command{
+	Use:   "deploy",
 	Short: "Deploying a configuration to a remote cluster",
-	Long:  installLongDescription,
+	Long:  deployLongDescription,
 	Run: func(cmd *cobra.Command, args []string) {
 		path, err := cmd.Flags().GetString("path")
 		if err != nil {
@@ -60,28 +61,28 @@ var installCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// address, err := cmd.Flags().GetString("address")
-		// if err != nil {
-		// 	fmt.Printf("failed to read flag \"address\", %s\n", err)
-		// 	os.Exit(1)
-		// }
+		address, err := cmd.Flags().GetString("address")
+		if err != nil {
+			fmt.Printf("failed to read flag \"address\", %s\n", err)
+			os.Exit(1)
+		}
 
-		// token, err := cmd.Flags().GetString("token")
-		// if err != nil {
-		// 	fmt.Printf("failed to read flag \"token\", %s\n", err)
-		// 	os.Exit(1)
-		// }
+		token, err := cmd.Flags().GetString("token")
+		if err != nil {
+			fmt.Printf("failed to read flag \"token\", %s\n", err)
+			os.Exit(1)
+		}
 
-		// createNamespace, err := cmd.Flags().GetBool("create-namespace")
-		// if err != nil {
-		// 	fmt.Printf("failed to read flag \"create-namespace\", %s\n", err)
-		// 	os.Exit(1)
-		// }
+		createNamespace, err := cmd.Flags().GetBool("create-namespace")
+		if err != nil {
+			fmt.Printf("failed to read flag \"create-namespace\", %s\n", err)
+			os.Exit(1)
+		}
 
 		if path == "" || namespace == "" {
 			fmt.Printf(
 				"%s %s %s\n",
-				"failed execute install command,",
+				"failed execute deploy command,",
 				"one of the required flags is not specified:",
 				"path, version, namespace",
 			)
@@ -94,7 +95,7 @@ var installCmd = &cobra.Command{
 		if err != nil {
 			fmt.Printf(
 				"%s %s\n",
-				"error execute install command,",
+				"error execute deploy command,",
 				"failed get project directory path",
 			)
 
@@ -122,6 +123,12 @@ var installCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		outputConfig, err := services.Output.OutputConfig(configStructure)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
 		// Dry run.
 		if dryRun {
 			if outputPath != "" {
@@ -138,49 +145,84 @@ var installCmd = &cobra.Command{
 				}
 			}
 
-			outputConfig, err := services.Output.OutputConfig(configStructure)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
 			fmt.Printf("\nOutput config:\n\n%v\n", outputConfig)
 			return
 		}
 
 		// Deployment.
+		if address == "" || token == "" {
+			fmt.Printf(
+				"%s %s %s\n",
+				"failed execute deploy command,",
+				"one of the required flags is not specified:",
+				"address, token",
+			)
+
+			os.Exit(1)
+		}
+
+		configAPI := &api.Config{
+			Address:  address,
+			SecretID: token,
+		}
+
+		client, err := api.NewClient(configAPI)
+		if err != nil {
+			fmt.Printf("error create nomad api client %s", err)
+			os.Exit(1)
+		}
+
+		checkNamespace := model.CheckNamespace{
+			Client:          client,
+			Namespace:       namespace,
+			CreateNamespace: createNamespace,
+		}
+
+		err = services.Deployment.CheckNamespace(checkNamespace)
+		if err != nil {
+			fmt.Printf("namespace error: %s\n", err)
+			os.Exit(1)
+		}
+
+		jobID, err := services.Deployment.Deployment(client, outputConfig)
+		if err != nil {
+			fmt.Printf("error job deployment: %s\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Job \"%s\" deployed successfully.\n", jobID)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(installCmd)
+	rootCmd.AddCommand(deployCmd)
 
-	installCmd.Flags().StringP("path", "p", "", "path to project directory") // required
-	installCmd.Flags().StringP("namespace", "n", "", "namespace name")       // required
-	installCmd.Flags().StringP("release", "r", "", "release name")
-	installCmd.Flags().StringP("address", "a", "", "cluster address")
-	installCmd.Flags().StringP("token", "t", "", "cluster access token")
+	deployCmd.Flags().StringP("path", "p", "", "path to project directory") // required
+	deployCmd.Flags().StringP("namespace", "n", "", "namespace name")       // required
+	deployCmd.Flags().StringP("address", "a", "", "cluster address")        // required for deployment
+	deployCmd.Flags().StringP("token", "t", "", "cluster access token")     // required for deployment
+	deployCmd.Flags().StringP("release", "r", "", "release name")
 
-	installCmd.Flags().StringSliceP(
+	deployCmd.Flags().StringSliceP(
 		"file",
 		"f",
 		[]string{},
 		"full path to file to update configuration",
 	)
 
-	installCmd.Flags().Bool(
+	deployCmd.Flags().Bool(
 		"create-namespace",
 		false,
 		"create namespace if not created",
 	)
 
-	installCmd.Flags().Bool(
+	deployCmd.Flags().Bool(
 		"dry-run",
 		false,
 		"output the result to the console (blocking the deployment)",
 	)
 
-	installCmd.Flags().StringP(
+	deployCmd.Flags().StringP(
 		"output",
 		"o",
 		"",
