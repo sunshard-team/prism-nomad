@@ -207,19 +207,19 @@ func init() {
 		"file",
 		"f",
 		[]string{},
-		"full path to file to update configuration",
+		"file name or full path to file to update configuration",
 	)
 
 	deployCmd.Flags().Bool(
 		"create-namespace",
 		false,
-		"create namespace if not created",
+		"create a namespace in the cluster if one is not created",
 	)
 
 	deployCmd.Flags().Bool(
 		"dry-run",
 		false,
-		"output the result to the console (blocking the deployment)",
+		"print the job configuration to the console (blocking the deployment)",
 	)
 
 	deployCmd.Flags().StringP(
@@ -227,7 +227,7 @@ func init() {
 		"o",
 		"",
 		fmt.Sprintf(
-			`Path to the directory in which the "%s" file will be created`,
+			"Path to the directory in which the \"%s\" file will be created",
 			"<project>_<release>_config_output.nomad.hcl",
 		),
 	)
