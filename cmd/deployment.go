@@ -133,7 +133,11 @@ var deployCmd = &cobra.Command{
 		if dryRun {
 			if outputPath != "" {
 				projectName := strings.ReplaceAll(projectDir, "-", "_")
-				fileName := fmt.Sprintf("%s_config", projectName)
+				fileName := projectName
+
+				if release != "" {
+					fileName = fmt.Sprintf("%s_%s", projectName, release)
+				}
 
 				err := services.Output.CreateConfigFile(
 					fileName, outputPath, configStructure,
@@ -228,7 +232,7 @@ func init() {
 		"",
 		fmt.Sprintf(
 			"Path to the directory in which the \"%s\" file will be created",
-			"<project>_<release>_config_output.nomad.hcl",
+			"<project>_<release>.nomad.hcl",
 		),
 	)
 }
