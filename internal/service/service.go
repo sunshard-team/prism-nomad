@@ -99,7 +99,9 @@ type Deployment interface {
 		parameter model.ConfigParameter,
 	) (model.TemplateBlock, error)
 
-	// Checking if the namespace exists in the nomad cluster.
+	// Checks whether the namespace exists in the cluster.
+	// If the --create-namespace flag is specified and
+	// the specified namespace does not exist, then it will be created.
 	CheckNamespace(namespace model.CheckNamespace) error
 
 	// Job configuration deployment in the nomad cluster.

@@ -1,11 +1,11 @@
 job:
   name: "nginx"
   datacenters: ["dc1"]
-  type: "service" # chart type, default "service"
+  type: "service" # type from topic, default "service"
   namespace: "default"
 
   meta:
-    run_uuid: "uuid4" # chart deploy_version
+    run_uuid: "uuid4" # deploy_version from topic
 
   group:
     - name: "nginx"

@@ -28,7 +28,7 @@ func (s *Changes) SetChanges(
 		Release:   changes.Release,
 		Namespace: changes.Namespace,
 		File:      model.TemplateBlock{},
-		Chart:     changes.Chart,
+		Topic:     changes.Topic,
 	}
 
 	if len(changes.Files) > 0 {
@@ -240,7 +240,7 @@ func checkFileChanges(
 		Release:   changes.Release,
 		Namespace: changes.Namespace,
 		File:      fileChanges,
-		Chart:     changes.Chart,
+		Topic:     changes.Topic,
 	}
 
 	return blockChanges

@@ -15,24 +15,24 @@ func (s *Deployment) CreateConfigStructure(
 ) (model.TemplateBlock, error) {
 	var config model.TemplateBlock
 
-	// Chart.
-	chartName := strings.ReplaceAll(parameter.ProjectDir, "-", "_")
-	chartFileName := fmt.Sprintf("%s.yaml", chartName)
-	chartPath := filepath.Join(parameter.ProjectDirPath, chartFileName)
+	// Topic.
+	topicName := strings.ReplaceAll(parameter.ProjectDir, "-", "_")
+	topicFileName := fmt.Sprintf("%s.yaml", topicName)
+	topicPath := filepath.Join(parameter.ProjectDirPath, topicFileName)
 
-	chartFile, err := os.ReadFile(chartPath)
+	topicFile, err := os.ReadFile(topicPath)
 	if err != nil {
-		return config, fmt.Errorf("error to read chart file, %s", err)
+		return config, fmt.Errorf("error to read topic file, %s", err)
 	}
 
-	parsedChartConfig, err := s.parser.ParseYAML(chartFile)
+	parsedTopicConfig, err := s.parser.ParseYAML(topicFile)
 	if err != nil {
 		if err != nil {
-			return config, fmt.Errorf("failed to parsing chart file, %s", err)
+			return config, fmt.Errorf("failed to parsing topic file, %s", err)
 		}
 	}
 
-	chartConfig := s.parser.ParseConfig("chart", parsedChartConfig)
+	topicConfig := s.parser.ParseConfig("topic", parsedTopicConfig)
 
 	// Job.
 	jobFileName := "config.yaml"
@@ -128,7 +128,7 @@ func (s *Deployment) CreateConfigStructure(
 		Release:   parameter.Release,
 		Namespace: parameter.Namespace,
 		Files:     files,
-		Chart:     chartConfig,
+		Topic:     topicConfig,
 	}
 
 	err = s.changes.SetChanges(&config, &changes)

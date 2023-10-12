@@ -432,14 +432,14 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		haveMeta      bool
 	)
 
-	// Get type from chart and set namespace.
+	// Get type from topic and set namespace.
 	for index, item := range block.Parameter {
 		for key := range item {
 			switch key {
 			case "type":
 				haveType = true
 
-				for _, item := range changes.Chart.Parameter {
+				for _, item := range changes.Topic.Parameter {
 					for k, v := range item {
 						if k == key {
 							block.Parameter[index][key] = v.(string)
@@ -463,7 +463,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 
 	if !haveType {
-		for _, item := range changes.Chart.Parameter {
+		for _, item := range changes.Topic.Parameter {
 			for k := range item {
 				if k == "type" {
 					block.Parameter = append(block.Parameter, item)
@@ -477,7 +477,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 			Type: "meta",
 		}
 
-		for _, item := range changes.Chart.Parameter {
+		for _, item := range changes.Topic.Parameter {
 			for k, v := range item {
 				if k == "deploy_version" {
 					i := map[string]interface{}{"run_uuid": v.(string)}
@@ -565,7 +565,7 @@ func jobMeta(block *model.TemplateBlock, changes *model.BlockChanges) {
 		for key := range item {
 			switch key {
 			case "run_uuid":
-				for _, item := range changes.Chart.Parameter {
+				for _, item := range changes.Topic.Parameter {
 					for k, v := range item {
 						if k == "deploy_version" {
 							block.Parameter[index][key] = v.(string)
