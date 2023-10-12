@@ -1,8 +1,8 @@
 {{ define "block" -}}
-{{ $bn := .BlockName }}{{ $bn }} {{- if .Name }} "{{.Name}}"{{- end }} {
+{{ $type := .Type }}{{ $type }} {{- if .Label }} "{{ .Label }}"{{- end }} {
   {{- range $index, $item := .Parameter }}
-  {{- if eq $bn "template" }}
-  {{ $item | getValue $bn -}}
+  {{- if eq $type "template" }}
+  {{ $item | getValue $type -}}
   {{ else }}
   {{ $item | getValue "" }}
   {{- end }}
