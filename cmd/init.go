@@ -9,10 +9,12 @@ import (
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Create prism project",
+	Short: "Create new project",
 	Long: fmt.Sprintf(
-		"Create new deployment project.\n%s",
+		"Create new deployment project.\n%s\n%s %s",
 		"Creates a project directory with default configuration files.",
+		"To set your project name, specify it after the init command:",
+		"prism init <project-name>",
 	),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Project name.
