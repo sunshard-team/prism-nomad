@@ -5,29 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"prism/internal/model"
-	"prism/internal/service/builder"
-	"prism/internal/service/parser"
 	"regexp"
 	"strings"
 )
-
-type Deployment struct {
-	parser  parser.Parser
-	builder builder.StructureBuilder
-	changes builder.Changes
-}
-
-func NewDeployment(
-	parser parser.Parser,
-	builder builder.StructureBuilder,
-	changes builder.Changes,
-) *Deployment {
-	return &Deployment{
-		parser:  parser,
-		builder: builder,
-		changes: changes,
-	}
-}
 
 // Returns the configuration structure.
 func (s *Deployment) CreateConfigStructure(
