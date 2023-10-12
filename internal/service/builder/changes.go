@@ -6,9 +6,9 @@ import (
 )
 
 var (
-	singleType  = "singleBlock"
-	unnamedType = "unnamedBlock"
-	namedType   = "namedBlock"
+	single  = "single"
+	unnamed = "unnamed"
+	named   = "named"
 )
 
 type Changes struct{}
@@ -25,11 +25,10 @@ func (s *Changes) SetChanges(
 	changes *model.Changes,
 ) error {
 	blockChanges := model.BlockChanges{
-		ProjectDirPath: changes.ProjectDirPath,
-		Release:        changes.Release,
-		Namespace:      changes.Namespace,
-		File:           model.TemplateBlock{},
-		Chart:          changes.Chart,
+		Release:   changes.Release,
+		Namespace: changes.Namespace,
+		File:      model.TemplateBlock{},
+		Chart:     changes.Chart,
 	}
 
 	if len(changes.Files) > 0 {
@@ -57,22 +56,22 @@ func (s *Changes) SetChanges(
 // in the specified file that can be specified only once.
 // If the block specified in the file is in the configuration, it is ignored.
 // Otherwise it will be added.
-func checkSingleBlocks(block, file *model.TemplateBlock, blockName []string) {
+func checkSingleBlocks(block, file *model.TemplateBlock, blockType []string) {
 	var haveBlock []string
 
 	for _, fileBlock := range file.Block {
-		if slices.Contains(blockName, fileBlock.BlockName) {
+		if slices.Contains(blockType, fileBlock.Type) {
 			for _, item := range block.Block {
-				if item.BlockName == fileBlock.BlockName {
-					haveBlock = append(haveBlock, fileBlock.BlockName)
+				if item.Type == fileBlock.Type {
+					haveBlock = append(haveBlock, fileBlock.Type)
 				}
 			}
 		}
 	}
 
 	for _, item := range file.Block {
-		if slices.Contains(blockName, item.BlockName) {
-			if !slices.Contains(haveBlock, item.BlockName) {
+		if slices.Contains(blockType, item.Type) {
+			if !slices.Contains(haveBlock, item.Type) {
 				block.Block = append(block.Block, item)
 			}
 		}
@@ -83,26 +82,24 @@ func checkSingleBlocks(block, file *model.TemplateBlock, blockName []string) {
 // for which a name is specified, such as a group or task block.
 // If the block specified in the file is in the configuration, it is ignored.
 // Otherwise it will be added.
-// "blockName" contains a list of available block names,
-// as in the specification (group, task, etc.).
 func checkNamedDublicateBlocks(
 	block, file *model.TemplateBlock,
-	blockName []string,
+	blockType []string,
 ) {
 	var haveBlock []string
 
 	for _, fileBlock := range file.Block {
-		if slices.Contains(blockName, fileBlock.BlockName) {
+		if slices.Contains(blockType, fileBlock.Type) {
 
 			for _, item := range block.Block {
-				if item.BlockName == fileBlock.BlockName {
-					if fileBlock.Name == "" {
-						haveBlock = append(haveBlock, fileBlock.Name)
+				if item.Type == fileBlock.Type {
+					if fileBlock.Label == "" {
+						haveBlock = append(haveBlock, fileBlock.Label)
 						continue
 					}
 
-					if item.Name == fileBlock.Name {
-						haveBlock = append(haveBlock, fileBlock.Name)
+					if item.Label == fileBlock.Label {
+						haveBlock = append(haveBlock, fileBlock.Label)
 					}
 				}
 			}
@@ -110,8 +107,8 @@ func checkNamedDublicateBlocks(
 	}
 
 	for _, item := range file.Block {
-		if slices.Contains(blockName, item.BlockName) {
-			if !slices.Contains(haveBlock, item.Name) {
+		if slices.Contains(blockType, item.Type) {
+			if !slices.Contains(haveBlock, item.Label) {
 				block.Block = append(block.Block, item)
 			}
 		}
@@ -123,7 +120,7 @@ func checkNamedDublicateBlocks(
 // such as a check block or a service.
 // If the block specified in the file is in the configuration, it is ignored.
 // Otherwise it will be added.
-// The "nameKey" specifies the name of the block as a key,
+// The "nameKey" specifies the type of the block as a key,
 // as in the specification (group, task, etc.),
 // and the key name of the block (name, value, etc.).
 func checkUnnamedDublicateBlocks(
@@ -134,21 +131,21 @@ func checkUnnamedDublicateBlocks(
 
 	for _, fileBlock := range file.Block {
 
-		for blockName, name := range nameKey {
-			if fileBlock.BlockName == blockName {
+		for blockType, key := range nameKey {
+			if fileBlock.Type == blockType {
 
 				for _, item := range block.Block {
-					if item.BlockName == fileBlock.BlockName {
-						fName := getUnnamedBlockName(name, fileBlock.Parameter)
-						cName := getUnnamedBlockName(name, item.Parameter)
+					if item.Type == fileBlock.Type {
+						fileKey := getUnnamedBlockName(key, fileBlock.Parameter)
+						blockKey := getUnnamedBlockName(key, item.Parameter)
 
-						if fName == "" {
-							haveBlock = append(haveBlock, fileBlock.Name)
+						if fileKey == "" {
+							haveBlock = append(haveBlock, fileBlock.Label)
 							continue
 						}
 
-						if fName == cName {
-							haveBlock = append(haveBlock, fileBlock.Name)
+						if fileKey == blockKey {
+							haveBlock = append(haveBlock, fileBlock.Label)
 						}
 					}
 				}
@@ -157,9 +154,9 @@ func checkUnnamedDublicateBlocks(
 	}
 
 	for _, item := range file.Block {
-		for blockName := range nameKey {
-			if item.BlockName == blockName {
-				if !slices.Contains(haveBlock, item.Name) {
+		for blockType := range nameKey {
+			if item.Type == blockType {
+				if !slices.Contains(haveBlock, item.Label) {
 					block.Block = append(block.Block, item)
 				}
 			}
@@ -189,47 +186,47 @@ func getUnnamedBlockName(
 func checkFileChanges(
 	block *model.TemplateBlock,
 	changes *model.BlockChanges,
-	blockType string,
+	blockKind string,
 	nameKey ...map[string]string,
 ) model.BlockChanges {
 	var fileChanges model.TemplateBlock
 
 	for _, fileBlock := range changes.File.Block {
-		if blockType == singleType {
-			if fileBlock.BlockName == block.BlockName {
+		if blockKind == single {
+			if fileBlock.Type == block.Type {
 				fileChanges = fileBlock
 				break
 			}
 		}
 
-		if blockType == namedType {
-			if fileBlock.BlockName == block.BlockName {
-				if fileBlock.Name == "" {
+		if blockKind == named {
+			if fileBlock.Type == block.Type {
+				if fileBlock.Label == "" {
 					fileChanges = fileBlock
 					break
 				}
 
-				if fileBlock.Name == block.Name {
+				if fileBlock.Label == block.Label {
 					fileChanges = fileBlock
 					break
 				}
 			}
 		}
 
-		if blockType == unnamedType {
-			if fileBlock.BlockName == block.BlockName {
+		if blockKind == unnamed {
+			if fileBlock.Type == block.Type {
 
-				for blockName, name := range nameKey[0] {
-					if fileBlock.BlockName == blockName {
-						fName := getUnnamedBlockName(name, fileBlock.Parameter)
-						cName := getUnnamedBlockName(name, block.Parameter)
+				for blockType, label := range nameKey[0] {
+					if fileBlock.Type == blockType {
+						fileLabel := getUnnamedBlockName(label, fileBlock.Parameter)
+						blockLabel := getUnnamedBlockName(label, block.Parameter)
 
-						if fName == "" {
+						if fileLabel == "" {
 							fileChanges = fileBlock
 							break
 						}
 
-						if fName == cName {
+						if fileLabel == blockLabel {
 							fileChanges = fileBlock
 							break
 						}
@@ -240,11 +237,10 @@ func checkFileChanges(
 	}
 
 	blockChanges := model.BlockChanges{
-		ProjectDirPath: changes.ProjectDirPath,
-		Release:        changes.Release,
-		Namespace:      changes.Namespace,
-		File:           fileChanges,
-		Chart:          changes.Chart,
+		Release:   changes.Release,
+		Namespace: changes.Namespace,
+		File:      fileChanges,
+		Chart:     changes.Chart,
 	}
 
 	return blockChanges
@@ -257,7 +253,7 @@ func checkFileChanges(
 func setFileChanges(config, changes *model.TemplateBlock) {
 	var parameters []string
 
-	if config.BlockName != changes.BlockName || len(changes.Parameter) == 0 {
+	if config.Type != changes.Type || len(changes.Parameter) == 0 {
 		return
 	}
 
@@ -265,8 +261,8 @@ func setFileChanges(config, changes *model.TemplateBlock) {
 		for configKey := range item {
 
 			for _, p := range changes.Parameter {
-				for changesKey, value := range p {
-					if configKey == changesKey {
+				for key, value := range p {
+					if configKey == key {
 						switch value.(type) {
 						case []interface{}:
 							list := config.Parameter[index][configKey].([]interface{})
@@ -278,10 +274,10 @@ func setFileChanges(config, changes *model.TemplateBlock) {
 							}
 
 							config.Parameter[index][configKey] = list
-							parameters = append(parameters, changesKey)
+							parameters = append(parameters, key)
 						default:
 							config.Parameter[index][configKey] = value
-							parameters = append(parameters, changesKey)
+							parameters = append(parameters, key)
 						}
 					}
 				}
@@ -289,10 +285,10 @@ func setFileChanges(config, changes *model.TemplateBlock) {
 		}
 	}
 
-	for _, item := range changes.Parameter {
-		for k := range item {
-			if !slices.Contains(parameters, k) {
-				config.Parameter = append(config.Parameter, item)
+	for _, parameter := range changes.Parameter {
+		for key := range parameter {
+			if !slices.Contains(parameters, key) {
+				config.Parameter = append(config.Parameter, parameter)
 			}
 		}
 	}

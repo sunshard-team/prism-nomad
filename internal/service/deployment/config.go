@@ -5,28 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"prism/internal/model"
-	"prism/internal/service/builder"
-	"prism/internal/service/parser"
+	"regexp"
 	"strings"
 )
-
-type Deployment struct {
-	parser  parser.Parser
-	builder builder.StructureBuilder
-	changes builder.Changes
-}
-
-func NewDeployment(
-	parser parser.Parser,
-	builder builder.StructureBuilder,
-	changes builder.Changes,
-) *Deployment {
-	return &Deployment{
-		parser:  parser,
-		builder: builder,
-		changes: changes,
-	}
-}
 
 // Returns the configuration structure.
 func (s *Deployment) CreateConfigStructure(
@@ -74,18 +55,51 @@ func (s *Deployment) CreateConfigStructure(
 
 	// Config structure.
 	buildStructure := model.BuildStructure{
-		Config:         jobConfig,
-		ProjectDirPath: parameter.ProjectDirPath,
+		Config:       jobConfig,
+		FilesDirPath: filepath.Join(parameter.ProjectDirPath, "files"),
 	}
+
 	config = s.builder.BuildConfigStructure(buildStructure)
 
 	//  Set changes.
 	var files []model.TemplateBlock
 
 	for _, file := range parameter.Files {
-		filePath := filepath.Join(file)
+		file = filepath.Join(file)
 
-		readFile, err := os.ReadFile(filePath)
+		var (
+			fileDirPath  string
+			fileFullPath string
+		)
+
+		// Check the full file path or file name.
+		separatorFormat, err := regexp.Compile(`\\|\/`)
+		if err != nil {
+			return config, fmt.Errorf(
+				"failed check OS separator in file path, %s", err,
+			)
+		}
+
+		findSeparator := separatorFormat.FindStringSubmatch(file)
+
+		if len(findSeparator) > 0 {
+			fileFormat, err := regexp.Compile(`([\w+-]+)\..*$`)
+			if err != nil {
+				return config, fmt.Errorf(
+					"failed get file directory path",
+				)
+			}
+
+			findFile := fileFormat.FindStringSubmatch(file)
+			fileDirPath = file[:len(file)-len(findFile[0])]
+			fileFullPath = file
+		} else {
+			fileDirPath = filepath.Join(parameter.ProjectDirPath, "files")
+			fileFullPath = filepath.Join(fileDirPath, file)
+		}
+
+		// Read and parse file.
+		readFile, err := os.ReadFile(fileFullPath)
 		if err != nil {
 			return config, fmt.Errorf("error to read job file, %s", err)
 		}
@@ -100,9 +114,10 @@ func (s *Deployment) CreateConfigStructure(
 			parsedFile["job"].(map[string]interface{}),
 		)
 
+		// Create config structure.
 		buildStructure := model.BuildStructure{
-			Config:         fileConfig,
-			ProjectDirPath: parameter.ProjectDirPath,
+			Config:       fileConfig,
+			FilesDirPath: fileDirPath,
 		}
 
 		fileConfigStructure := s.builder.BuildConfigStructure(buildStructure)
@@ -110,11 +125,10 @@ func (s *Deployment) CreateConfigStructure(
 	}
 
 	changes := model.Changes{
-		ProjectDirPath: parameter.ProjectDirPath,
-		Release:        parameter.Release,
-		Namespace:      parameter.Namespace,
-		Files:          files,
-		Chart:          chartConfig,
+		Release:   parameter.Release,
+		Namespace: parameter.Namespace,
+		Files:     files,
+		Chart:     chartConfig,
 	}
 
 	err = s.changes.SetChanges(&config, &changes)

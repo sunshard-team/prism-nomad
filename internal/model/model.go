@@ -1,25 +1,27 @@
 package model
 
+import "github.com/hashicorp/nomad/api"
+
 // Yaml configuration block.
 // Any structure in a file configuration that is not a variable
 // and contains variables and block structures.
 type ConfigBlock struct {
-	Name      string                   // "job", "group", "task" etc.
+	Type      string                   // "job", "group", "task" etc.
 	Parameter []map[string]interface{} // parameter list
 	Block     []ConfigBlock            // list of configuration blocks
 }
 
 // Structure for creating a nomad configuration template.
 type TemplateBlock struct {
-	BlockName string                   // "job", "group", "task" etc.
-	Name      string                   // job "name", group "name" etc.
+	Type      string                   // "job", "group", "task" etc.
+	Label     string                   // job "name", group "name" etc.
 	Parameter []map[string]interface{} // parameter list
 	Block     []TemplateBlock          // list of configuration blocks
 }
 
 type BuildStructure struct {
-	Config         ConfigBlock
-	ProjectDirPath string
+	Config       ConfigBlock
+	FilesDirPath string
 }
 
 type ConfigParameter struct {
@@ -31,17 +33,21 @@ type ConfigParameter struct {
 }
 
 type Changes struct {
-	ProjectDirPath string
-	Release        string
-	Namespace      string
-	Files          []TemplateBlock
-	Chart          ConfigBlock
+	Release   string
+	Namespace string
+	Files     []TemplateBlock
+	Chart     ConfigBlock
 }
 
 type BlockChanges struct {
-	ProjectDirPath string
-	Release        string
-	Namespace      string
-	File           TemplateBlock
-	Chart          ConfigBlock
+	Release   string
+	Namespace string
+	File      TemplateBlock
+	Chart     ConfigBlock
+}
+
+type CheckNamespace struct {
+	Client          *api.Client
+	Namespace       string
+	CreateNamespace bool
 }

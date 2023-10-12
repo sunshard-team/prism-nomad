@@ -3,6 +3,7 @@ package builder
 import (
 	"fmt"
 	"prism/internal/model"
+	"slices"
 )
 
 func artifact(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -13,10 +14,10 @@ func artifact(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "options":
 			artifactOptions(&block.Block[index], &blockChanges)
 		case "headers":
@@ -60,10 +61,10 @@ func check(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "header":
 			checkHeader(&block.Block[index], &blockChanges)
 		case "check_restart":
@@ -88,10 +89,10 @@ func connect(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "sidecar_service":
 			sidecarService(&block.Block[index], &blockChanges)
 		case "sidecar_task":
@@ -122,15 +123,15 @@ func device(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	if changes.Release != "" {
-		block.Name = fmt.Sprintf("%s-%s", block.Name, changes.Release)
+		block.Label = fmt.Sprintf("%s-%s", block.Label, changes.Release)
 	}
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "affinity":
 			affinity(&block.Block[index], &blockChanges)
 		case "constraint":
@@ -159,10 +160,10 @@ func expose(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+			&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 		)
 
-		if item.BlockName == "path" {
+		if item.Type == "path" {
 			exposePath(&block.Block[index], &blockChanges)
 		}
 	}
@@ -179,10 +180,10 @@ func gateway(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "proxy":
 			gatewayProxy(&block.Block[index], &blockChanges)
 		case "ingress":
@@ -203,15 +204,15 @@ func gatewayProxy(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 
-		switch item.BlockName {
+		switch item.Type {
 		case "config":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, singleType,
+				&block.Block[index], changes, single,
 			)
 			config(&block.Block[index], &blockChanges)
 		case "envoy_gateway_bind_address":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, namedType,
+				&block.Block[index], changes, named,
 			)
 			gatewayProxyAddress(&block.Block[index], &blockChanges)
 		}
@@ -242,15 +243,15 @@ func gatewayIngress(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 
-		switch item.BlockName {
+		switch item.Type {
 		case "tls":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, singleType,
+				&block.Block[index], changes, single,
 			)
 			gatewayIngressTLS(&block.Block[index], &blockChanges)
 		case "listener":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+				&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 			)
 			gatewayIngressListener(&block.Block[index], &blockChanges)
 		}
@@ -269,10 +270,10 @@ func gatewayIngressListener(block *model.TemplateBlock, changes *model.BlockChan
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+			&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 		)
 
-		if item.BlockName == "service" {
+		if item.Type == "service" {
 			gatewayIngressListenerService(&block.Block[index], &blockChanges)
 		}
 	}
@@ -304,10 +305,10 @@ func gatewayTerminating(block *model.TemplateBlock, changes *model.BlockChanges)
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+			&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 		)
 
-		if item.BlockName == "service" {
+		if item.Type == "service" {
 			gatewayTerminatingService(&block.Block[index], &blockChanges)
 		}
 	}
@@ -358,13 +359,13 @@ func group(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	if changes.Release != "" {
-		block.Name = fmt.Sprintf("%s-%s", block.Name, changes.Release)
+		block.Label = fmt.Sprintf("%s-%s", block.Label, changes.Release)
 	}
 
 	for index, item := range block.Block {
-		blockChanges := checkFileChanges(&block.Block[index], changes, singleType)
+		blockChanges := checkFileChanges(&block.Block[index], changes, single)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "affinity":
 			affinity(&block.Block[index], &blockChanges)
 		case "consul":
@@ -384,13 +385,13 @@ func group(block *model.TemplateBlock, changes *model.BlockChanges) {
 		case "update":
 			update(&block.Block[index], &blockChanges)
 		case "task":
-			blockChanges := checkFileChanges(&block.Block[index], changes, namedType)
+			blockChanges := checkFileChanges(&block.Block[index], changes, named)
 			task(&block.Block[index], &blockChanges)
 		case "scaling":
 			scaling(&block.Block[index], &blockChanges)
 		case "service":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+				&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 			)
 			service(&block.Block[index], &blockChanges)
 		case "meta":
@@ -398,7 +399,7 @@ func group(block *model.TemplateBlock, changes *model.BlockChanges) {
 		case "restart":
 			restart(&block.Block[index], &blockChanges)
 		case "volume":
-			blockChanges := checkFileChanges(&block.Block[index], changes, namedType)
+			blockChanges := checkFileChanges(&block.Block[index], changes, named)
 			volume(&block.Block[index], &blockChanges)
 		case "vault":
 			vault(&block.Block[index], &blockChanges)
@@ -436,6 +437,8 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		for key := range item {
 			switch key {
 			case "type":
+				haveType = true
+
 				for _, item := range changes.Chart.Parameter {
 					for k, v := range item {
 						if k == key {
@@ -443,8 +446,6 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 						}
 					}
 				}
-
-				haveType = true
 			case "namespace":
 				haveNamespace = true
 
@@ -456,14 +457,12 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 
 	for _, i := range block.Block {
-		if i.BlockName == "meta" {
+		if i.Type == "meta" {
 			haveMeta = true
 		}
 	}
 
-	// Create a type and "meta" block if they don't exist.
-	switch false {
-	case haveType:
+	if !haveType {
 		for _, item := range changes.Chart.Parameter {
 			for k := range item {
 				if k == "type" {
@@ -471,9 +470,11 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 				}
 			}
 		}
-	case haveMeta:
+	}
+
+	if !haveMeta {
 		meta := model.TemplateBlock{
-			BlockName: "meta",
+			Type: "meta",
 		}
 
 		for _, item := range changes.Chart.Parameter {
@@ -486,7 +487,9 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		}
 
 		block.Block = append(block.Block, meta)
-	case haveNamespace:
+	}
+
+	if !haveNamespace {
 		if changes.Namespace != "" {
 			namespace := map[string]interface{}{"namespace": changes.Namespace}
 			block.Parameter = append(block.Parameter, namespace)
@@ -517,22 +520,22 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	if changes.Release != "" {
-		block.Name = fmt.Sprintf("%s-%s", block.Name, changes.Release)
+		block.Label = fmt.Sprintf("%s-%s", block.Label, changes.Release)
 	}
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "affinity":
 			affinity(&block.Block[index], &blockChanges)
 		case "constraint":
 			constraint(&block.Block[index], &blockChanges)
 		case "group":
 			blockChanges = checkFileChanges(
-				&block.Block[index], changes, namedType,
+				&block.Block[index], changes, named,
 			)
 			group(&block.Block[index], &blockChanges)
 		case "meta":
@@ -602,15 +605,15 @@ func multiregion(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 
-		switch item.BlockName {
+		switch item.Type {
 		case "strategy":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, singleType,
+				&block.Block[index], changes, single,
 			)
 			multiregionStrategy(&block.Block[index], &blockChanges)
 		case "region":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, namedType,
+				&block.Block[index], changes, named,
 			)
 			multiregionRegion(&block.Block[index], &blockChanges)
 		}
@@ -628,9 +631,9 @@ func multiregionRegion(block *model.TemplateBlock, changes *model.BlockChanges) 
 	setFileChanges(block, &changes.File)
 
 	for index, item := range block.Block {
-		if item.BlockName == "meta" {
+		if item.Type == "meta" {
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, singleType,
+				&block.Block[index], changes, single,
 			)
 			meta(&block.Block[index], &blockChanges)
 		}
@@ -647,15 +650,15 @@ func network(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 
-		switch item.BlockName {
+		switch item.Type {
 		case "dns":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, singleType,
+				&block.Block[index], changes, single,
 			)
 			networkDNS(&block.Block[index], &blockChanges)
 		case "port":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, namedType,
+				&block.Block[index], changes, named,
 			)
 			networkPort(&block.Block[index], &blockChanges)
 		}
@@ -686,10 +689,10 @@ func proxy(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "config":
 			config(&block.Block[index], &blockChanges)
 		case "upstreams":
@@ -711,9 +714,9 @@ func resources(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	for index, item := range block.Block {
-		if item.BlockName == "device" {
+		if item.Type == "device" {
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, namedType,
+				&block.Block[index], changes, named,
 			)
 			device(&block.Block[index], &blockChanges)
 		}
@@ -731,9 +734,9 @@ func scaling(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	for index, item := range block.Block {
-		if item.BlockName == "policy" {
+		if item.Type == "policy" {
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, singleType,
+				&block.Block[index], changes, single,
 			)
 			scalingPolicy(&block.Block[index], &blockChanges)
 		}
@@ -781,14 +784,14 @@ func service(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 
 	for index, item := range block.Block {
-		blockChanges := checkFileChanges(&block.Block[index], changes, singleType)
+		blockChanges := checkFileChanges(&block.Block[index], changes, single)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "tagged_addresses":
 			serviceTaggedAddresses(&block.Block[index], &blockChanges)
 		case "check":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+				&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 			)
 			check(&block.Block[index], &blockChanges)
 		case "check_restart":
@@ -818,9 +821,9 @@ func sidecarService(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	for index, item := range block.Block {
-		blockChanges := checkFileChanges(&block.Block[index], changes, singleType)
+		blockChanges := checkFileChanges(&block.Block[index], changes, single)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "meta":
 			meta(&block.Block[index], &blockChanges)
 		case "proxy":
@@ -854,10 +857,10 @@ func sidecarTask(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "config":
 			config(&block.Block[index], &blockChanges)
 		case "env":
@@ -879,9 +882,9 @@ func spread(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	for index, item := range block.Block {
-		if item.BlockName == "target" {
+		if item.Type == "target" {
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, namedType,
+				&block.Block[index], changes, named,
 			)
 			spreadTarget(&block.Block[index], &blockChanges)
 		}
@@ -925,13 +928,13 @@ func task(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	if changes.Release != "" {
-		block.Name = fmt.Sprintf("%s-%s", block.Name, changes.Release)
+		block.Label = fmt.Sprintf("%s-%s", block.Label, changes.Release)
 	}
 
 	for index, item := range block.Block {
-		blockChanges := checkFileChanges(&block.Block[index], changes, singleType)
+		blockChanges := checkFileChanges(&block.Block[index], changes, single)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "artifact":
 			artifact(&block.Block[index], &blockChanges)
 		case "affinity":
@@ -946,7 +949,7 @@ func task(block *model.TemplateBlock, changes *model.BlockChanges) {
 			meta(&block.Block[index], &blockChanges)
 		case "template":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+				&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 			)
 			template(&block.Block[index], &blockChanges)
 		case "csi_plugin":
@@ -964,18 +967,18 @@ func task(block *model.TemplateBlock, changes *model.BlockChanges) {
 		case "restart":
 			restart(&block.Block[index], &blockChanges)
 		case "scaling":
-			blockChanges := checkFileChanges(&block.Block[index], changes, namedType)
+			blockChanges := checkFileChanges(&block.Block[index], changes, named)
 			scaling(&block.Block[index], &blockChanges)
 		case "service":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+				&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 			)
 			service(&block.Block[index], &blockChanges)
 		case "vault":
 			vault(&block.Block[index], &blockChanges)
 		case "volume_mount":
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, unnamedType, unnamedDublicateBlock,
+				&block.Block[index], changes, unnamed, unnamedDublicateBlock,
 			)
 			volumeMount(&block.Block[index], &blockChanges)
 		}
@@ -988,12 +991,24 @@ func template(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
 
+Loop:
+	for index, item := range block.Parameter {
+		for k := range item {
+			if k == "name" {
+				block.Parameter = slices.Delete(
+					block.Parameter, index, index+1,
+				)
+				break Loop
+			}
+		}
+	}
+
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "wait":
 			templateWait(&block.Block[index], &blockChanges)
 		case "change_script":
@@ -1039,10 +1054,10 @@ func upstreams(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
-			&block.Block[index], changes, singleType,
+			&block.Block[index], changes, single,
 		)
 
-		switch item.BlockName {
+		switch item.Type {
 		case "config":
 			config(&block.Block[index], &blockChanges)
 		case "mesh_gateway":
@@ -1076,9 +1091,9 @@ func volume(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	for index, item := range block.Block {
-		if item.BlockName == "mount_options" {
+		if item.Type == "mount_options" {
 			blockChanges := checkFileChanges(
-				&block.Block[index], changes, singleType,
+				&block.Block[index], changes, single,
 			)
 			volumeMountOptions(&block.Block[index], &blockChanges)
 		}

@@ -32,11 +32,11 @@ func (p *Parser) ParseYAML(file []byte) (map[string]interface{}, error) {
 // Parsing the configuration map.
 // Assembles a block structure.
 func (p *Parser) ParseConfig(
-	name string,
+	blockType string,
 	config map[string]interface{},
 ) model.ConfigBlock {
 	block := model.ConfigBlock{
-		Name: name,
+		Type: blockType,
 	}
 
 	for key, value := range config {

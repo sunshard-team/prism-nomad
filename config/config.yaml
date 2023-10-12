@@ -75,7 +75,8 @@ job:
               - "custom_path:/custom_path_in_container"
 
           template:
-            - name: load_balancer.conf
+            - name: "load_balancer"
+              file: "load_balancer.conf"
               destination: "local/load_balancer.conf"
               change_mode: "signal"
               change_signal: "SIGHUP"
