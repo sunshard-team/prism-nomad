@@ -2,12 +2,11 @@ name: "test"
 description: "A Helm chart for Kubernetes"
 type: "service"
 
+deploy_version: "0.0.1"
+prism_version: "0.0.1"
+
 dependencies:
-  - name: rabbit
+  - name: "rabbit"
     prism_version: "1.0"
     path: "project/charts/rabbit"
     config_path: "project/env/prod/config/rabbit_config.yaml"
-
-deploy_version: "0.1.0"
-
-prism_version: "1.16.0"
