@@ -437,6 +437,8 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		for key := range item {
 			switch key {
 			case "type":
+				haveType = true
+
 				for _, item := range changes.Chart.Parameter {
 					for k, v := range item {
 						if k == key {
@@ -444,8 +446,6 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 						}
 					}
 				}
-
-				haveType = true
 			case "namespace":
 				haveNamespace = true
 
@@ -462,9 +462,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		}
 	}
 
-	// Create a type and "meta" block if they don't exist.
-	switch false {
-	case haveType:
+	if !haveType {
 		for _, item := range changes.Chart.Parameter {
 			for k := range item {
 				if k == "type" {
@@ -472,7 +470,9 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 				}
 			}
 		}
-	case haveMeta:
+	}
+
+	if !haveMeta {
 		meta := model.TemplateBlock{
 			Type: "meta",
 		}
@@ -487,7 +487,9 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		}
 
 		block.Block = append(block.Block, meta)
-	case haveNamespace:
+	}
+
+	if !haveNamespace {
 		if changes.Namespace != "" {
 			namespace := map[string]interface{}{"namespace": changes.Namespace}
 			block.Parameter = append(block.Parameter, namespace)
