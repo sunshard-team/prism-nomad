@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"prism/internal/model"
 	"regexp"
-	"strings"
 )
 
 // Returns the configuration structure.
@@ -15,42 +14,41 @@ func (s *Deployment) CreateConfigStructure(
 ) (model.TemplateBlock, error) {
 	var config model.TemplateBlock
 
-	// Topic.
-	topicName := strings.ReplaceAll(parameter.ProjectDir, "-", "_")
-	topicFileName := fmt.Sprintf("%s.yaml", topicName)
-	topicPath := filepath.Join(parameter.ProjectDirPath, topicFileName)
+	// Pack.
+	packFileName := "prism.yaml"
+	packPath := filepath.Join(parameter.ProjectDirPath, packFileName)
 
-	topicFile, err := os.ReadFile(topicPath)
+	packFile, err := os.ReadFile(packPath)
 	if err != nil {
-		return config, fmt.Errorf("error to read topic file, %s", err)
+		return config, fmt.Errorf("error to read pack file, %s", err)
 	}
 
-	parsedTopicConfig, err := s.parser.ParseYAML(topicFile)
+	parsedPackConfig, err := s.parser.ParseYAML(packFile)
 	if err != nil {
 		if err != nil {
-			return config, fmt.Errorf("failed to parsing topic file, %s", err)
+			return config, fmt.Errorf("failed to parsing pack file, %s", err)
 		}
 	}
 
-	topicConfig := s.parser.ParseConfig("topic", parsedTopicConfig)
+	packConfig := s.parser.ParseConfig("pack", parsedPackConfig)
 
-	// Job.
-	jobFileName := "config.yaml"
-	jobPath := filepath.Join(parameter.ProjectDirPath, jobFileName)
+	// Job config.
+	configFileName := "config.yaml"
+	configPath := filepath.Join(parameter.ProjectDirPath, configFileName)
 
-	jobFile, err := os.ReadFile(jobPath)
+	configFile, err := os.ReadFile(configPath)
 	if err != nil {
 		return config, fmt.Errorf("error to read job file, %s", err)
 	}
 
-	parsedJobConfig, err := s.parser.ParseYAML(jobFile)
+	parsedConfig, err := s.parser.ParseYAML(configFile)
 	if err != nil {
-		return config, fmt.Errorf("failed to parsing job file, %s", err)
+		return config, fmt.Errorf("failed to parsing job config file, %s", err)
 	}
 
 	jobConfig := s.parser.ParseConfig(
 		"job",
-		parsedJobConfig["job"].(map[string]interface{}),
+		parsedConfig["job"].(map[string]interface{}),
 	)
 
 	// Config structure.
@@ -128,7 +126,7 @@ func (s *Deployment) CreateConfigStructure(
 		Release:   parameter.Release,
 		Namespace: parameter.Namespace,
 		Files:     files,
-		Topic:     topicConfig,
+		Pack:      packConfig,
 	}
 
 	err = s.changes.SetChanges(&config, &changes)

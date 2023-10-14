@@ -1,12 +1,31 @@
-name: "test"
-description: "A Helm chart for Kubernetes"
+# The name of the Prism Pack.
+name: "PRISM_PACK_NAME"
+
+# Description of the Prism Pack.
+description: "A prism pack for Nomad"
+
+# Specifies the Nomad scheduler to use.
+# Nomad provides the service, system, batch, and sysbatch schedulers.
 type: "service"
 
+# Links to source code or resources associated with the Prism Pack.
+sources:
+  # - https://github.com/prometheus-operator/kube-prometheus
+
+# The version of the application it contains.
 deploy_version: "0.0.1"
+
+# The version of the Prism Pack,
+# aiding in tracking changes and updates to the Prism Pack.
 prism_version: "0.0.1"
 
-dependencies:
-  - name: "rabbit"
-    prism_version: "1.0"
-    path: "project/charts/rabbit"
-    config_path: "project/env/prod/config/rabbit_config.yaml"
+# The version of Nomad on which the Prism Pack has been tested.
+nomadVer: 1.6.1
+
+# Specifies dependencies of the current Prism Pack on other Prism Packs,
+# which will be automatically installed when installing the main Prism Pack.
+# dependencies:
+#   - name: "rabbit"
+#     prism_version: "0.0.1"
+#     path: "project/pack/rabbit"
+#     config_path: "project/env/prod/config/rabbit_config.yaml"

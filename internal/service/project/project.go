@@ -21,7 +21,7 @@ func (s *Project) Create(name string) (string, error) {
 	// Get root dir path.
 	rootDir, err := os.Getwd()
 	if err != nil {
-		return "", fmt.Errorf("failed project initialization, %s", err)
+		return "", fmt.Errorf("failed to get path, %s", err)
 	}
 
 	// Create project directories.
@@ -36,11 +36,8 @@ func (s *Project) Create(name string) (string, error) {
 	projectFileDir := "files"
 	fileDirPath := filepath.Join(projectDirPath, projectFileDir)
 
-	topicName := strings.ReplaceAll(projectName, "-", "_")
-	topicFileName := fmt.Sprintf("%s.yaml", topicName)
-
-	configName := "config"
-	configFileName := fmt.Sprintf("%s.yaml", configName)
+	packFileName := "prism.yaml"
+	configFileName := "config.yaml"
 
 	dirStat, err := os.Stat(projectDirPath)
 	if err != nil || !dirStat.IsDir() {
@@ -50,13 +47,13 @@ func (s *Project) Create(name string) (string, error) {
 		)
 
 		if err != nil {
-			return "", fmt.Errorf("failed project initialization, %s", err)
+			return "", fmt.Errorf("failed to check project directory, %s", err)
 		}
 	}
 
 	// Create default project files.
 	defaultFile := map[string]string{
-		"prism.yaml":  topicFileName,
+		"prism.yaml":  packFileName,
 		"config.yaml": configFileName,
 	}
 
@@ -64,11 +61,10 @@ func (s *Project) Create(name string) (string, error) {
 		err = createFile(config.ConfigFile, k, v, projectDirPath)
 
 		if err != nil {
-			return "", fmt.Errorf(err.Error())
+			return "", err
 		}
 	}
 
-	// additional files.
 	err = createFile(config.ConfigFile,
 		"load_balancer.conf",
 		"load_balancer.conf",
@@ -77,6 +73,13 @@ func (s *Project) Create(name string) (string, error) {
 
 	if err != nil {
 		return "", fmt.Errorf(err.Error())
+	}
+
+	// Set pack name.
+	packPath := filepath.Join(projectDirPath, packFileName)
+	err = setPackName(projectName, packPath)
+	if err != nil {
+		return "", err
 	}
 
 	return projectName, nil
@@ -106,6 +109,30 @@ func createFile(
 	_, err = io.Copy(createdFile, file)
 	if err != nil {
 		return fmt.Errorf("failed to create file %s, %s", fileName, err)
+	}
+
+	return nil
+}
+
+func setPackName(name, filePath string) error {
+	packFile, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("error to read pack file, %s", err)
+	}
+
+	lines := strings.Split(string(packFile), "\n")
+
+	for i, l := range lines {
+		if strings.Contains(l, "name: \"PRISM_PACK_NAME\"") {
+			lines[i] = fmt.Sprintf("name: \"%s\"", name)
+		}
+	}
+
+	output := strings.Join(lines, "\n")
+
+	err = os.WriteFile(filePath, []byte(output), 0644)
+	if err != nil {
+		return fmt.Errorf("error writing data to pack file, %s", err)
 	}
 
 	return nil

@@ -27,7 +27,7 @@ var initCmd = &cobra.Command{
 		// Create a project.
 		projectName, err := services.Project.Create(name)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("An error occurred while creating the project: %s\n", err)
 			os.Exit(1)
 		}
 
