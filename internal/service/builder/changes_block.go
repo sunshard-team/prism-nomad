@@ -432,14 +432,14 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		haveMeta      bool
 	)
 
-	// Get type from topic and set namespace.
+	// Get type from pack file and set namespace.
 	for index, item := range block.Parameter {
 		for key := range item {
 			switch key {
 			case "type":
 				haveType = true
 
-				for _, item := range changes.Topic.Parameter {
+				for _, item := range changes.Pack.Parameter {
 					for k, v := range item {
 						if k == key {
 							block.Parameter[index][key] = v.(string)
@@ -463,7 +463,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 
 	if !haveType {
-		for _, item := range changes.Topic.Parameter {
+		for _, item := range changes.Pack.Parameter {
 			for k := range item {
 				if k == "type" {
 					block.Parameter = append(block.Parameter, item)
@@ -472,12 +472,19 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		}
 	}
 
+	if !haveNamespace {
+		if changes.Namespace != "" {
+			namespace := map[string]interface{}{"namespace": changes.Namespace}
+			block.Parameter = append(block.Parameter, namespace)
+		}
+	}
+
 	if !haveMeta {
 		meta := model.TemplateBlock{
 			Type: "meta",
 		}
 
-		for _, item := range changes.Topic.Parameter {
+		for _, item := range changes.Pack.Parameter {
 			for k, v := range item {
 				if k == "deploy_version" {
 					i := map[string]interface{}{"run_uuid": v.(string)}
@@ -489,14 +496,8 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 		block.Block = append(block.Block, meta)
 	}
 
-	if !haveNamespace {
-		if changes.Namespace != "" {
-			namespace := map[string]interface{}{"namespace": changes.Namespace}
-			block.Parameter = append(block.Parameter, namespace)
-		}
-	}
-
-	// Check block list.
+	// Checking for blocks.
+	// If the block is not in the configuration, it will be added.
 	singleBlock := []string{
 		"affinity",
 		"constraint",
@@ -519,6 +520,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	// Set changes.
 	setFileChanges(block, &changes.File)
 
+	// Adding the release name to the job name.
 	if changes.Release != "" {
 		block.Label = fmt.Sprintf("%s-%s", block.Label, changes.Release)
 	}
@@ -565,7 +567,7 @@ func jobMeta(block *model.TemplateBlock, changes *model.BlockChanges) {
 		for key := range item {
 			switch key {
 			case "run_uuid":
-				for _, item := range changes.Topic.Parameter {
+				for _, item := range changes.Pack.Parameter {
 					for k, v := range item {
 						if k == "deploy_version" {
 							block.Parameter[index][key] = v.(string)

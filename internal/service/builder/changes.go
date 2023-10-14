@@ -28,7 +28,7 @@ func (s *Changes) SetChanges(
 		Release:   changes.Release,
 		Namespace: changes.Namespace,
 		File:      model.TemplateBlock{},
-		Topic:     changes.Topic,
+		Pack:      changes.Pack,
 	}
 
 	if len(changes.Files) > 0 {
@@ -48,7 +48,6 @@ func (s *Changes) SetChanges(
 	}
 
 	job(config, &blockChanges)
-
 	return nil
 }
 
@@ -240,7 +239,7 @@ func checkFileChanges(
 		Release:   changes.Release,
 		Namespace: changes.Namespace,
 		File:      fileChanges,
-		Topic:     changes.Topic,
+		Pack:      changes.Pack,
 	}
 
 	return blockChanges
