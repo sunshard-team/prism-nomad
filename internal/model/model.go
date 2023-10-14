@@ -19,11 +19,13 @@ type TemplateBlock struct {
 	Block     []TemplateBlock          // list of configuration blocks
 }
 
+// Necessary data for building the job configuration structure.
 type BuildStructure struct {
 	Config       ConfigBlock
 	FilesDirPath string
 }
 
+// Job deployment data.
 type ConfigParameter struct {
 	ProjectDir     string
 	ProjectDirPath string
@@ -42,12 +44,12 @@ type Changes struct {
 	Release   string
 	Namespace string
 	Files     []TemplateBlock
-	Topic     ConfigBlock
+	Pack      ConfigBlock
 }
 
 type BlockChanges struct {
 	Release   string
 	Namespace string
 	File      TemplateBlock
-	Topic     ConfigBlock
+	Pack      ConfigBlock
 }
