@@ -15,7 +15,7 @@ func (s *Deployment) CreateConfigStructure(
 	var config model.TemplateBlock
 
 	// Pack.
-	packFileName := "prism.yaml"
+	packFileName := "pack.yaml"
 	packPath := filepath.Join(parameter.ProjectDirPath, packFileName)
 
 	packFile, err := os.ReadFile(packPath)
