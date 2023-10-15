@@ -563,16 +563,29 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 }
 
 func jobMeta(block *model.TemplateBlock, changes *model.BlockChanges) {
-	for index, item := range block.Parameter {
-		for key := range item {
-			switch key {
-			case "run_uuid":
-				for _, item := range changes.Pack.Parameter {
-					for k, v := range item {
-						if k == "deploy_version" {
+	var haveUUID bool
+
+	for _, item := range changes.Pack.Parameter {
+		for k, v := range item {
+			if k == "deploy_version" {
+				for index, p := range block.Parameter {
+					for key := range p {
+						if key == "run_uuid" {
+							haveUUID = true
 							block.Parameter[index][key] = v.(string)
 						}
 					}
+				}
+			}
+		}
+	}
+
+	if !haveUUID {
+		for _, item := range changes.Pack.Parameter {
+			for k, v := range item {
+				if k == "deploy_version" {
+					i := map[string]interface{}{"run_uuid": v.(string)}
+					block.Parameter = append(block.Parameter, i)
 				}
 			}
 		}
