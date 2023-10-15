@@ -8,12 +8,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var services *service.Service
+var (
+	version  = "dev"
+	services *service.Service
+)
 
 var rootCmd = &cobra.Command{
-	Use:   "prism",
-	Short: "Creating a nomad job configuration template.",
-	Long:  `Prism creates a nomad job configuration template and deploys it to the cluster.`,
+	Use:     "prism",
+	Short:   "Creating a nomad job configuration template.",
+	Long:    `Prism creates a nomad job configuration template and deploys it to the cluster.`,
+	Version: version,
 }
 
 func Execute(service *service.Service) {
