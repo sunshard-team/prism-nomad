@@ -36,7 +36,7 @@ func (s *Project) Create(name string) (string, error) {
 	projectFileDir := "files"
 	fileDirPath := filepath.Join(projectDirPath, projectFileDir)
 
-	packFileName := "prism.yaml"
+	packFileName := "pack.yaml"
 	configFileName := "config.yaml"
 
 	dirStat, err := os.Stat(projectDirPath)
@@ -53,7 +53,7 @@ func (s *Project) Create(name string) (string, error) {
 
 	// Create default project files.
 	defaultFile := map[string]string{
-		"prism.yaml":  packFileName,
+		"pack.yaml":   packFileName,
 		"config.yaml": configFileName,
 	}
 
