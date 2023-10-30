@@ -1,0 +1,35 @@
+# The name of the Prism Pack.
+name: "example_pack"
+
+# Description of the Prism Pack.
+description: "A prism pack for Nomad"
+
+# Information about those who maintain the Prism Pack.
+maintainers:
+  - "Name, email, etc."
+
+# Specifies the Nomad scheduler to use.
+# Nomad provides the service, system, batch, and sysbatch schedulers.
+type: "service"
+
+# Links to source code or resources associated with the Prism Pack.
+sources:
+  # - https://some-repo.ru/path/
+
+# The version of the application it contains.
+deploy_version: "0.0.1"
+
+# The version of the Prism Pack,
+# aiding in tracking changes and updates to the Prism Pack.
+prism_version: "0.0.1"
+
+# The version of Nomad on which the Prism Pack has been tested.
+nomad_version: 1.6.1
+
+# Specifies dependencies of the current Prism Pack on other Prism Packs,
+# which will be automatically installed when installing the main Prism Pack.
+# dependencies:
+#   - name: "rabbit"
+#     prism_version: "0.0.1"
+#     path: "project/pack/rabbit"
+#     config_path: "project/env/prod/config/rabbit_config.yaml"
