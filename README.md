@@ -8,10 +8,10 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Deploying a Configuration](#deploying-a-configuration)
+- [Deploying a Configuration](#deploying-a-configuration)
 - [Commands](#commands)
-- [Contributing](#contributing)
 - [Pack Information](#pack-information)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## Installation
@@ -20,12 +20,12 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 1. Clone the Prism repository:
    ```bash
-   git clone https://github.com/yourusername/prism.git
+   git clone https://github.com/sunshard-prism/prism-nomad.git
    ```
 
 2. Change to the project directory:
    ```bash
-   cd prism
+   cd prism-nomad
    ```
 
 3. Install the required Go dependencies:
@@ -37,7 +37,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    ```bash
    go run main.go
    ```
-
+   
 **Or download pre-built binary (Windows, MacOS, or Linux).**
 
 [Release download](https://github.com/sunshard-prism/prism-nomad/releases)
@@ -45,15 +45,6 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 ## Usage
 
 Prism simplifies the process of creating and deploying Nomad job configurations. You can define your infrastructure and application requirements in a `config.yaml` file and then generate configuration files and Go code for deployment.
-
-## Commands
-
-Prism provides the following commands:
-
-- `deploy`: Deploy a configuration to a remote cluster.
-- `init`: Create a new project.
-
-For more details on each command and their usage, run `prism [command] --help`.
 
 ### Deploying a Configuration
 
@@ -85,6 +76,15 @@ prism deploy -a http://nomad_ip:4646 -t nomad_token -n dest_namespace -r name_of
 
 This command will perform a dry run and print the job configuration to the console. Adjust the flags to suit your deployment needs.
 
+## Commands
+
+Prism provides the following commands:
+
+- `deploy`: Deploy a configuration to a remote cluster.
+- `init`: Create a new project.
+
+For more details on each command and their usage, run `prism [command] --help`.
+
 ## Pack Information
 
 The `pack.yaml` file is used in the context of Prism-cli packages, which serve as a way to describe, package, and deploy applications in Nomad. This file contains metadata and information about the Prism Pack, which is an archive containing descriptions of Nomad resources, default values for creating deployed applications in the Nomad cluster. Here are some of the key fields that may be found in the `pack.yaml` file:
@@ -107,7 +107,7 @@ If you want to contribute to the development of Prism, please follow these steps
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/prism.git
+   git clone https://github.com/sunshard-prism/prism-nomad.git
    ```
 
 2. Create a new branch for your feature or bug fix:
