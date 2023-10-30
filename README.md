@@ -10,8 +10,8 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 - [Usage](#usage)
 - [Deploying a Configuration](#deploying-a-configuration)
 - [Commands](#commands)
-- [Contributing](#contributing)
 - [Pack Information](#pack-information)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## Installation
@@ -37,7 +37,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    ```bash
    go run main.go
    ```
-
+   
 **Or download pre-built binary (Windows, MacOS, or Linux).**
 
 [Release download](https://github.com/sunshard-prism/prism-nomad/releases)
@@ -85,13 +85,29 @@ Prism provides the following commands:
 
 For more details on each command and their usage, run `prism [command] --help`.
 
+## Pack Information
+
+The `pack.yaml` file is used in the context of Prism-cli packages, which serve as a way to describe, package, and deploy applications in Nomad. This file contains metadata and information about the Prism Pack, which is an archive containing descriptions of Nomad resources, default values for creating deployed applications in the Nomad cluster. Here are some of the key fields that may be found in the `pack.yaml` file:
+
+- **name**: The name of the Prism Pack.
+- **description**: Description of the Prism Pack.
+- **maintainers**: Information about those who maintain the Prism Pack.
+- **type**: Specifies the Nomad scheduler to use. Nomad provides the service, system, batch, and sysbatch schedulers.
+- **sources**: Links to source code or resources associated with the Prism Pack.
+- **deploy_version**: The version of the application it contains.
+- **prism_version**: The version of the Prism Pack, aiding in tracking changes and updates to the Prism Pack.
+- **nomad_version**: The version of Nomad on which the Prism Pack has been tested.
+- **dependencies**: Specifies dependencies of the current Prism Pack on other Prism Packs, which will be automatically installed when installing the main Prism Pack.
+
+This file is valuable for organizing and documenting Prism Packs, as well as for their publication and exchange among Nomad developers. The `pack.yaml` file helps manage Prism Pack versions, simplifies searching and describing packs, and eases their utilization in the Nomad environment.
+
 ## Contributing
 
 If you want to contribute to the development of Prism, please follow these steps:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/prism.git
+   git clone https://github.com/sunshard-prism/prism-nomad.git
    ```
 
 2. Create a new branch for your feature or bug fix:
@@ -111,24 +127,6 @@ If you want to contribute to the development of Prism, please follow these steps
    ```
 
 5. Create a Pull Request in the Prism repository for your changes.
-
-
-## Pack Information
-
-The `pack.yaml` file is used in the context of Prism-cli packages, which serve as a way to describe, package, and deploy applications in Nomad. This file contains metadata and information about the Prism Pack, which is an archive containing descriptions of Nomad resources, default values for creating deployed applications in the Nomad cluster. Here are some of the key fields that may be found in the `pack.yaml` file:
-
-- **name**: The name of the Prism Pack.
-- **description**: Description of the Prism Pack.
-- **maintainers**: Information about those who maintain the Prism Pack.
-- **type**: Specifies the Nomad scheduler to use. Nomad provides the service, system, batch, and sysbatch schedulers.
-- **sources**: Links to source code or resources associated with the Prism Pack.
-- **deploy_version**: The version of the application it contains.
-- **prism_version**: The version of the Prism Pack, aiding in tracking changes and updates to the Prism Pack.
-- **nomad_version**: The version of Nomad on which the Prism Pack has been tested.
-- **dependencies**: Specifies dependencies of the current Prism Pack on other Prism Packs, which will be automatically installed when installing the main Prism Pack.
-
-This file is valuable for organizing and documenting Prism Packs, as well as for their publication and exchange among Nomad developers. The `pack.yaml` file helps manage Prism Pack versions, simplifies searching and describing packs, and eases their utilization in the Nomad environment.
-
 
 ## License
 
