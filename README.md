@@ -25,7 +25,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 2. Change to the project directory:
    ```bash
-   cd prism
+   cd prism-nomad
    ```
 
 3. Install the required Go dependencies:
