@@ -11,31 +11,29 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 - [Deploying a Configuration](#deploying-a-configuration)
 - [Commands](#commands)
 - [Pack Information](#pack-information)
-- [Contributing](#contributing)
-- [License](#license)
+
 
 ## Installation
 
 **To get started with Prism, you'll need to install it. Please follow these steps:**
 
-1. Clone the Prism repository:
+1. Download release on local station:
    ```bash
-   git clone https://github.com/sunshard-prism/prism-nomad.git
+   wget https://github.com/sunshard-prism/prism-nomad/releases/download/v{{version}}-alpha/prism.linux-amd64.tar.gz
+
+2. Move prism binaries to /usr/local/bin:
+   ```bash
+   mv prism /usr/local/bin/prism
    ```
 
-2. Change to the project directory:
+3. Grants executable permissions for prism binaries:
    ```bash
-   cd prism-nomad
+   chmod +x /usr/local/bin/prism
    ```
 
-3. Install the required Go dependencies:
+4. Test to ensure the version you installed is up-to-date:
    ```bash
-   go mod download
-   ```
-
-4. You're all set! You can run Prism with the following command:
-   ```bash
-   go run main.go
+   prism —version
    ```
    
 **Or download pre-built binary (Windows, MacOS, or Linux).**
@@ -100,36 +98,3 @@ The `pack.yaml` file is used in the context of Prism-cli packages, which serve a
 - **dependencies**: Specifies dependencies of the current Prism Pack on other Prism Packs, which will be automatically installed when installing the main Prism Pack.
 
 This file is valuable for organizing and documenting Prism Packs, as well as for their publication and exchange among Nomad developers. The `pack.yaml` file helps manage Prism Pack versions, simplifies searching and describing packs, and eases their utilization in the Nomad environment.
-
-## Contributing
-
-If you want to contribute to the development of Prism, please follow these steps:
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/sunshard-prism/prism-nomad.git
-   ```
-
-2. Create a new branch for your feature or bug fix:
-   ```bash
-   git checkout -b yourbranch
-   ```
-
-3. Make your changes, and commit them:
-   ```bash
-   git add .
-   git commit -m "Your commit message"
-   ```
-
-4. Push your changes to GitHub:
-   ```bash
-   git push origin yourbranch
-   ```
-
-5. Create a Pull Request in the Prism repository for your changes.
-
-## License
-
-Prism is distributed under the MIT License. For more information, please see the `LICENSE` file.
-```
-
