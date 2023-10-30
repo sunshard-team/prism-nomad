@@ -20,7 +20,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 1. Clone the Prism repository:
    ```bash
-   git clone https://github.com/yourusername/prism.git
+   git clone git@github.com:sunshard-prism/prism-nomad.git
    ```
 
 2. Change to the project directory:
