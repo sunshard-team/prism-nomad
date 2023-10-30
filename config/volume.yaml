@@ -1,0 +1,20 @@
+enable: false
+autocreate: false
+volume:
+  id: "<<NAME>>"
+  namespace: "namespace"
+  name: "<<NAME>>"
+  type: "csi"
+  external_id: "external_id"
+  plugin_id: "plugin_id"
+  capacity_max: "capacity_max"
+  capacity_min: "capacity_min"
+  capability:
+    access_mode: "single-node-writer"
+    attachment_mode: "file-system"
+  mount_options:
+    fs_type: "ext4"
+    mount_flags: ["noatime"]
+  context:
+    server: "ip_address"
+    share: "/path/to/volume"

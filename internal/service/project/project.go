@@ -38,6 +38,7 @@ func (s *Project) Create(name string) (string, error) {
 
 	packFileName := "pack.yaml"
 	configFileName := "config.yaml"
+	volumeFileName := "volume.yaml"
 
 	dirStat, err := os.Stat(projectDirPath)
 	if err != nil || !dirStat.IsDir() {
@@ -55,6 +56,7 @@ func (s *Project) Create(name string) (string, error) {
 	defaultFile := map[string]string{
 		"pack.yaml":   packFileName,
 		"config.yaml": configFileName,
+		"volume.yaml": volumeFileName,
 	}
 
 	for k, v := range defaultFile {
