@@ -1,5 +1,5 @@
 # The name of the Prism Pack.
-name: "example_pack"
+name: "example"
 
 # Description of the Prism Pack.
 description: "A prism pack for Nomad"

@@ -21,7 +21,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 1. Download release on local station:
    ```bash
-   wget https://github.com/sunshard-prism/prism-nomad/releases/download/v{{version}}-alpha/prism.linux-amd64.tar.gz
+   wget https://github.com/sunshard-prism/prism-nomad/releases/download/{{version}}/prism.linux-amd64.tar.gz
 
 2. Move prism binaries to /usr/local/bin:
    ```bash
