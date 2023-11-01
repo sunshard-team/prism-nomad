@@ -1,0 +1,777 @@
+## This file contains the fully described blocks 
+job:
+  name: "job-name" 
+  all_at_once: false
+  datacenters: ["*"]
+  node_pool: "default"
+  namespace: "default"
+  priority: 50
+  region: "global"
+  type: "service"
+  vault_token: "test-vault-token"
+  consul_token: "test-consul-token"
+
+  meta:
+    run_uuid: "uuid4"
+    meta_test: "test1"
+    meta_test2: "test2"
+
+  affinity:
+    attribute: "${job-attr}"
+    operator: "="
+    value: "job-value"
+    weight: 50
+
+  constraint:
+    attribute: "${job-attr}"
+    operator: "="
+    value: "job-value"
+
+  spread:
+    attribute: "${job-attr}"
+    weight: 0
+    target:
+      - value: "job-target-value"
+        percent: 0
+      - value: "job-target-value-2"
+        percent: 0
+
+  migrate:
+    max_parallel: 1
+    health_check: "checks"
+    min_healthy_time: "10s"
+    healthy_deadline: "5m"
+
+  multiregion:
+    strategy:
+      max_parallel: 1
+      on_failure: "fail_local"
+
+    region:
+      - name: "test-region-name"
+        count: 2
+        datacenters: ["test-job"]
+        node_pool: "test-job"
+
+        meta:
+          meta_test_region: "test"
+          meta_test_region2: "test2"
+
+      - name: "test-region-name-2"
+        count: 2
+        datacenters: ["test-job"]
+        node_pool: "test-job-2"
+
+        meta:
+          meta_test_region: "test"
+          meta_test_region2: "test2"
+
+  parameterized:
+    meta_optional: ["meta", "meta2"]
+    meta_required: ["meta", "meta2"]
+    payload: "optional"
+  
+  periodic:
+    cron: "crone_test"
+    prohibit_overlap: false
+    time_zone: "UTC"
+    enabled: true
+  
+  reschedule:
+    attempts: 2
+    interval: "10s"
+    delay: "5s"
+    delay_function: "constant"
+    max_delay: "60s"
+    unlimited: false
+
+  update:
+    max_parallel: 2
+    health_check: "checks"
+    min_healthy_time: "10s"
+    healthy_deadline: "5m"
+    progress_deadline: "10m"
+    auto_revert: false
+    auto_promote: false
+    canary: 0
+    stagger: "30s"
+
+  vault:
+    change_mode: "restart"
+    change_signal: "SIGINT"
+    env: true
+    disable_file: false
+    namespace: "job-test"
+    policies: ["job-test", "job-test2"]
+  
+  group:
+    - name: "test-group"
+      count: 1
+      shutdown_delay: "0s"
+      stop_after_client_disconnect: "sacd-test"
+      max_client_disconnect: "mcd-test"
+
+      consul:
+        namespace: "group-consul"
+
+      affinity:
+        attribute: "${group-attr}"
+        operator: "="
+        value: "goup-value"
+        weight: 50
+
+      constraint:
+        attribute: "${group-attr}"
+        operator: "="
+        value: "group-value"
+
+      meta:
+        meta_test: "goup-test1"
+        meta_test2: "group-test2"
+
+      restart:
+        attempts: 1
+        delay: "15s"
+        interval: "30s"
+        mode: "fail"
+
+      scaling:
+        min: 1
+        max: 10
+        enabled: false
+        
+        policy:
+          scaling_test: "test"
+          scaling_test2: "test2"
+
+      vault:
+        change_mode: "restart"
+        change_signal: "SIGINT"
+        env: true
+        disable_file: false
+        namespace: "group-test"
+        policies: ["group-test", "group-test2"]
+
+      network:
+        mode: "bridge"
+        hostname: "group-hostname"
+        dns:
+          servers: ["group", "group2", "group3"]
+          searches: ["s-group", "s-group2", "s-group3"]
+          options: ["o-group", "o-group2", "o-group3"]
+        port:
+          - name: "http"
+            host_network: ""
+            static: 80
+            to: 8181
+
+      volume:
+        - name: "test_name"
+          type: "host"
+          source: "host_volume"
+          read_only: false
+          per_alloc: false
+          access_mode: "single-node-reader-only"
+          attachment_mode: "file-system"
+
+          mount_options:
+            fs_type: "ext4"
+            mount_flags: "ro"
+
+      ephemeral_disk:
+        migrate: false
+        size: 300
+        sticky: false
+
+      migrate:
+        max_parallel: 1
+        health_check: "checks"
+        min_healthy_time: "10s"
+        healthy_deadline: "5m"
+
+      reschedule:
+        attempts: 2
+        interval: "10s"
+        delay: "5s"
+        delay_function: "constant"
+        max_delay: "60s"
+        unlimited: false
+
+      update:
+        max_parallel: 2
+        health_check: "checks"
+        min_healthy_time: "10s"
+        healthy_deadline: "5m"
+        progress_deadline: "10m"
+        auto_revert: false
+        auto_promote: false
+        canary: 0
+        stagger: "30s"
+
+      service:
+        - name: "group-test"
+          provider: "consul"
+          port: "host"
+          tags: ["gr", "gr2", "gr3"]
+          canary_tags: ["c-gr", "c-gr2", "c-gr3"]
+          enable_tag_override: false
+          address: "ip4"
+          address_mode: "auto"
+          task: "test"
+          on_update: "require_healthy"
+
+          tagged_addresses:
+            tag_address: "test"
+            tag_address2: "test2"
+
+          check:
+            - name: "service check"
+              address_mode: "host"
+              args: ["arg", "arg2", "arg3"]
+              command: "cmd"
+              grpc_service: "grpc1"
+              grpc_use_tls: false
+              initial_status: "enum"
+              success_before_passing: 0
+              failures_before_critical: 0
+              interval: "20s"
+              method: "GET"
+              body: "test-body"
+              path: "service sheck path"
+              expose: false
+              port: "80"
+              protocol: "http"
+              task: "test"
+              timeout: "30s"
+              type: "http"
+              tls_server_name: "https_server"
+              tls_skip_verify: false
+              on_update: "require_healthy"
+
+              header:
+                auth: ["Basic"]
+                origin: "localhost"
+
+              check_restart:
+                limit: 0
+                grace: "90s"
+                ignore_warnings: false
+
+          check_restart:
+            limit: 0
+            grace: "90s"
+            ignore_warnings: false
+
+          meta:
+            meta_test: "goup-service-test1"
+            meta_test2: "group-service-test2"
+
+          canary_meta:
+            canary_meta_test: "goup-service-test1"
+            canary_meta_test2: "group-service-test2"
+
+          connect:
+            native: false
+            open_sidecar_service: false
+
+            sidecar_service:
+              disable_default_tcp_check: false
+              port: "http"
+              tags: ["test", "test2"]
+
+              meta:
+                meta_test: "goup-sidecar_service-test1"
+                meta_test2: "group-sidecar_service-test2"
+
+              proxy:
+                local_service_address: "127.0.0.1"
+                local_service_port: 80
+
+                config:
+                  test_config: "group-test-config"
+
+                upstreams:
+                  destination_name: "test-name"
+                  destination_namespace: "test-namespace"
+                  datacenter: "test-datacenter"
+                  local_bind_address: "local-address"
+
+                  config:
+                    test_config: "group-test-config"
+
+                  mesh_gateway:
+                    mode: "local"
+
+                expose:
+                  path:
+                    - path: "test-path"
+                      protocol: "http"
+                      local_path_port: 80
+                      listener_port: "port-name-from-network"
+                    - path: "test-path-2"
+                      protocol: "https"
+                      local_path_port: 443
+                      listener_port: "port-name-from-network"
+            
+            sidecar_task:
+              name: "test-name"
+              driver: "docker"
+              user: "username"
+              kill_timeout: "5s"
+              shutdown_delay: "5s"
+              kill_signal: "SIGINT"
+
+              config:
+                test_config: "group-test-config"
+                test_config2: "group-test-config2"
+
+              env:
+                test_env: "group-test-env"
+                test_env2: "group-test-env2"
+              
+              meta:
+                meta_test: "goup-sidecar_task-test1"
+                meta_test2: "group-sidecar_task-test2"
+
+              logs:
+                max_files: 10
+                max_file_size: 10
+                disabled: false
+
+              resources:
+                cpu: 100
+                cores: 1
+                memory: 300
+                memory_max: 500
+
+                device:
+                  name: "device-name"
+                  count: 1
+
+                  affinity:
+                    attribute: "${device-attr}"
+                    operator: "="
+                    value: "device-value"
+                    weight: 50
+
+                  constraint:
+                    attribute: "${device-attr}"
+                    operator: "="
+                    value: "device-value"
+
+            gateway:
+              proxy:
+                connect_timeout: "5s"
+                envoy_gateway_bind_tagged_address: false
+                envoy_gateway_no_default_bind: false
+                envoy_dns_doscovery_type: false
+
+                config:
+                  test_config: "group-test-config"
+                  test_config2: "group-test-config2"
+
+                envoy_gateway_bind_addresses:
+                  - name: "listener-service-name"
+                    address: "127.0.0.1"
+                    port: 80
+                  - name: "listener-service-name-2"
+                    address: "127.0.0.1"
+                    port: 443
+
+              ingress:
+                tls:
+                  enabled: false
+                  tls_min_version: "TLSv1_2"
+                  tls_max_version: "TLSv1_4"
+                  cipher_suites: ["test", "test2"]
+
+                listener:
+                  - port: 80
+                    protocol: "http"
+                    service:
+                      - name: "test-serv"
+                        hosts: ["test", "test2"]
+                      - name: "test-serv"
+                        hosts: ["test", "test2"]
+
+                  - port: 443
+                    protocol: "https"
+                    service:
+                      - name: "test-serv"
+                        hosts: ["test", "test2"]
+                      - name: "test-serv"
+                        hosts: ["test", "test2"]
+
+              terminating:
+                service:
+                  - name: "test-service-terminating"
+                    ca_file: "ca file"
+                    cert_file: "cert file"
+                    key_file: "key file"
+                    sni: "sni test"
+
+              mesh:
+
+      task:
+        - name: "test-task-name-group"
+          driver: "docker"
+          kill_timeout: "5s"
+          kill_signal: "CTRL_BREAK_EVENT"
+          leader: false
+          shutdown_delay: "0s"
+          user: "user test"
+          kind: "kind test"
+
+          config:
+            test_config: "group-test-config"
+            test_config2: "group-test-config2"
+
+          affinity:
+            attribute: "${task-attr}"
+            operator: "="
+            value: "task-value"
+            weight: 50
+
+          artifact:
+            destination: "local/"
+            mode: "any"
+            source: "source test"
+            
+            options:
+              test_options: "test"
+              test_options2: "test2"
+
+            headers:
+              test_headers: "test"
+              test_oheaders2: "test2"
+          
+          constraint:
+            attribute: "${task-attr}"
+            operator: "="
+            value: "job-value"
+
+          template:
+            - name: "example_template_config"
+              file: "example_template_config.yaml"
+              change_mode: "restart"
+              change_signal: "SIGUSR1"
+              destination: "local/..."
+              env: false
+              error_on_missing_key: false
+              left_delimiter: "{{"
+              perms: "664"
+              uid: 0
+              gid: 0
+              right_delimiter: "}}"
+              source: "data"
+              splay: "5s"
+              vault_grace: "15s"
+
+              wait:
+                min: "5s"
+                max: "10s"
+
+              change_script:
+                command: "cmd"
+                args: ["args", "args2", "args3"]
+                timeout: "5s"
+                fail_on_error: false
+
+          csi_plugin:
+            id: "test id"
+            type: "test type"
+            mount_dir: "dir"
+            stage_publish_base_dir: "dir publish"
+            health_timeout: "30s"
+
+          resources:
+            cpu: 100
+            cores: 1
+            memory: 300
+            memory_max: 500
+
+            device:
+              name: "device-name"
+              count: 1
+
+              affinity:
+                attribute: "${device-attr}"
+                operator: "="
+                value: "device-value"
+                weight: 50
+
+              constraint:
+                attribute: "${device-attr}"
+                operator: "="
+                value: "device-value"
+
+          dispatch_payload:
+            file: "file test"
+
+          identity:
+            env: false
+            file: false
+
+          lifecycle:
+            hook: "prestart"
+            sidecar: false
+
+          logs:
+            max_files: 10
+            max_file_size: 10
+            disabled: false
+
+          env:
+            env_test: "goup-task-test1"
+            env_test2: "group-task-test2"
+
+          meta:
+            meta_test: "goup-task-test1"
+            meta_test2: "group-task-test2"
+
+          restart:
+            attempts: 1
+            delay: "15s"
+            interval: "30s"
+            mode: "fail"
+
+          scaling:
+            - name: "cpu"
+              min: 1
+              max: 10
+              enabled: false
+
+              policy:
+                scaling_test: "test"
+                scaling_test2: "test2"
+
+            - name: "mem"
+              min: 1
+              max: 10
+              enabled: false
+
+              policy:
+                scaling_test: "test"
+                scaling_test2: "test2"
+
+          vault:
+            change_mode: "restart"
+            change_signal: "SIGINT"
+            env: true
+            disable_file: false
+            namespace: "job-test"
+            policies: ["job-test", "job-test2"]
+
+          volume_mount:
+            - volume: "group-volume"
+              destination: "group-dest"
+              read_only: false
+              propagation_mode: "private"
+            - volume: "group-volume-2"
+              destination: "group-dest2"
+              read_only: false
+              propagation_mode: "private"
+
+          service:
+            - name: "group-test"
+              provider: "consul"
+              port: "http"
+              tags: ["gr", "gr2", "gr3"]
+              canary_tags: ["c-gr", "c-gr2", "c-gr3"]
+              enable_tag_override: false
+              address: "ip4"
+              address_mode: "auto"
+              task: "test"
+              on_update: "require_healthy"
+
+              tagged_address:
+                tag_address: "test"
+                tag_address2: "test2"
+
+              check:
+                - name: "service chech"
+                  address_mode: "host"
+                  args: ["arg", "arg2", "arg3"]
+                  command: "cmd"
+                  grpc_service: "grpc1"
+                  grpc_use_tls: false
+                  initial_status: "enum"
+                  success_before_passing: 0
+                  failures_before_critical: 0
+                  interval: "20s"
+                  method: "GET"
+                  body: "test-body"
+                  path: "service sheck path"
+                  expose: true
+                  port: "80"
+                  protocol: "http"
+                  task: "test"
+                  timeout: "30s"
+                  type: "http"
+                  tls_server_name: "https_server"
+                  tls_skip_verify: false
+                  on_update: "require_healthy"
+
+                  header:
+                    auth: ["Basic"]
+                    origin: "localhost"
+
+                  check_restart:
+                    limit: 0
+                    grace: "90s"
+                    ignore_warnings: false
+            
+              check_restart:
+                limit: 0
+                grace: "90s"
+                ignore_warnings: false
+
+              meta:
+                meta_test: "goup-service-test1"
+                meta_test2: "group-service-test2"
+
+              canary_meta:
+                canary_meta_test: "goup-service-test1"
+                canary_meta_test2: "group-service-test2"
+
+              connect:
+                native: false
+                open_sidecar_service: false
+
+                sidecar_service:
+                  disable_default_tcp_check: false
+                  port: "http"
+                  tags: ["test", "test2"]
+
+                  meta:
+                    meta_test: "goup-sidecar_service-test1"
+                    meta_test2: "group-sidecar_service-test2"
+
+                  proxy:
+                    local_service_address: "127.0.0.1"
+                    local_service_port: 80
+
+                    config:
+                      test_config: "group-test-config"
+
+                    upstreams:
+                      destination_name: "test-name"
+                      destination_namespace: "test-namespace"
+                      datacenter: "test-datacenter"
+                      local_bind_address: "local-address"
+
+                      config:
+                        test_config: "group-test-config"
+
+                      mesh_gateway:
+                        mode: "local"
+
+                    expose:
+                      path:
+                        - path: "test-path"
+                          protocol: "http"
+                          local_path_port: 80
+                          listener_port: "port-name-from-network"
+                        - path: "test-path-2"
+                          protocol: "https"
+                          local_path_port: 443
+                          listener_port: "port-name-from-network"
+
+                sidecar_task:
+                  name: "test-name"
+                  driver: "docker"
+                  user: "username"
+                  kill_timeout: "5s"
+                  shutdown_delay: "5s"
+                  kill_signal: "SIGINT"
+
+                  config:
+                    test_config: "group-test-config"
+                    test_config2: "group-test-config2"
+
+                  env:
+                    test_env: "group-test-env"
+                    test_env2: "group-test-env2"
+
+                  meta:
+                    meta_test: "goup-sidecar_task-test1"
+                    meta_test2: "group-sidecar_task-test2"
+
+                  logs:
+                    max_files: 10
+                    max_file_size: 10
+                    disabled: false
+
+                  resources:
+                    cpu: 100
+                    cores: 1
+                    memory: 300
+                    memory_max: 500
+
+                    device:
+                      name: "device-name"
+                      count: 1
+
+                      affinity:
+                        attribute: "${device-attr}"
+                        operator: "="
+                        value: "device-value"
+                        weight: 50
+
+                      constraint:
+                        attribute: "${device-attr}"
+                        operator: "="
+                        value: "device-value"
+
+                gateway:
+                  proxy:
+                    connect_timeout: "5s"
+                    envoy_gateway_bind_tagged_addresses: false
+                    envoy_gateway_no_default_bind: false
+                    envoy_dns_discovery_type: false
+
+                    config:
+                      test_config: "group-test-config"
+                      test_config2: "group-test-config2"
+
+                    envoy_gateway_bind_addresses:
+                      - name: "listener-service-name"
+                        address: "127.0.0.1"
+                        port: 80
+                      - name: "listener-service-name-2"
+                        address: "127.0.0.1"
+                        port: 80
+
+                  ingress:
+                    tls:
+                      enabled: false
+                      tls_min_version: "TLSv1_2"
+                      tls_max_version: "TLSv1_4"
+                      cipher_suites: ["test", "test2"]
+
+                    listener:
+                      - port: 80
+                        protocol: "http"
+                        service:
+                          - name: "test-serv"
+                            hosts: ["test", "test2"]
+                          - name: "test-serv-2"
+                            hosts: ["test", "test2"]
+
+                      - port: 443
+                        protocol: "https"
+                        service:
+                          - name: "test-serv"
+                            hosts: ["test", "test2"]
+                          - name: "test-serv-2"
+                            hosts: ["test", "test2"]
+
+                  terminating:
+                    service:
+                      - name: "test-service-terminating"
+                        ca_file: "ca file"
+                        cert_file: "cert file"
+                        key_file: "key file"
+                        sni: "sni test"
+
+                  mesh:

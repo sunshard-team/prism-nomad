@@ -1,18 +1,20 @@
 # Prism
 
-[![Discord](https://img.shields.io/badge/prism-cli.svg?style=flat&logo=discord)](https://discord.gg/fSvtfPTrud)
+[![Discord](https://img.shields.io/badge/prism-cli.svg?style=flat&logo=discord)](https://discord.gg/fSvtfPTrud)      [![Telegram](https://img.shields.io/badge/Telegram-Join%20Chat-blue?logo=telegram)](https://t.me/+Ubx2ygV2rd4yNzUy)
+
 
 Prism is a tool that simplifies the creation of Nomad job configuration templates and deploys them to a remote cluster.
+
+![Scheme of work Prism cli](docs/prism.svg)
 
 ## Table of Contents
 
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Deploying a Configuration](#deploying-a-configuration)
 - [Commands](#commands)
-- [Contributing](#contributing)
+- [Flags](#flags)
+- [Example command](#example-command)
 - [Pack Information](#pack-information)
-- [License](#license)
 
 ## Prerequisites
 + Go is [installed](https://go.dev/doc/install)
@@ -23,27 +25,30 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 **To get started with Prism, you'll need to install it. Please follow these steps:**
 
-1. Clone the Prism repository:
+1. Download release on local station:
    ```bash
-   git clone https://github.com/sunshard-prism/prism-nomad
+
+   wget https://github.com/sunshard-prism/prism-nomad/releases/download/{{version}}/prism.linux-amd64.tar.gz
+
+
+2. Move prism binaries to /usr/local/bin:
+   ```bash
+
+   tar -C /usr/local/bin/prism -xzf prism.linux-amd64.tar.gz
+
    ```
 
-2. Change to the project directory:
+3. Grants executable permissions for prism binaries:
    ```bash
-   cd prism-nomad
+   chmod +x /usr/local/bin/prism
    ```
 
-3. Install the required Go dependencies:
+4. Test to ensure the version you installed is up-to-date:
    ```bash
-   go mod download
+   prism --version
    ```
 
-4. You're all set! You can run Prism with the following command:
-   ```bash
-   go run main.go
-   ```
-
-**Or download pre-built binary (Windows, MacOS, or Linux).**
+**Or download pre-built binary (Windows, MacOS or Linux).**
 
 [Release download](https://github.com/sunshard-prism/prism-nomad/releases)
 
@@ -55,32 +60,31 @@ Prism simplifies the process of creating and deploying Nomad job configurations.
 
 Prism provides the following commands:
 
-- `deploy`: Deploy a configuration to a remote cluster.
 - `init`: Create a new project.
+- `deploy`: Deploy a configuration to a remote cluster.
 
 For more details on each command and their usage, run `prism [command] --help`.
 
-### Deploying a Configuration
+## Flags
 
-To deploy a configuration to a remote Nomad cluster, use the `deploy` command. Here's how to use it:
+**prism:**
+- `--version`: Use this flag to request the current version.
 
-```bash
-prism deploy [flags]
-```
+**init command:**
+- For init command use project name argument `prism init <name>`.
 
-**Flags**:
-
+**deploy command:**
 - `-a, --address string`: The address of the Nomad cluster.
+- `-t, --token string`: Cluster access token.
+- `-n, --namespace string`: Namespace name.
+- `-r, --release string`: Release name.
+- `-p, --path string`: Path to the project directory.
+- `-o, --output string`: Path to the directory where the `<project>_<release>.nomad.hcl` file will be created.
+- `-f, --file strings`: File name or full path to the file to update the configuration.
 - `--create-namespace`: Create a namespace in the cluster if it doesn't exist.
 - `--dry-run`: Print the job configuration to the console (blocking the deployment).
-- `-f, --file strings`: File name or full path to the file to update the configuration.
-- `-n, --namespace string`: Namespace name.
-- `-o, --output string`: Path to the directory where the `<project>_<release>.nomad.hcl` file will be created.
-- `-p, --path string`: Path to the project directory.
-- `-r, --release string`: Release name.
-- `-t, --token string`: Cluster access token.
 
-**Example**:
+## Example command:
 
 Here's an example of deploying a configuration to a remote Nomad cluster:
 
@@ -105,36 +109,3 @@ The `pack.yaml` file is used in the context of Prism-cli packages, which serve a
 - **dependencies**: Specifies dependencies of the current Prism Pack on other Prism Packs, which will be automatically installed when installing the main Prism Pack.
 
 This file is valuable for organizing and documenting Prism Packs, as well as for their publication and exchange among Nomad developers. The `pack.yaml` file helps manage Prism Pack versions, simplifies searching and describing packs, and eases their utilization in the Nomad environment.
-
-## Contributing
-
-If you want to contribute to the development of Prism, please follow these steps:
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/prism.git
-   ```
-
-2. Create a new branch for your feature or bug fix:
-   ```bash
-   git checkout -b yourbranch
-   ```
-
-3. Make your changes, and commit them:
-   ```bash
-   git add .
-   git commit -m "Your commit message"
-   ```
-
-4. Push your changes to GitHub:
-   ```bash
-   git push origin yourbranch
-   ```
-
-5. Create a Pull Request in the Prism repository for your changes.
-
-## License
-
-Prism is distributed under the MIT License. For more information, please see the `LICENSE` file.
-```
-
