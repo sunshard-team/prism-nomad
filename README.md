@@ -1,6 +1,7 @@
 # Prism
 
-[![Discord](https://img.shields.io/badge/prism-cli.svg?style=flat&logo=discord)](https://discord.gg/fSvtfPTrud)      [![Telegram](https://img.shields.io/badge/Telegram-Join%20Chat-blue?logo=telegram)](https://t.me/+Ubx2ygV2rd4yNzUy)
+[![Discord](https://img.shields.io/badge/prism-cli.svg?style=flat&logo=discord)](https://discord.gg/fSvtfPTrud)
+[![Telegram](https://img.shields.io/badge/Telegram-Join%20Chat-blue?logo=telegram)](https://t.me/+Ubx2ygV2rd4yNzUy)
 
 
 Prism is a tool that simplifies the creation of Nomad job configuration templates and deploys them to a remote cluster.
