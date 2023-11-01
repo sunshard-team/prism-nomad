@@ -14,18 +14,23 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 - [Pack Information](#pack-information)
 - [License](#license)
 
+## Prerequisites
++ Go is [installed](https://go.dev/doc/install)
++ Nomad is [installed](https://developer.hashicorp.com/nomad/tutorials/get-started/gs-install)
++ 
+
 ## Installation
 
 **To get started with Prism, you'll need to install it. Please follow these steps:**
 
 1. Clone the Prism repository:
    ```bash
-   git clone https://github.com/yourusername/prism.git
+   git clone https://github.com/sunshard-prism/prism-nomad
    ```
 
 2. Change to the project directory:
    ```bash
-   cd prism
+   cd prism-nomad
    ```
 
 3. Install the required Go dependencies:
