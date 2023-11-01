@@ -25,7 +25,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 2. Move prism binaries to /usr/local/bin:
    ```bash
-   mv prism /usr/local/bin/prism
+   tar -C /usr/local/bin/prism -xzf prism.linux-amd64.tar.gz
    ```
 
 3. Grants executable permissions for prism binaries:
@@ -35,10 +35,10 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 4. Test to ensure the version you installed is up-to-date:
    ```bash
-   prism —version
+   prism --version
    ```
-   
-**Or download pre-built binary (Windows, MacOS, or Linux).**
+
+**Or download pre-built binary (Windows, MacOS or Linux).**
 
 [Release download](https://github.com/sunshard-prism/prism-nomad/releases)
 
@@ -46,37 +46,35 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 Prism simplifies the process of creating and deploying Nomad job configurations. You can define your infrastructure and application requirements in a `config.yaml` file and then generate configuration files and Go code for deployment.
 
-### Flags
-
-To deploy a configuration to a remote Nomad cluster, use the `deploy` command. Here's how to use it:
-
-```bash
-prism deploy [flags]
-```
-
 ## Commands
 
 Prism provides the following commands:
 
-- `deploy`: Deploy a configuration to a remote cluster.
 - `init`: Create a new project.
+- `deploy`: Deploy a configuration to a remote cluster.
 
 For more details on each command and their usage, run `prism [command] --help`.
 
-**Flags**:
+## Flags
 
-- `-a, --address string`: The address of the Nomad cluster.
-- `--create-namespace`: Create a namespace in the cluster if it doesn't exist.
-- `--dry-run`: Print the job configuration to the console (blocking the deployment).
-- `-f, --file strings`: File name or full path to the file to update the configuration.
-- `-n, --namespace string`: Namespace name.
-- `-o, --output string`: Path to the directory where the `<project>_<release>.nomad.hcl` file will be created.
-- `-p, --path string`: Path to the project directory.
-- `-r, --release string`: Release name.
-- `-t, --token string`: Cluster access token.
+**prism:**
 - `--version`: Use this flag to request the current version.
 
-### Example command:
+**init command:**
+- For init command use project name argument `prism init <name>`.
+
+**deploy command:**
+- `-a, --address string`: The address of the Nomad cluster.
+- `-t, --token string`: Cluster access token.
+- `-n, --namespace string`: Namespace name.
+- `-r, --release string`: Release name.
+- `-p, --path string`: Path to the project directory.
+- `-o, --output string`: Path to the directory where the `<project>_<release>.nomad.hcl` file will be created.
+- `-f, --file strings`: File name or full path to the file to update the configuration.
+- `--create-namespace`: Create a namespace in the cluster if it doesn't exist.
+- `--dry-run`: Print the job configuration to the console (blocking the deployment).
+
+## Example command:
 
 Here's an example of deploying a configuration to a remote Nomad cluster:
 
