@@ -479,10 +479,14 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 
 	if !haveNamespace {
+		namespace := "default"
+
 		if changes.Namespace != "" {
-			namespace := map[string]interface{}{"namespace": changes.Namespace}
-			block.Parameter = append(block.Parameter, namespace)
+			namespace = changes.Namespace
 		}
+
+		namespaceParameter := map[string]interface{}{"namespace": namespace}
+		block.Parameter = append(block.Parameter, namespaceParameter)
 	}
 
 	if !haveMeta {

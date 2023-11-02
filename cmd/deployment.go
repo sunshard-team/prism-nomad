@@ -85,12 +85,12 @@ var deployCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if path == "" || namespace == "" {
+		if path == "" {
 			fmt.Printf(
 				"%s %s %s\n",
 				"failed execute deploy command,",
 				"one of the required flags is not specified:",
-				"path, version, namespace",
+				"path",
 			)
 
 			os.Exit(1)
@@ -160,12 +160,12 @@ var deployCmd = &cobra.Command{
 		}
 
 		// Deployment.
-		if address == "" || token == "" {
+		if address == "" {
 			fmt.Printf(
 				"%s %s %s\n",
 				"failed execute deploy command,",
 				"one of the required flags is not specified:",
-				"address, token",
+				"address",
 			)
 
 			os.Exit(1)
@@ -207,10 +207,10 @@ var deployCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(deployCmd)
 
-	deployCmd.Flags().StringP("path", "p", "", "path to project directory") // required
-	deployCmd.Flags().StringP("namespace", "n", "", "namespace name")       // required
 	deployCmd.Flags().StringP("address", "a", "", "cluster address")        // required for deployment
 	deployCmd.Flags().StringP("token", "t", "", "cluster access token")     // required for deployment
+	deployCmd.Flags().StringP("path", "p", "", "path to project directory") // required
+	deployCmd.Flags().StringP("namespace", "n", "", "namespace name")
 	deployCmd.Flags().StringP("release", "r", "", "release name")
 
 	deployCmd.Flags().StringSliceP(

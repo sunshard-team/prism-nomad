@@ -26,6 +26,7 @@ prism_version: "0.0.1"
 # The version of Nomad on which the Prism Pack has been tested.
 nomad_version: 1.6.1
 
+# Fuaters in progress.
 # Specifies dependencies of the current Prism Pack on other Prism Packs,
 # which will be automatically installed when installing the main Prism Pack.
 # dependencies:
