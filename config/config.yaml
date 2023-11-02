@@ -1,21 +1,54 @@
 job:
-  name: "nginx"
+  name: "redis"
   datacenters: ["dc1"]
-  type: "service" # type from pack, default "service"
-  namespace: "default" # set in the deployment command flag
+  type: "service" # type from pack.yaml, default "service"
+
+  # constraint:
+  #   attribute: "${attr.kernel.name}"
+  #   value: "linux"
+
+  update:
+    max_parallel: 1
+    min_healthy_time: "10s"
+    healthy_deadline: "3m"
+    progress_deadline: "10m"
+    auto_revert: false
+    canary: 0
+
+  migrate:
+    max_parallel: 1
+    health_check: "checks"
+    min_healthy_time: "10s"
+    healthy_deadline: "5m"
 
   group:
-    - name: "nginx"
+    - name: "cache"
       count: 1
+
+      # Example for use volume
+      # volumes: 
+      #   - name:  "example_volume_1" 
+      #     type: "csi"
+      #     source: "example_volume_1"
+      #     read_only: false
+      #     attachment_mode: "file-system"
+      #     access_mode: "multi-node-multi-writer"
+      #   - name:  "example_volume_2" 
+      #     type: "csi"
+      #     source: "example_volume_2"
+      #     read_only: false
+      #     attachment_mode: "file-system"
+      #     access_mode: "multi-node-multi-writer"
 
       network:
         mode: "bridge"
         port:
-          - name: "http"
-            static: 80
-            to: 80
-          - name: "https"
-            to: 443
+          # - name: "db_example_1"
+          #   static: 80
+          #   to: 80
+          # - name: "db_example_2"
+          - name: "db"
+            to: 6479
 
       scaling:
         enabled: true
@@ -23,63 +56,66 @@ job:
         max: 6
 
       service:
-        - name: "nginx"
-          provider: "consul"
-          port: "http"
+        - name: "redis-cache"
+          # provider: "nomad"  #(optional)
+          port: "db"
           tags: ["nginx"]
 
-          check:
-            - name: "alive"
-              type: "http"
-              path: "/"
-              interval: "10s"
-              timeout: "2s"
+          # check:
+          #   - name: "alive"
+          #     type: "http"
+          #     path: "/"
+          #     interval: "10s"
+          #     timeout: "2s"
 
-          connect:
-            open_sidecar_service: true
+          # Example for use connect function:
+          # connect:
+          #   open_sidecar_service: true
 
-        - name: "nginx-https"
-          provider: "consul"
-          port: "https"
-          tags: ["nginx"]
-
-          connect:
-            sidecar_service:
-              proxy:
-                upstreams:
-                  destination_name: "nginx"
-                  local_bind_port: 80
+          # connect:
+          #   sidecar_service:
+          #     proxy:
+          #       upstreams:
+          #         destination_name: "some_service"
+          #         local_bind_port: <<service_port>
 
       restart:
-        attempts: 10
-        interval: "5m"
-        delay: "25s"
-        mode: "delay"
+        attempts: 2
+        interval: "30m"
+        delay: "15s"
+        mode: "fail"
+
+      ephemeral_disk:
+        size: 300
 
       task:
-        - name: "nginx"
+        - name: "redis"
           driver: "docker"
-
           config:
-            image: "nginx"
-            force_pull: true
-            ports: ["http"]
+            image: "redis:7"
+            # force_pull: true
+            ports: ["db"]
             volumes:
-              - "local:/etc/nginx/conf.d"
-              - "local/test.conf:/etc/nginx/conf.d/test.conf"
               - "custom_path:/custom_path_in_container"
 
-          template:
-            - name: "load_balancer"
-              file: "load_balancer.conf"
-              destination: "local/load_balancer.conf"
-              change_mode: "signal"
-              change_signal: "SIGHUP"
+          # volume_mount:
+          #   - volume: "example_volume_1"
+          #     destination: "/path/in/container"
+          #   - volume: "example_volume_2"
+          #     destination: "/path/in/container"
+
+          # Example for use template. You need create file in folder 
+          # files. Paste template in file. And use example bellow 
+          # for use template in task.
+          # template:
+          #   - name: "load_balancer"
+          #     file: "load_balancer.conf"
+          #     destination: "local/load_balancer.conf"
+          #     change_mode: "signal"
+          #     change_signal: "SIGHUP"
 
           env:
-            WORDPRESS_DB_HOST: "${NOMAD_UPSTREAM_IP_mysql-server}"
-            WORDPRESS_CONFIG_HOME: "define('WP_HOME','wp.sunshard.ru:443')"
-            WORDPRESS_CONFIG_ALLOW_REPAIR: "define('WP_ALLOW_REPAIR', true); define('WP_HOME','https://wp.sunshard.space'); define('WP_SITEURL','https://wp.sunshard.space');"
+            ENV: "FOO"
 
           resources:
             cpu: 1000
