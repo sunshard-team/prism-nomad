@@ -160,12 +160,12 @@ var deployCmd = &cobra.Command{
 		}
 
 		// Deployment.
-		if address == "" || token == "" {
+		if address == "" {
 			fmt.Printf(
 				"%s %s %s\n",
 				"failed execute deploy command,",
 				"one of the required flags is not specified:",
-				"address, token",
+				"address",
 			)
 
 			os.Exit(1)
