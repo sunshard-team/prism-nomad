@@ -1,0 +1,48 @@
+job:
+  name: "website"
+  datacenters: ["dc1"]
+  type: "service" # type from pack, default "service"
+  namespace: "default" # set in the deployment command flag
+
+  group:
+    - name: "database"
+      network:
+        port:
+          - name: "db"
+            to: 3306
+
+      task:
+        - name: "mysql"
+          driver: "docker"
+
+          env:
+            MYSQL_ROOT_PASSWORD: "somewordpress"
+            MYSQL_DATABASE: "wordpress"
+            MYSQL_USER: "wordpress"
+            MYSQL_PASSWORD: "wordpress"
+
+          config:
+            image: "mysql:5.7"
+            ports: ["db"]
+
+          resources:
+            cpu: 500
+            memory: 256
+
+  group:
+    - name: "wordpress"
+      network:
+        port:
+          - name: "http"
+            to: 80
+      task:
+        - name: "wordpress"
+          driver: "docker"
+
+          config:
+            image: "wordpress:latest"
+            ports: ["http"]
+
+          resources:
+            cpu: 500
+            memory: 256
