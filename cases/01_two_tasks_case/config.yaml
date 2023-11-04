@@ -31,7 +31,6 @@ job:
             cpu: 500
             memory: 256
 
-      task:
         - name: "wordpress"
           driver: "docker"
 

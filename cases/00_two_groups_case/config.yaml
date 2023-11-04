@@ -29,7 +29,6 @@ job:
             cpu: 500
             memory: 256
 
-  group:
     - name: "wordpress"
       network:
         port:
