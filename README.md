@@ -94,14 +94,14 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    *Note that we add `--file dev.yaml` to tell prism to take the dev.yaml file and overlay it with the main config file. Prism adds parameters and configuration blocks missing from the main configuration file or replaces them if they exist (taking into account the hierarchy and the official specification of nomad). If multiple files are specified, changes will be applied in the order in which the files are specified.*
 
    If everything is in order, we can deploy the job configuration.
-   
+
    ```
    prism deploy --path ./prism --release dev --file dev.yaml --address $cluster-address
    ```
 
    *If a token is required to access the cluster, simply specify it by adding the `--token` flag.*
 
-   Ready! The prod version (using prod.yml) can be deployed in the same way as the dev version.
+   Ready! The prod version (using prod.yaml) can be deployed in the same way as the dev version.
 
 ## Commands
 
