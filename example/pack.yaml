@@ -1,5 +1,5 @@
 # The name of the Prism Pack.
-name: "PRISM_PACK_NAME"
+name: "example"
 
 # Description of the Prism Pack.
 description: "A prism pack for Nomad"
@@ -14,7 +14,7 @@ type: "service"
 
 # Links to source code or resources associated with the Prism Pack.
 sources:
-  # - https://github.com/prometheus-operator/kube-prometheus
+  # - https://some-repo.ru/path/
 
 # The version of the application it contains.
 deploy_version: "0.0.1"
@@ -26,7 +26,6 @@ prism_version: "0.0.1"
 # The version of Nomad on which the Prism Pack has been tested.
 nomad_version: 1.6.1
 
-# Fuaters in progress.
 # Specifies dependencies of the current Prism Pack on other Prism Packs,
 # which will be automatically installed when installing the main Prism Pack.
 # dependencies:
