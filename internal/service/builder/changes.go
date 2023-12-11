@@ -7,11 +7,14 @@
 package builder
 
 import (
+	"fmt"
 	"prism/internal/model"
 	"slices"
 )
 
 var (
+	missingENV []string
+
 	single  = "single"
 	unnamed = "unnamed"
 	named   = "named"
@@ -54,7 +57,31 @@ func (s *Changes) SetChanges(
 	}
 
 	job(config, &blockChanges)
+
+	// test path
+	filePath := "prism/appenv.yaml"
+
+	err := setEnvVar(config, filePath, map[string]string{})
+	if err != nil {
+		return err
+	}
+
+	if len(missingENV) > 0 {
+		var mass string
+
+		for index, m := range missingENV {
+			if len(missingENV)-1 != index {
+				mass = mass + fmt.Sprintf("%s, ", m)
+			} else {
+				mass = mass + fmt.Sprintf("%s", m)
+			}
+		}
+
+		return fmt.Errorf("environment variables not found: %v", mass)
+	}
+
 	return nil
+
 }
 
 // Checks for the presence of blocks
