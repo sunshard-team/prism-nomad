@@ -133,6 +133,12 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    - `--create-namespace`: Create a namespace in the cluster if it doesn't exist.
    - `--env-file`: Full path to the file with environment variables.
    - `--dry-run`: Print the job configuration to the console (blocking the deployment).
+   - `--ca-cert`: Path to a PEM encoded CA cert file to use to verify the Nomad server SSL certificate.
+   - `--ca-path`: Path to a directory of PEM encoded CA cert files to verify the Nomad server SSL certificate.
+   - `--client-cert`: Path to a PEM encoded client certificate for TLS authentication to the Nomad server.
+   - `--client-key`: Path to an unencrypted PEM encoded private key matching the client certificate from --client-cert.
+   - `--tls-server-name`: The server name to use as the SNI host when connecting via TLS.
+   - `--tls-skip-verify`: Do not verify TLS certificate. This is highly not recommended.
 
 ## Example command:
 
