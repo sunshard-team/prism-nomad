@@ -38,6 +38,8 @@ type ConfigParameter struct {
 	Namespace      string
 	Release        string
 	Files          []string
+	EnvFilePath    string
+	EnvVars        map[string]string
 }
 
 type CheckNamespace struct {
@@ -47,10 +49,12 @@ type CheckNamespace struct {
 }
 
 type Changes struct {
-	Release   string
-	Namespace string
-	Files     []TemplateBlock
-	Pack      ConfigBlock
+	Release     string
+	Namespace   string
+	Files       []TemplateBlock
+	Pack        ConfigBlock
+	EnvFilePath string
+	EnvVars     map[string]string
 }
 
 type BlockChanges struct {
