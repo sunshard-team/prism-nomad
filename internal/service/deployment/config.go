@@ -129,10 +129,12 @@ func (s *Deployment) CreateConfigStructure(
 	}
 
 	changes := model.Changes{
-		Release:   parameter.Release,
-		Namespace: parameter.Namespace,
-		Files:     files,
-		Pack:      packConfig,
+		Release:     parameter.Release,
+		Namespace:   parameter.Namespace,
+		Files:       files,
+		Pack:        packConfig,
+		EnvFilePath: parameter.EnvFilePath,
+		EnvVars:     parameter.EnvVars,
 	}
 
 	err = s.changes.SetChanges(&config, &changes)

@@ -85,6 +85,18 @@ var deployCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		envFilePath, err := cmd.Flags().GetString("env-file")
+		if err != nil {
+			fmt.Printf("failed to read flag \"env-file\", %s\n", err)
+			os.Exit(1)
+		}
+
+		envVars, err := cmd.Flags().GetStringToString("env")
+		if err != nil {
+			fmt.Printf("failed to read flag \"env\", %s\n", err)
+			os.Exit(1)
+		}
+
 		if path == "" {
 			fmt.Printf(
 				"%s %s %s\n",
@@ -118,6 +130,8 @@ var deployCmd = &cobra.Command{
 			Namespace:      namespace,
 			Release:        release,
 			Files:          file,
+			EnvFilePath:    envFilePath,
+			EnvVars:        envVars,
 		}
 
 		configStructure, err := services.Deployment.CreateConfigStructure(
@@ -212,6 +226,14 @@ func init() {
 	deployCmd.Flags().StringP("path", "p", "", "path to project directory") // required
 	deployCmd.Flags().StringP("namespace", "n", "", "namespace name")
 	deployCmd.Flags().StringP("release", "r", "", "release name")
+
+	deployCmd.Flags().String(
+		"env-file", "", "full path to the file with environment variables",
+	)
+
+	deployCmd.Flags().StringToStringP(
+		"env", "e", map[string]string{}, "environment variables in the form key=value",
+	)
 
 	deployCmd.Flags().StringSliceP(
 		"file",
