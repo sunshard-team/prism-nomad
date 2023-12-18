@@ -110,6 +110,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
    - `init`: Create a new project.
    - `deploy`: Deploy a configuration to a remote cluster.
+      - `tls`: Parameters required to configure TLS on the HTTP client used to communicate with Nomad.
 
    For more details on each command and their usage, run `prism [command] --help`.
 
@@ -130,9 +131,11 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    - `-o, --output string`: Path to the directory where the `<project>_<release>.nomad.hcl` file will be created.
    - `-f, --file strings`: File name or full path to the file to update the configuration.
    - `-e --env`: Environment variables in the form key=value.
-   - `--create-namespace`: Create a namespace in the cluster if it doesn't exist.
    - `--env-file`: Full path to the file with environment variables.
+   - `--create-namespace`: Create a namespace in the cluster if it doesn't exist.
    - `--dry-run`: Print the job configuration to the console (blocking the deployment).
+   
+   **tls command:**
    - `--ca-cert`: Path to a PEM encoded CA cert file to use to verify the Nomad server SSL certificate.
    - `--ca-path`: Path to a directory of PEM encoded CA cert files to verify the Nomad server SSL certificate.
    - `--client-cert`: Path to a PEM encoded client certificate for TLS authentication to the Nomad server.
