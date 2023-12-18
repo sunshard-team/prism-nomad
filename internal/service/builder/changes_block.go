@@ -9,7 +9,7 @@ package builder
 import (
 	"fmt"
 	"prism/internal/model"
-	"slices"
+	"prism/pkg"
 )
 
 func artifact(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -1005,17 +1005,7 @@ func template(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
 
-Loop:
-	for index, item := range block.Parameter {
-		for k := range item {
-			if k == "name" {
-				block.Parameter = slices.Delete(
-					block.Parameter, index, index+1,
-				)
-				break Loop
-			}
-		}
-	}
+	pkg.RemoveParameter(block, "name")
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(

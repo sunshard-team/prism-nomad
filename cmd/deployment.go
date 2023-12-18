@@ -35,53 +35,6 @@ var deployCmd = &cobra.Command{
 	Run:   deployment,
 }
 
-func init() {
-	rootCmd.AddCommand(deployCmd)
-
-	deployCmd.PersistentFlags().StringP("path", "p", "", "path to project directory") // required
-	deployCmd.PersistentFlags().StringP("address", "a", "", "cluster address")        // required for deployment
-	deployCmd.PersistentFlags().StringP("token", "t", "", "cluster access token")
-	deployCmd.PersistentFlags().StringP("release", "r", "", "release name")
-	deployCmd.PersistentFlags().StringP("namespace", "n", "default", "namespace name")
-
-	deployCmd.PersistentFlags().Bool(
-		"create-namespace",
-		false,
-		"create a namespace in the cluster if one is not created",
-	)
-
-	deployCmd.PersistentFlags().String(
-		"env-file", "", "full path to the file with environment variables",
-	)
-
-	deployCmd.PersistentFlags().StringToStringP(
-		"env", "e", map[string]string{}, "environment variables in the form key=value",
-	)
-
-	deployCmd.PersistentFlags().StringSliceP(
-		"file",
-		"f",
-		[]string{},
-		"file name or full path to file to update configuration",
-	)
-
-	deployCmd.PersistentFlags().Bool(
-		"dry-run",
-		false,
-		"print the job configuration to the console (blocking the deployment)",
-	)
-
-	deployCmd.PersistentFlags().StringP(
-		"output",
-		"o",
-		"",
-		fmt.Sprintf(
-			"Path to the directory in which the \"%s\" file will be created",
-			"<project>_<release>.nomad.hcl",
-		),
-	)
-}
-
 func deployment(cmd *cobra.Command, args []string) {
 	path, err := cmd.Flags().GetString("path")
 	if err != nil {
@@ -270,4 +223,51 @@ func deployment(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("Job \"%s\" deployed successfully.\n", jobID)
+}
+
+func init() {
+	rootCmd.AddCommand(deployCmd)
+
+	deployCmd.PersistentFlags().StringP("path", "p", "", "path to project directory") // required
+	deployCmd.PersistentFlags().StringP("address", "a", "", "cluster address")        // required for deployment
+	deployCmd.PersistentFlags().StringP("token", "t", "", "cluster access token")
+	deployCmd.PersistentFlags().StringP("release", "r", "", "release name")
+	deployCmd.PersistentFlags().StringP("namespace", "n", "default", "namespace name")
+
+	deployCmd.PersistentFlags().Bool(
+		"create-namespace",
+		false,
+		"create a namespace in the cluster if one is not created",
+	)
+
+	deployCmd.PersistentFlags().String(
+		"env-file", "", "full path to the file with environment variables",
+	)
+
+	deployCmd.PersistentFlags().StringToStringP(
+		"env", "e", map[string]string{}, "environment variables in the form key=value",
+	)
+
+	deployCmd.PersistentFlags().StringSliceP(
+		"file",
+		"f",
+		[]string{},
+		"file name or full path to file to update configuration",
+	)
+
+	deployCmd.PersistentFlags().Bool(
+		"dry-run",
+		false,
+		"print the job configuration to the console (blocking the deployment)",
+	)
+
+	deployCmd.PersistentFlags().StringP(
+		"output",
+		"o",
+		"",
+		fmt.Sprintf(
+			"Path to the directory in which the \"%s\" file will be created",
+			"<project>_<release>.nomad.hcl",
+		),
+	)
 }

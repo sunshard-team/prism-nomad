@@ -452,7 +452,7 @@ job:
 
           template:
             - name: "example_template_config"
-              file: "example_template_config.yaml"
+              file: "example_template_config.conf" # file name (if in a working pack) or full path
               change_mode: "restart"
               change_signal: "SIGUSR1"
               destination: "local/..."

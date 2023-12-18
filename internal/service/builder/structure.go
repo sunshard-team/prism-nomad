@@ -8,6 +8,7 @@ package builder
 
 import (
 	"prism/internal/model"
+	"prism/pkg"
 )
 
 var (
@@ -448,6 +449,8 @@ func connectStructure(config model.ConfigBlock) model.TemplateBlock {
 
 					connect.Block = append(connect.Block, sidecarService)
 					return connect
+				} else {
+					pkg.RemoveParameter(&connect, "open_sidecar_service")
 				}
 			}
 		}
