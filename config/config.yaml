@@ -26,7 +26,7 @@ job:
       count: 1
 
       # Example for use volume
-      # volumes: 
+      # volume: 
       #   - name:  "example_volume_1" 
       #     type: "csi"
       #     source: "example_volume_1"

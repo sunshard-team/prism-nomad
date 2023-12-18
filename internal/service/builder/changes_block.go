@@ -9,7 +9,7 @@ package builder
 import (
 	"fmt"
 	"prism/internal/model"
-	"slices"
+	"prism/pkg"
 )
 
 func artifact(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -416,12 +416,10 @@ func group(block *model.TemplateBlock, changes *model.BlockChanges) {
 func groupConsul(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
-	if changes.Namespace != "" {
-		for index, item := range block.Parameter {
-			for k := range item {
-				if k == "namespace" {
-					block.Parameter[index][k] = changes.Namespace
-				}
+	for index, item := range block.Parameter {
+		for k := range item {
+			if k == "namespace" {
+				block.Parameter[index][k] = changes.Namespace
 			}
 		}
 	}
@@ -454,10 +452,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 				}
 			case "namespace":
 				haveNamespace = true
-
-				if changes.Namespace != "" {
-					block.Parameter[index][key] = changes.Namespace
-				}
+				block.Parameter[index][key] = changes.Namespace
 			}
 		}
 	}
@@ -479,13 +474,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 
 	if !haveNamespace {
-		namespace := "default"
-
-		if changes.Namespace != "" {
-			namespace = changes.Namespace
-		}
-
-		namespaceParameter := map[string]interface{}{"namespace": namespace}
+		namespaceParameter := map[string]interface{}{"namespace": changes.Namespace}
 		block.Parameter = append(block.Parameter, namespaceParameter)
 	}
 
@@ -1016,17 +1005,7 @@ func template(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
 
-Loop:
-	for index, item := range block.Parameter {
-		for k := range item {
-			if k == "name" {
-				block.Parameter = slices.Delete(
-					block.Parameter, index, index+1,
-				)
-				break Loop
-			}
-		}
-	}
+	pkg.RemoveParameter(block, "name")
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
@@ -1056,12 +1035,10 @@ func upstreams(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
 
-	if changes.Namespace != "" {
-		for index, item := range block.Parameter {
-			for k := range item {
-				if k == "destination_namespace" {
-					block.Parameter[index][k] = changes.Namespace
-				}
+	for index, item := range block.Parameter {
+		for k := range item {
+			if k == "destination_namespace" {
+				block.Parameter[index][k] = changes.Namespace
 			}
 		}
 	}
@@ -1098,12 +1075,10 @@ func upstreamMeshGateway(block *model.TemplateBlock, changes *model.BlockChanges
 func vault(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
-	if changes.Namespace != "" {
-		for index, item := range block.Parameter {
-			for k := range item {
-				if k == "namespace" {
-					block.Parameter[index][k] = changes.Namespace
-				}
+	for index, item := range block.Parameter {
+		for k := range item {
+			if k == "namespace" {
+				block.Parameter[index][k] = changes.Namespace
 			}
 		}
 	}

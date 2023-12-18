@@ -50,10 +50,21 @@ func (s *Changes) SetChanges(
 			job(config, &blockChanges)
 		}
 
+		err := findAndReplaceEnvVars(config, changes.EnvFilePath, changes.EnvVars)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 
 	job(config, &blockChanges)
+
+	err := findAndReplaceEnvVars(config, changes.EnvFilePath, changes.EnvVars)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
