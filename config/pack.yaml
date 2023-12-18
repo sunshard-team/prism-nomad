@@ -24,7 +24,7 @@ deploy_version: "0.0.1"
 pack_version: "0.0.1"
 
 # The version of Nomad on which the Prism Pack has been tested.
-nomad_version: "1.6.1"
+nomad_version: "1.7.2"
 
 # Fuaters in progress.
 # Specifies dependencies of the current Prism Pack on other Prism Packs,
