@@ -42,7 +42,7 @@ func init() {
 	deployCmd.PersistentFlags().StringP("address", "a", "", "cluster address")        // required for deployment
 	deployCmd.PersistentFlags().StringP("token", "t", "", "cluster access token")
 	deployCmd.PersistentFlags().StringP("release", "r", "", "release name")
-	deployCmd.PersistentFlags().StringP("namespace", "n", "", "namespace name")
+	deployCmd.PersistentFlags().StringP("namespace", "n", "default", "namespace name")
 
 	deployCmd.PersistentFlags().Bool(
 		"create-namespace",
