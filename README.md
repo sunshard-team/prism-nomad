@@ -19,7 +19,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 ## Prerequisites
 
-+ Go >= 1.21.1 is [installed](https://go.dev/doc/install)
++ Go >= 1.21.5 is [installed](https://go.dev/doc/install)
 + Nomad is [installed](https://developer.hashicorp.com/nomad/tutorials/get-started/gs-install)
 
 ## Installation
