@@ -132,7 +132,8 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    - `-p, --path string`: Path to the project directory.
    - `-o, --output string`: Path to the directory where the `<project>_<release>.nomad.hcl` file will be created.
    - `-f, --file strings`: File name or full path to the file to update the configuration.
-   - `-e --env`: Environment variables in the form key=value.
+   - `-w, --wait-time`: Deployment wait time in seconds (default 120 sec.).
+   - `-e, --env`: Environment variables in the form key=value.
    - `--env-file`: Full path to the file with environment variables.
    - `--create-namespace`: Create a namespace in the cluster if it doesn't exist.
    - `--dry-run`: Print the job configuration to the console (blocking the deployment).
@@ -244,6 +245,6 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
    When deploying jobs, the following statuses are displayed in the console: deployment, job, allocation and deployment time of each job. If an error occurs during the deployment process, the process will be stopped.
 
-   Additionally, a wait time of 2 minutes is set for the deployment of each job. You can change the waiting time for jobs to be deployed using the "--wait-time" flag (the time is indicated in seconds).
+   Additionally, a wait time of 2 minutes is set for the deployment of each job. You can change the waiting time for jobs to be deployed using the `--wait-time` flag (the time is indicated in seconds).
    
    **The job will be considered successfully deployed only if the deployment status is "successful"!**
