@@ -12,6 +12,7 @@ import (
 	"prism/internal/service/builder"
 	"prism/internal/service/parser"
 	"slices"
+	"time"
 
 	"github.com/hashicorp/nomad/api"
 )
@@ -84,13 +85,129 @@ func (s *Deployment) CheckNamespace(namespace model.CheckNamespace) error {
 }
 
 // Job configuration deployment in the nomad cluster.
-func (s *Deployment) Deployment(client *api.Client, config string) (string, error) {
-	job, _ := client.Jobs().ParseHCL(config, true)
+func (s *Deployment) Deployment(
+	client *api.Client,
+	jobName, config string,
+	waitTime int,
+) (string, error) {
+	job, err := client.Jobs().ParseHCL(config, true)
+	if err != nil {
+		return jobName, fmt.Errorf("failed to parse hcl: %s", err)
+	}
 
-	_, _, err := client.Jobs().Register(job, &api.WriteOptions{})
+	fmt.Printf("Running of job \"%s\" deployment.\n", *job.ID)
+
+	_, _, err = client.Jobs().Register(job, &api.WriteOptions{})
 	if err != nil {
 		return "", fmt.Errorf("job registration error, %s", err)
 	}
 
-	return *job.ID, nil
+	timeNow := time.Now().UTC()
+	deployment := &api.Deployment{}
+
+	for {
+		var (
+			jobName          string
+			jobStatus        string
+			deploymentStatus string
+			allocationStatus string
+
+			startTime = fmt.Sprint(
+				time.Duration(time.Since(timeNow).Seconds()) * time.Second,
+			)
+		)
+
+		timeIsOver := time.Duration(
+			time.Since(timeNow).Seconds(),
+		)*time.Second == time.Duration(waitTime)*time.Second
+
+		if timeIsOver {
+			return *job.ID, fmt.Errorf("job deployment time out has expired")
+		}
+
+		job, _, err = client.Jobs().Info(*job.ID, &api.QueryOptions{})
+		if err != nil {
+			return *job.ID, fmt.Errorf("failed to get job status: %s", err)
+		}
+
+		if job != nil {
+			jobName = *job.Name
+			jobStatus = *job.Status
+
+			deployment, _, err = client.Jobs().LatestDeployment(
+				*job.ID, &api.QueryOptions{},
+			)
+
+			if err != nil {
+				return *job.Name, fmt.Errorf(
+					"failed to get deployment status: %s", err,
+				)
+			}
+
+			if deployment != nil {
+				deploymentStatus = deployment.Status
+
+				allocation, _, err := client.Jobs().Allocations(
+					deployment.JobID, false, &api.QueryOptions{},
+				)
+
+				if err != nil {
+					return *job.Name, fmt.Errorf(
+						"failed to get allocation status: %s", err,
+					)
+				}
+
+				if len(allocation) > 0 {
+					allocationStatus = allocation[0].ClientStatus
+
+					if allocationStatus == "failed" {
+						printDeploymentStatus(
+							jobName, startTime, jobStatus,
+							deploymentStatus, allocationStatus,
+						)
+
+						return jobName, fmt.Errorf("allocation status \"failed\"")
+					}
+
+					if allocationStatus == "running" {
+						if jobStatus == "dead" {
+							printDeploymentStatus(
+								jobName, startTime, jobStatus,
+								deploymentStatus, allocationStatus,
+							)
+
+							return jobName, fmt.Errorf("job status \"dead\"")
+						}
+
+						if jobStatus == "running" {
+							if deploymentStatus == "successful" {
+								printDeploymentStatus(
+									jobName, startTime, jobStatus,
+									deploymentStatus, allocationStatus,
+								)
+
+								return jobName, nil
+							}
+						}
+					}
+
+					printDeploymentStatus(
+						jobName, startTime, jobStatus,
+						deploymentStatus, allocationStatus,
+					)
+				}
+			}
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func printDeploymentStatus(
+	jobName, startTime, jobStatus, deploymentStatus, allocationStatus string,
+) {
+	fmt.Printf("Job deployment \"%s\" started %s ago\n", jobName, startTime)
+	fmt.Printf("Job status: \t\t%+v\n", jobStatus)
+	fmt.Printf("Deployment status: \t%+v\n", deploymentStatus)
+	fmt.Printf("Allocation status: \t%+v\n\n", allocationStatus)
 }

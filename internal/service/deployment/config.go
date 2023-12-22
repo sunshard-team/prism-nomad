@@ -12,13 +12,15 @@ import (
 	"path/filepath"
 	"prism/internal/model"
 	"regexp"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Returns the configuration structure.
 func (s *Deployment) CreateConfigStructure(
 	parameter model.ConfigParameter,
-) (model.TemplateBlock, error) {
-	var config model.TemplateBlock
+) ([]model.TemplateBlock, error) {
+	var configList []model.TemplateBlock
 
 	// Pack.
 	packFileName := "pack.yaml"
@@ -26,121 +28,172 @@ func (s *Deployment) CreateConfigStructure(
 
 	packFile, err := os.ReadFile(packPath)
 	if err != nil {
-		return config, fmt.Errorf("error to read pack file, %s", err)
+		return configList, fmt.Errorf("error to read pack file, %s", err)
 	}
 
-	parsedPackConfig, err := s.parser.ParseYAML(packFile)
+	var packConfig = &model.Pack{}
+
+	err = yaml.Unmarshal([]byte(packFile), packConfig)
 	if err != nil {
-		if err != nil {
-			return config, fmt.Errorf("failed to parsing pack file, %s", err)
-		}
+		return configList, fmt.Errorf("failed to parsing pack file, %s", err)
 	}
-
-	packConfig := s.parser.ParseConfig("pack", parsedPackConfig)
 
 	// Job config.
 	configFileName := "config.yaml"
 	configPath := filepath.Join(parameter.ProjectDirPath, configFileName)
+	filesPath := filepath.Join(parameter.ProjectDirPath, "files")
 
-	configFile, err := os.ReadFile(configPath)
+	configStructure, err := s.BuildConfigStructure(configPath, "job", filesPath)
 	if err != nil {
-		return config, fmt.Errorf("error to read job file, %s", err)
+		return configList, err
 	}
 
-	parsedConfig, err := s.parser.ParseYAML(configFile)
+	// Set changes.
+	config, err := s.SetChanges(parameter, packConfig, configStructure)
 	if err != nil {
-		return config, fmt.Errorf("failed to parsing job config file, %s", err)
+		return configList, err
 	}
 
-	jobConfig := s.parser.ParseConfig(
-		"job",
-		parsedConfig["job"].(map[string]interface{}),
-	)
+	// Create dependencies configuration structure.
+	if len(packConfig.Dependencies) > 0 {
+		for _, dependencyJob := range packConfig.Dependencies {
+			configFileName := "config.yaml"
+			configPath := filepath.Join(dependencyJob.Path, configFileName)
+			filesPath := filepath.Join(dependencyJob.Path, "files")
 
-	// Config structure.
-	buildStructure := model.BuildStructure{
-		Config:       jobConfig,
-		FilesDirPath: filepath.Join(parameter.ProjectDirPath, "files"),
+			configStructure, err := s.BuildConfigStructure(configPath, "job", filesPath)
+			if err != nil {
+				return configList, err
+			}
+
+			parameter.Files = dependencyJob.Files
+
+			config, err := s.SetChanges(parameter, packConfig, configStructure)
+			if err != nil {
+				return configList, err
+			}
+
+			configList = append(configList, config)
+		}
 	}
 
-	config = s.builder.BuildConfigStructure(buildStructure)
+	configList = append(configList, config)
+	return configList, nil
+}
 
-	//  Set changes.
+func (s *Deployment) SetChanges(
+	parameter model.ConfigParameter,
+	packConfig *model.Pack,
+	config model.TemplateBlock,
+) (model.TemplateBlock, error) {
+	// Parsing files.
 	var files []model.TemplateBlock
 
 	for _, file := range parameter.Files {
 		file = filepath.Join(file)
 
-		var (
-			fileDirPath  string
-			fileFullPath string
-		)
-
-		// Check the full file path or file name.
-		separatorFormat, err := regexp.Compile(`\\|\/`)
+		fileDirPath, fileFullPath, err := s.CheckFileName(file, parameter.ProjectDirPath)
 		if err != nil {
-			return config, fmt.Errorf(
-				"failed check OS separator in file path, %s", err,
-			)
+			return config, fmt.Errorf("could not verify file name, %s", err)
 		}
 
-		findSeparator := separatorFormat.FindStringSubmatch(file)
-
-		if len(findSeparator) > 0 {
-			fileFormat, err := regexp.Compile(`([\w+-]+)\..*$`)
-			if err != nil {
-				return config, fmt.Errorf(
-					"failed get file directory path",
-				)
-			}
-
-			findFile := fileFormat.FindStringSubmatch(file)
-			fileDirPath = file[:len(file)-len(findFile[0])]
-			fileFullPath = file
-		} else {
-			fileDirPath = filepath.Join(parameter.ProjectDirPath, "files")
-			fileFullPath = filepath.Join(fileDirPath, file)
-		}
-
-		// Read and parse file.
-		readFile, err := os.ReadFile(fileFullPath)
+		fileConfigStructure, err := s.BuildConfigStructure(fileFullPath, "job", fileDirPath)
 		if err != nil {
-			return config, fmt.Errorf("error to read job file, %s", err)
+			return config, err
 		}
 
-		parsedFile, err := s.parser.ParseYAML(readFile)
-		if err != nil {
-			return config, fmt.Errorf("failed to parsing job file, %s", err)
-		}
-
-		fileConfig := s.parser.ParseConfig(
-			"job",
-			parsedFile["job"].(map[string]interface{}),
-		)
-
-		// Create config structure.
-		buildStructure := model.BuildStructure{
-			Config:       fileConfig,
-			FilesDirPath: fileDirPath,
-		}
-
-		fileConfigStructure := s.builder.BuildConfigStructure(buildStructure)
 		files = append(files, fileConfigStructure)
 	}
 
+	// Set changes.
 	changes := model.Changes{
 		Release:     parameter.Release,
 		Namespace:   parameter.Namespace,
 		Files:       files,
-		Pack:        packConfig,
+		Pack:        *packConfig,
 		EnvFilePath: parameter.EnvFilePath,
 		EnvVars:     parameter.EnvVars,
 	}
 
-	err = s.changes.SetChanges(&config, &changes)
+	err := s.changes.SetChanges(&config, &changes)
 	if err != nil {
 		return config, fmt.Errorf("failed to make changes, %s", err)
 	}
 
 	return config, nil
+}
+
+// Parsing the configuration file and creating a structured job configuration.
+func (s *Deployment) BuildConfigStructure(
+	path, blockType, fileDirPath string,
+) (model.TemplateBlock, error) {
+	var config model.TemplateBlock
+
+	content, err := s.ParseFile(path)
+	if err != nil {
+		return config, fmt.Errorf("parse error, %s", err)
+	}
+
+	parsedConfig := s.parser.ParseConfig(
+		blockType,
+		content["job"].(map[string]interface{}),
+	)
+
+	buildStructure := model.BuildStructure{
+		Config:       parsedConfig,
+		FilesDirPath: fileDirPath,
+	}
+
+	config = s.builder.BuildConfigStructure(buildStructure)
+	return config, nil
+}
+
+// Read and parse file.
+// Returns the file contents, hierarchically sorted into blocks.
+func (s *Deployment) ParseFile(fileFullPath string) (map[string]interface{}, error) {
+	var parsedContent map[string]interface{}
+
+	content, err := os.ReadFile(fileFullPath)
+	if err != nil {
+		return parsedContent, err
+	}
+
+	parsedContent, err = s.parser.ParseYAML(content)
+	if err != nil {
+		return parsedContent, fmt.Errorf("failed to parsing file %s, %s", fileFullPath, err)
+	}
+
+	return parsedContent, nil
+}
+
+// Check the full file path or file name.
+func (s *Deployment) CheckFileName(
+	file, projectDirPath string,
+) (fileDirPath, fileFullPath string, err error) {
+	separatorFormat, err := regexp.Compile(`\\|\/`)
+	if err != nil {
+		return fileDirPath, fileFullPath, fmt.Errorf(
+			"failed check OS separator in file path, %s", err,
+		)
+	}
+
+	findSeparator := separatorFormat.FindStringSubmatch(file)
+
+	if len(findSeparator) > 0 {
+		fileFormat, err := regexp.Compile(`([\w+-]+)\..*$`)
+		if err != nil {
+			return fileDirPath, fileFullPath, fmt.Errorf(
+				"failed get file directory path",
+			)
+		}
+
+		findFile := fileFormat.FindStringSubmatch(file)
+		fileDirPath = file[:len(file)-len(findFile[0])]
+		fileFullPath = file
+	} else {
+		fileDirPath = filepath.Join(projectDirPath, "files")
+		fileFullPath = filepath.Join(fileDirPath, file)
+	}
+
+	return fileDirPath, fileFullPath, nil
 }

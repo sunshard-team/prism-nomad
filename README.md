@@ -16,6 +16,8 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 - [Example command](#example-command)
 - [Pack information](#pack-information)
 - [Environment variables](#environment-variables)
+- [Pack dependencies](#pack-dependencies)
+- [Deployment status](#deployment-status)
 
 ## Prerequisites
 
@@ -217,3 +219,31 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    You can specify a default value for an environment variable. It will be taken if the variable is not found in any of the sources. It is indicated immediately after the variable name, separated by a vertical bar with the keyword "default=", example: `${PRISM_VAR|default=any-value}`.
 
    **Do not leave the default without a value `"${PRISM_VAR|default=}"`, otherwise the line will be ignored!**
+
+## Pack dependencies
+
+   You can specify dependencies for a Pack to deploy them sequentially, before deploying the main job. A dependency is any other package, or rather its “basic” job configuration template - `config.yaml` file.
+
+   Dependency parameters:
+   - `name`: Dependency name.
+   - `pack_version`: Pack vesrion (optional).
+   - `path`: Full path to the Pack directory.
+   - `files`: List of files name or full paths to files to update (parameter overrides/additions), configuration. If only the filename is specified, Prism will look for it in the current Pack rather than the dependency Pack. This works like the `--file` flag of the `deploy` command.
+
+   The jobs is deployed in the following order:
+   1. Dependencies deployment, in the order in which they are listed;
+   2. Jobs deployment from the current Pack (job for which the dependencies are indicated);
+
+   The `--dry-run` flag prints jobs to the console in the order in which they will be deployed.
+
+   When jobs are deployed, the deployment status will be displayed in the console, [deployment status](#deployment-status).
+
+## Deployment status
+
+   Starting with version v0.4.0, the job deployment status functionality is introduced.
+
+   When deploying jobs, the following statuses are displayed in the console: deployment, job, allocation and deployment time of each job. If an error occurs during the deployment process, the process will be stopped.
+
+   Additionally, a wait time of 2 minutes is set for the deployment of each job. You can change the waiting time for jobs to be deployed using the "--wait-time" flag (the time is indicated in seconds).
+   
+   **The job will be considered successfully deployed only if the deployment status is "successful"!**

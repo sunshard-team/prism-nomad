@@ -101,9 +101,7 @@ type StructureBuilder interface {
 
 type Deployment interface {
 	// Returns the configuration structure.
-	CreateConfigStructure(
-		parameter model.ConfigParameter,
-	) (model.TemplateBlock, error)
+	CreateConfigStructure(parameter model.ConfigParameter) ([]model.TemplateBlock, error)
 
 	// Checks whether the namespace exists in the cluster.
 	// If the --create-namespace flag is specified and
@@ -111,7 +109,7 @@ type Deployment interface {
 	CheckNamespace(namespace model.CheckNamespace) error
 
 	// Job configuration deployment in the nomad cluster.
-	Deployment(client *api.Client, config string) (string, error)
+	Deployment(client *api.Client, jobName, config string, waitTime int) (string, error)
 }
 
 type Changes interface {

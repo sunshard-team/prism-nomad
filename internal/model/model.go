@@ -25,6 +25,25 @@ type TemplateBlock struct {
 	Block     []TemplateBlock          // list of configuration blocks
 }
 
+type Pack struct {
+	Name          string           `yaml:"name"`
+	Description   string           `yaml:"description"`
+	Maintainers   []string         `yaml:"maintainers"`
+	Type          string           `yaml:"type"`
+	Sources       []string         `yaml:"sources"`
+	DeployVersion string           `yaml:"deploy_version"`
+	PackVersion   string           `yaml:"pack_version"`
+	NomadVersion  string           `yaml:"nomad_version"`
+	Dependencies  []PackDependency `yaml:"dependencies"`
+}
+
+type PackDependency struct {
+	Name        string   `yaml:"name"`
+	PackVersion string   `yaml:"pack_version"`
+	Path        string   `yaml:"path"`
+	Files       []string `yaml:"files"`
+}
+
 // Necessary data for building the job configuration structure.
 type BuildStructure struct {
 	Config       ConfigBlock
@@ -33,7 +52,6 @@ type BuildStructure struct {
 
 // Job deployment data.
 type ConfigParameter struct {
-	ProjectDir     string
 	ProjectDirPath string
 	Namespace      string
 	Release        string
@@ -52,7 +70,7 @@ type Changes struct {
 	Release     string
 	Namespace   string
 	Files       []TemplateBlock
-	Pack        ConfigBlock
+	Pack        Pack
 	EnvFilePath string
 	EnvVars     map[string]string
 }
@@ -61,5 +79,5 @@ type BlockChanges struct {
 	Release   string
 	Namespace string
 	File      TemplateBlock
-	Pack      ConfigBlock
+	Pack      Pack
 }

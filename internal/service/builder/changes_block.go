@@ -442,14 +442,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 			switch key {
 			case "type":
 				haveType = true
-
-				for _, item := range changes.Pack.Parameter {
-					for k, v := range item {
-						if k == key {
-							block.Parameter[index][key] = v.(string)
-						}
-					}
-				}
+				block.Parameter[index][key] = changes.Pack.Type
 			case "namespace":
 				haveNamespace = true
 				block.Parameter[index][key] = changes.Namespace
@@ -464,13 +457,9 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 
 	if !haveType {
-		for _, item := range changes.Pack.Parameter {
-			for k := range item {
-				if k == "type" {
-					block.Parameter = append(block.Parameter, item)
-				}
-			}
-		}
+		schedulerType := make(map[string]interface{})
+		schedulerType["type"] = changes.Pack.Type
+		block.Parameter = append(block.Parameter, schedulerType)
 	}
 
 	if !haveNamespace {
@@ -483,14 +472,8 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 			Type: "meta",
 		}
 
-		for _, item := range changes.Pack.Parameter {
-			for k, v := range item {
-				if k == "deploy_version" {
-					i := map[string]interface{}{"run_uuid": v.(string)}
-					meta.Parameter = append(meta.Parameter, i)
-				}
-			}
-		}
+		deployVersion := map[string]interface{}{"run_uuid": changes.Pack.DeployVersion}
+		meta.Parameter = append(meta.Parameter, deployVersion)
 
 		block.Block = append(block.Block, meta)
 	}
@@ -564,30 +547,18 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 func jobMeta(block *model.TemplateBlock, changes *model.BlockChanges) {
 	var haveUUID bool
 
-	for _, item := range changes.Pack.Parameter {
-		for k, v := range item {
-			if k == "deploy_version" {
-				for index, p := range block.Parameter {
-					for key := range p {
-						if key == "run_uuid" {
-							haveUUID = true
-							block.Parameter[index][key] = v.(string)
-						}
-					}
-				}
+	for index, p := range block.Parameter {
+		for key := range p {
+			if key == "run_uuid" {
+				haveUUID = true
+				block.Parameter[index][key] = changes.Pack.DeployVersion
 			}
 		}
 	}
 
 	if !haveUUID {
-		for _, item := range changes.Pack.Parameter {
-			for k, v := range item {
-				if k == "deploy_version" {
-					i := map[string]interface{}{"run_uuid": v.(string)}
-					block.Parameter = append(block.Parameter, i)
-				}
-			}
-		}
+		deployVersion := map[string]interface{}{"run_uuid": changes.Pack.DeployVersion}
+		block.Parameter = append(block.Parameter, deployVersion)
 	}
 
 	setFileChanges(block, &changes.File)
