@@ -203,7 +203,7 @@ func groupStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// network, set group block.
 	network := networkStructure(config)
-	if len(network.Block) != 0 {
+	if len(network.Parameter) != 0 || len(network.Block) != 0 {
 		group.Block = append(group.Block, network)
 	}
 
