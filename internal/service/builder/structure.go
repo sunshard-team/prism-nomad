@@ -560,6 +560,12 @@ func resourcesStructure(config model.ConfigBlock) model.TemplateBlock {
 		}
 	}
 
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["numa"] = blockBuilder.Numa
+	resources.Block = append(resources.Block, getConfigBlock(config, configBlock)...)
 	return resources
 }
 
@@ -572,11 +578,6 @@ func deviceStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	configBlock["affinity"] = blockBuilder.Affinity
 	configBlock["constraint"] = blockBuilder.Constraint
-
-	device.Block = append(
-		device.Block,
-		getConfigBlock(config, configBlock)...,
-	)
-
+	device.Block = append(device.Block, getConfigBlock(config, configBlock)...)
 	return device
 }

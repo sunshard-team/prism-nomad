@@ -69,6 +69,7 @@ type BlockBuilder interface {
 	Network(block model.ConfigBlock) model.TemplateBlock
 	NetworkPort(block model.ConfigBlock) model.TemplateBlock
 	NetworkDNS(block model.ConfigBlock) model.TemplateBlock
+	Numa(block model.ConfigBlock) model.TemplateBlock
 	Parameterized(block model.ConfigBlock) model.TemplateBlock
 	Periodic(block model.ConfigBlock) model.TemplateBlock
 	Proxy(block model.ConfigBlock) model.TemplateBlock

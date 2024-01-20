@@ -614,6 +614,10 @@ func networkDNS(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 }
 
+func numa(block *model.TemplateBlock, changes *model.BlockChanges) {
+	setFileChanges(block, &changes.File)
+}
+
 func parameterized(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 }
@@ -655,11 +659,15 @@ func resources(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	for index, item := range block.Block {
-		if item.Type == "device" {
-			blockChanges := checkFileChanges(
-				&block.Block[index], changes, named,
-			)
+		blockChanges := checkFileChanges(
+			&block.Block[index], changes, named,
+		)
+
+		switch item.Type {
+		case "device":
 			device(&block.Block[index], &blockChanges)
+		case "numa":
+			numa(&block.Block[index], &blockChanges)
 		}
 	}
 }

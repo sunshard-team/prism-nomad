@@ -967,6 +967,26 @@ func (b *BlockBuilder) NetworkDNS(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
+func (b *BlockBuilder) Numa(block model.ConfigBlock) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
+
+	for _, item := range block.Parameter {
+		for k := range item {
+			switch k {
+			case "affinity":
+				parameters = append(parameters, item)
+			}
+		}
+	}
+
+	templateBlock := model.TemplateBlock{
+		Type:      "numa",
+		Parameter: parameters,
+	}
+
+	return templateBlock
+}
+
 func (b *BlockBuilder) Parameterized(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 

@@ -362,6 +362,9 @@ job:
                 memory: 300
                 memory_max: 500
 
+                numa:
+                  affinity: "none"
+
                 device:
                   name: "device-name"
                   count: 1
@@ -507,6 +510,9 @@ job:
             cores: 1
             memory: 300
             memory_max: 500
+
+            numa:
+              affinity: "none"
 
             device:
               name: "device-name"
@@ -742,6 +748,9 @@ job:
                     cores: 1
                     memory: 300
                     memory_max: 500
+
+                    numa:
+                      affinity: "none"
 
                     device:
                       name: "device-name"
