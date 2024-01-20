@@ -85,25 +85,29 @@ func (s *Deployment) CheckNamespace(namespace model.CheckNamespace) error {
 }
 
 // Job configuration deployment in the nomad cluster.
-func (s *Deployment) Deployment(
-	client *api.Client,
-	jobName, config string,
-	waitTime int,
-) (string, error) {
-	job, err := client.Jobs().ParseHCL(config, true)
+func (s *Deployment) Deployment(d model.Deployment) (string, error) {
+	jobConfig, err := d.Client.Jobs().ParseHCL(d.Config, true)
 	if err != nil {
-		return jobName, fmt.Errorf("failed to parse hcl: %s", err)
+		return d.JobName, fmt.Errorf("failed to parse hcl: %s", err)
 	}
 
-	fmt.Printf("Running of job \"%s\" deployment.\n", *job.ID)
-
-	_, _, err = client.Jobs().Register(job, &api.WriteOptions{})
-	if err != nil {
-		return "", fmt.Errorf("job registration error, %s", err)
+	writeOptions := &api.WriteOptions{
+		Namespace: d.Namespace,
 	}
+
+	_, _, err = d.Client.Jobs().Register(jobConfig, writeOptions)
+	if err != nil {
+		return *jobConfig.ID, fmt.Errorf("job registration error, %s", err)
+	}
+
+	fmt.Printf("Running of job \"%s\" deployment.\n", *jobConfig.ID)
 
 	timeNow := time.Now().UTC()
 	deployment := &api.Deployment{}
+
+	queryOptions := &api.QueryOptions{
+		Namespace: d.Namespace,
+	}
 
 	for {
 		var (
@@ -119,25 +123,22 @@ func (s *Deployment) Deployment(
 
 		timeIsOver := time.Duration(
 			time.Since(timeNow).Seconds(),
-		)*time.Second == time.Duration(waitTime)*time.Second
+		)*time.Second == time.Duration(d.WaitTime)*time.Second
 
 		if timeIsOver {
-			return *job.ID, fmt.Errorf("job deployment time out has expired")
+			return *jobConfig.ID, fmt.Errorf("job deployment time out has expired")
 		}
 
-		job, _, err = client.Jobs().Info(*job.ID, &api.QueryOptions{})
+		job, _, err := d.Client.Jobs().Info(*jobConfig.ID, queryOptions)
 		if err != nil {
-			return *job.ID, fmt.Errorf("failed to get job status: %s", err)
+			return *jobConfig.ID, fmt.Errorf("failed to get job status: %s", err)
 		}
 
 		if job != nil {
 			jobName = *job.Name
 			jobStatus = *job.Status
 
-			deployment, _, err = client.Jobs().LatestDeployment(
-				*job.ID, &api.QueryOptions{},
-			)
-
+			deployment, _, err = d.Client.Jobs().LatestDeployment(*job.ID, queryOptions)
 			if err != nil {
 				return *job.Name, fmt.Errorf(
 					"failed to get deployment status: %s", err,
@@ -147,8 +148,8 @@ func (s *Deployment) Deployment(
 			if deployment != nil {
 				deploymentStatus = deployment.Status
 
-				allocation, _, err := client.Jobs().Allocations(
-					deployment.JobID, false, &api.QueryOptions{},
+				allocation, _, err := d.Client.Jobs().Allocations(
+					deployment.JobID, false, queryOptions,
 				)
 
 				if err != nil {

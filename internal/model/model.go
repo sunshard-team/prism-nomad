@@ -81,3 +81,11 @@ type BlockChanges struct {
 	File      TemplateBlock
 	Pack      Pack
 }
+
+type Deployment struct {
+	Client    *api.Client
+	JobName   string
+	Namespace string
+	Config    string
+	WaitTime  int
+}

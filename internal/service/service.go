@@ -13,8 +13,6 @@ import (
 	"prism/internal/service/output"
 	"prism/internal/service/parser"
 	"prism/internal/service/project"
-
-	"github.com/hashicorp/nomad/api"
 )
 
 type Project interface {
@@ -109,7 +107,7 @@ type Deployment interface {
 	CheckNamespace(namespace model.CheckNamespace) error
 
 	// Job configuration deployment in the nomad cluster.
-	Deployment(client *api.Client, jobName, config string, waitTime int) (string, error)
+	Deployment(deployment model.Deployment) (string, error)
 }
 
 type Changes interface {

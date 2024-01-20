@@ -236,7 +236,15 @@ func deployment(cmd *cobra.Command, args []string) {
 
 	for index, config := range outputConfig {
 		for k, v := range config {
-			jobName, err := services.Deployment.Deployment(client, k, v, waitTime)
+			deployment := model.Deployment{
+				Client:    client,
+				JobName:   k,
+				Config:    v,
+				Namespace: namespace,
+				WaitTime:  waitTime,
+			}
+
+			jobName, err := services.Deployment.Deployment(deployment)
 			if err != nil {
 				fmt.Printf("failed to deploy job \"%s\": %s\n", jobName, err)
 				os.Exit(1)
@@ -250,7 +258,6 @@ func deployment(cmd *cobra.Command, args []string) {
 			fmt.Printf("Job \"%s\" deployed successfully.\n", jobName)
 		}
 	}
-
 }
 
 func init() {
