@@ -54,17 +54,6 @@ func check(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
 
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
-
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
 			&block.Block[index], changes, single,
@@ -227,17 +216,6 @@ func gatewayProxy(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 func gatewayProxyAddress(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
 }
 
 func gatewayIngress(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -290,17 +268,6 @@ func gatewayIngressListenerService(
 	changes *model.BlockChanges,
 ) {
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
 }
 
 func gatewayTerminating(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -325,17 +292,6 @@ func gatewayTerminatingService(
 	changes *model.BlockChanges,
 ) {
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
 }
 
 func group(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -747,27 +703,6 @@ func service(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkUnnamedDublicateBlocks(block, &changes.File, unnamedDublicateBlock)
 	setFileChanges(block, &changes.File)
 
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				switch k {
-				case "name":
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				case "tags", "canary_tags":
-					var list []interface{}
-
-					for _, tag := range v.([]interface{}) {
-						release := fmt.Sprintf("%s-%s", tag, changes.Release)
-						list = append(list, release)
-					}
-
-					block.Parameter[index][k] = list
-				}
-			}
-		}
-	}
-
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(&block.Block[index], changes, single)
 
@@ -828,17 +763,6 @@ func sidecarTask(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
@@ -1010,17 +934,6 @@ func upstreams(block *model.TemplateBlock, changes *model.BlockChanges) {
 		for k := range item {
 			if k == "destination_namespace" {
 				block.Parameter[index][k] = changes.Namespace
-			}
-		}
-	}
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "destination_name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
 			}
 		}
 	}
