@@ -73,6 +73,9 @@ job:
   
   periodic:
     cron: "crone_test"
+    crons:
+      - "*/5 * * *"
+      - "/7 * * *"
     prohibit_overlap: false
     time_zone: "UTC"
     enabled: true
@@ -97,16 +100,20 @@ job:
     stagger: "30s"
 
   vault:
+    allow_token_expiration: false
     change_mode: "restart"
     change_signal: "SIGINT"
+    cluster: "default"
     env: true
     disable_file: false
     namespace: "job-test"
     policies: ["job-test", "job-test2"]
+    role: "test-role"
   
   group:
     - name: "test-group"
       count: 1
+      prevent_reschedule_on_lost: false
       shutdown_delay: "0s"
       stop_after_client_disconnect: "sacd-test"
       max_client_disconnect: "mcd-test"
@@ -134,6 +141,7 @@ job:
         delay: "15s"
         interval: "30s"
         mode: "fail"
+        render_templates: false
 
       scaling:
         min: 1
@@ -145,12 +153,15 @@ job:
           scaling_test2: "test2"
 
       vault:
+        allow_token_expiration: false
         change_mode: "restart"
         change_signal: "SIGINT"
+        cluster: "default"
         env: true
         disable_file: false
         namespace: "group-test"
         policies: ["group-test", "group-test2"]
+        role: "test-role"
 
       network:
         mode: "bridge"
@@ -211,6 +222,7 @@ job:
       service:
         - name: "group-test"
           provider: "consul"
+          cluster: "default"
           port: "host"
           tags: ["gr", "gr2", "gr3"]
           canary_tags: ["c-gr", "c-gr2", "c-gr3"]
@@ -234,6 +246,7 @@ job:
               initial_status: "enum"
               success_before_passing: 0
               failures_before_critical: 0
+              failures_before_warning: 0
               interval: "20s"
               method: "GET"
               body: "test-body"
@@ -293,8 +306,13 @@ job:
                 upstreams:
                   destination_name: "test-name"
                   destination_namespace: "test-namespace"
+                  destination_perr: "test-perr"
+                  destination_type: "test-type"
                   datacenter: "test-datacenter"
                   local_bind_address: "local-address"
+                  local_bind_port: "local-port"
+                  local_bind_socket_mode: "test-local-bind-socket-mode"
+                  local_bind_socket_path: "test-local-bind-socket-path"
 
                   config:
                     test_config: "group-test-config"
@@ -509,8 +527,14 @@ job:
             file: "file test"
 
           identity:
+            name: "default"
+            aud:
+              - "test-aud"
+            change_mode: "noop"
+            change_signal: "SIGHUP"
             env: false
             file: false
+            ttl: "30s"
 
           lifecycle:
             hook: "prestart"
@@ -534,6 +558,7 @@ job:
             delay: "15s"
             interval: "30s"
             mode: "fail"
+            render_templates: false
 
           scaling:
             - name: "cpu"
@@ -555,12 +580,15 @@ job:
                 scaling_test2: "test2"
 
           vault:
+            allow_token_expiration: false
             change_mode: "restart"
             change_signal: "SIGINT"
+            cluster: "default"
             env: true
             disable_file: false
             namespace: "job-test"
             policies: ["job-test", "job-test2"]
+            role: "test-role"
 
           volume_mount:
             - volume: "group-volume"
@@ -575,6 +603,7 @@ job:
           service:
             - name: "group-test"
               provider: "consul"
+              cluster: "default"
               port: "http"
               tags: ["gr", "gr2", "gr3"]
               canary_tags: ["c-gr", "c-gr2", "c-gr3"]
@@ -589,7 +618,7 @@ job:
                 tag_address2: "test2"
 
               check:
-                - name: "service chech"
+                - name: "service check"
                   address_mode: "host"
                   args: ["arg", "arg2", "arg3"]
                   command: "cmd"
@@ -598,6 +627,7 @@ job:
                   initial_status: "enum"
                   success_before_passing: 0
                   failures_before_critical: 0
+                  failures_before_warning: 0
                   interval: "20s"
                   method: "GET"
                   body: "test-body"
@@ -657,8 +687,13 @@ job:
                     upstreams:
                       destination_name: "test-name"
                       destination_namespace: "test-namespace"
+                      destination_perr: "test-perr"
+                      destination_type: "test-type"
                       datacenter: "test-datacenter"
                       local_bind_address: "local-address"
+                      local_bind_port: "local-port"
+                      local_bind_socket_mode: "test-local-bind-socket-mode"
+                      local_bind_socket_path: "test-local-bind-socket-path"
 
                       config:
                         test_config: "group-test-config"

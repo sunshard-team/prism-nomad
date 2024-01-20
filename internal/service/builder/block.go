@@ -112,6 +112,7 @@ func (b *BlockBuilder) Check(block model.ConfigBlock) model.TemplateBlock {
 		"initial_status",
 		"success_before_passing",
 		"failures_before_critical",
+		"failures_before_warning",
 		"interval",
 		"method",
 		"body",
@@ -605,6 +606,7 @@ func (b *BlockBuilder) Group(block model.ConfigBlock) model.TemplateBlock {
 
 	parameterName := []string{
 		"count",
+		"prevent_reschedule_on_lost",
 		"shutdown_delay",
 		"stop_after_client_disconnect",
 		"max_client_disconnect",
@@ -664,11 +666,23 @@ func (b *BlockBuilder) GroupConsul(block model.ConfigBlock) model.TemplateBlock 
 func (b *BlockBuilder) Identity(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
+	parameterName := []string{
+		"name",
+		"aud",
+		"change_mode",
+		"change_signal",
+		"env",
+		"file",
+		"ttl",
+	}
+
 	for _, item := range block.Parameter {
 		for k := range item {
-			switch k {
-			case "env", "file":
-				parameters = append(parameters, item)
+			for _, p := range parameterName {
+				switch k {
+				case p:
+					parameters = append(parameters, item)
+				}
 			}
 		}
 	}
@@ -979,7 +993,7 @@ func (b *BlockBuilder) Periodic(block model.ConfigBlock) model.TemplateBlock {
 	for _, item := range block.Parameter {
 		for k := range item {
 			switch k {
-			case "cron", "prohibit_overlap", "time_zone", "enabled":
+			case "cron", "crons", "prohibit_overlap", "time_zone", "enabled":
 				parameters = append(parameters, item)
 			}
 		}
@@ -1079,7 +1093,7 @@ func (b *BlockBuilder) Restart(block model.ConfigBlock) model.TemplateBlock {
 	for _, item := range block.Parameter {
 		for k := range item {
 			switch k {
-			case "attempts", "delay", "interval", "mode":
+			case "attempts", "delay", "interval", "mode", "render_templates":
 				parameters = append(parameters, item)
 			}
 		}
@@ -1132,6 +1146,7 @@ func (b *BlockBuilder) Service(block model.ConfigBlock) model.TemplateBlock {
 
 	parameterName := []string{
 		"provider",
+		"cluster",
 		"name",
 		"port",
 		"tags",
@@ -1465,8 +1480,13 @@ func (b *BlockBuilder) Upstreams(block model.ConfigBlock) model.TemplateBlock {
 	parameterName := []string{
 		"destination_name",
 		"destination_namespace",
+		"destination_perr",
+		"destination_type",
 		"datacenter",
 		"local_bind_address",
+		"local_bind_port",
+		"local_bind_socket_mode",
+		"local_bind_socket_path",
 	}
 
 	for _, item := range block.Parameter {
@@ -1524,12 +1544,15 @@ func (b *BlockBuilder) Vault(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
+		"allow_token_expiration",
 		"change_mode",
 		"change_signal",
+		"cluster",
 		"env",
 		"disable_file",
 		"namespace",
 		"policies",
+		"role",
 	}
 
 	for _, item := range block.Parameter {
@@ -1563,7 +1586,6 @@ func (b *BlockBuilder) Volume(block model.ConfigBlock) model.TemplateBlock {
 		"pear_alloc",
 		"access_mode",
 		"attachment_mode",
-		"mount_options",
 	}
 
 	for _, item := range block.Parameter {
