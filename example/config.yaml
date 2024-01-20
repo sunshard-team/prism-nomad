@@ -119,7 +119,9 @@ job:
       max_client_disconnect: "mcd-test"
 
       consul:
+        cluster: "default"
         namespace: "group-consul"
+        partition: "partition"
 
       affinity:
         attribute: "${group-attr}"
@@ -442,6 +444,11 @@ job:
           shutdown_delay: "0s"
           user: "user test"
           kind: "kind test"
+
+          consul:
+            cluster: "default"
+            namespace: "group-consul"
+            partition: "partition"
 
           config:
             test_config: "group-test-config"

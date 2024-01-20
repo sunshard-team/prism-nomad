@@ -37,6 +37,7 @@ type BlockBuilder interface {
 	Check(block model.ConfigBlock) model.TemplateBlock
 	CheckRestart(block model.ConfigBlock) model.TemplateBlock
 	Connect(block model.ConfigBlock) model.TemplateBlock
+	Consul(block model.ConfigBlock) model.TemplateBlock
 	Constraint(block model.ConfigBlock) model.TemplateBlock
 	CSIPlugin(block model.ConfigBlock) model.TemplateBlock
 	Device(block model.ConfigBlock) model.TemplateBlock
@@ -56,7 +57,6 @@ type BlockBuilder interface {
 	GatewayTerminatingService(block model.ConfigBlock) model.TemplateBlock
 	GatewayMesh() model.TemplateBlock
 	Group(block model.ConfigBlock) model.TemplateBlock
-	GroupConsul(block model.ConfigBlock) model.TemplateBlock
 	Identity(block model.ConfigBlock) model.TemplateBlock
 	Job(block model.ConfigBlock) model.TemplateBlock
 	Lifecycle(block model.ConfigBlock) model.TemplateBlock

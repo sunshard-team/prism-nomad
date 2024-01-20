@@ -196,6 +196,26 @@ func (b *BlockBuilder) Connect(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
+func (b *BlockBuilder) Consul(block model.ConfigBlock) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
+
+	for _, item := range block.Parameter {
+		for k := range item {
+			switch k {
+			case "cluster", "namespace", "partition":
+				parameters = append(parameters, item)
+			}
+		}
+	}
+
+	templateBlock := model.TemplateBlock{
+		Type:      "consul",
+		Parameter: parameters,
+	}
+
+	return templateBlock
+}
+
 func (b *BlockBuilder) Constraint(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
@@ -601,7 +621,6 @@ func (b *BlockBuilder) GatewayMesh() model.TemplateBlock {
 
 func (b *BlockBuilder) Group(block model.ConfigBlock) model.TemplateBlock {
 	var label string
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
@@ -627,36 +646,9 @@ func (b *BlockBuilder) Group(block model.ConfigBlock) model.TemplateBlock {
 		}
 	}
 
-	for _, item := range block.Block {
-		if item.Type == "consul" {
-			consul := b.GroupConsul(item)
-			internalBlock = append(internalBlock, consul)
-		}
-	}
-
 	templateBlock := model.TemplateBlock{
 		Type:      "group",
 		Label:     label,
-		Parameter: parameters,
-		Block:     internalBlock,
-	}
-
-	return templateBlock
-}
-
-func (b *BlockBuilder) GroupConsul(block model.ConfigBlock) model.TemplateBlock {
-	parameters := make([]map[string]interface{}, 0)
-
-	for _, item := range block.Parameter {
-		for k := range item {
-			if k == "namespace" {
-				parameters = append(parameters, item)
-			}
-		}
-	}
-
-	templateBlock := model.TemplateBlock{
-		Type:      "consul",
 		Parameter: parameters,
 	}
 

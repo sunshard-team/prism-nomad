@@ -143,6 +143,7 @@ func groupStructure(config model.ConfigBlock) model.TemplateBlock {
 	)
 
 	configBlock["affinity"] = blockBuilder.Affinity
+	configBlock["consul"] = blockBuilder.Consul
 	configBlock["constraint"] = blockBuilder.Constraint
 	configBlock["meta"] = blockBuilder.Meta
 	configBlock["restart"] = blockBuilder.Restart
@@ -285,6 +286,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	configBlock["artifact"] = blockBuilder.Artifact
 	configBlock["affinity"] = blockBuilder.Affinity
+	configBlock["consul"] = blockBuilder.Consul
 	configBlock["constraint"] = blockBuilder.Constraint
 	configBlock["csi_plugin"] = blockBuilder.CSIPlugin
 	configBlock["dispatch_payload"] = blockBuilder.DispatchPayload

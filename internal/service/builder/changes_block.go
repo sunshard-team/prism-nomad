@@ -98,6 +98,18 @@ func connect(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 }
 
+func consul(block *model.TemplateBlock, changes *model.BlockChanges) {
+	setFileChanges(block, &changes.File)
+
+	for index, item := range block.Parameter {
+		for k := range item {
+			if k == "namespace" {
+				block.Parameter[index][k] = changes.Namespace
+			}
+		}
+	}
+}
+
 func constraint(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 }
@@ -331,7 +343,7 @@ func group(block *model.TemplateBlock, changes *model.BlockChanges) {
 		case "affinity":
 			affinity(&block.Block[index], &blockChanges)
 		case "consul":
-			groupConsul(&block.Block[index], &blockChanges)
+			consul(&block.Block[index], &blockChanges)
 		case "constraint":
 			constraint(&block.Block[index], &blockChanges)
 		case "ephemeral_disk":
@@ -365,18 +377,6 @@ func group(block *model.TemplateBlock, changes *model.BlockChanges) {
 			volume(&block.Block[index], &blockChanges)
 		case "vault":
 			vault(&block.Block[index], &blockChanges)
-		}
-	}
-}
-
-func groupConsul(block *model.TemplateBlock, changes *model.BlockChanges) {
-	setFileChanges(block, &changes.File)
-
-	for index, item := range block.Parameter {
-		for k := range item {
-			if k == "namespace" {
-				block.Parameter[index][k] = changes.Namespace
-			}
 		}
 	}
 }
@@ -856,6 +856,8 @@ func task(block *model.TemplateBlock, changes *model.BlockChanges) {
 			artifact(&block.Block[index], &blockChanges)
 		case "affinity":
 			affinity(&block.Block[index], &blockChanges)
+		case "consul":
+			consul(&block.Block[index], &blockChanges)
 		case "config":
 			config(&block.Block[index], &blockChanges)
 		case "constraint":
