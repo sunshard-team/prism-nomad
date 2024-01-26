@@ -16,6 +16,10 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 - [Example command](#example-command)
 - [Pack information](#pack-information)
 - [Environment variables](#environment-variables)
+- [Pack dependencies](#pack-dependencies)
+- [Deployment status](#deployment-status)
+- [Release](#release)
+- [Sidecar service](#sidecar-service)
 
 ## Prerequisites
 
@@ -60,7 +64,8 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 **1. Creating a project. In prism they are called “pack”.**
 
    To do this, run the command, where \<name> is the name of your project (default name pack name "prism", further in the example this name will be indicated).
-   ```
+
+   ```bash
    prism init <name>
    ```
 
@@ -88,7 +93,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    First, we’ll do a dry run to output the finished configuration in HCL format to make sure that everything is specified correctly.
    You can also output the result to a file in HCL format using the `--output` flag.
 
-   ```
+   ```bash
    prism deploy --path ./prism --release dev --file dev.yaml --dry-run
    ```
 
@@ -96,7 +101,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
    If everything is in order, we can deploy the job configuration.
 
-   ```
+   ```bash
    prism deploy --path ./prism --release dev --file dev.yaml --address $cluster-address
    ```
 
@@ -130,7 +135,8 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    - `-p, --path string`: Path to the project directory.
    - `-o, --output string`: Path to the directory where the `<project>_<release>.nomad.hcl` file will be created.
    - `-f, --file strings`: File name or full path to the file to update the configuration.
-   - `-e --env`: Environment variables in the form key=value.
+   - `-w, --wait-time`: Deployment wait time in seconds (default 120 sec.).
+   - `-e, --env`: Environment variables in the form key=value.
    - `--env-file`: Full path to the file with environment variables.
    - `--create-namespace`: Create a namespace in the cluster if it doesn't exist.
    - `--dry-run`: Print the job configuration to the console (blocking the deployment).
@@ -186,7 +192,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    **How it works.**\
    For example, let's specify a variable for the job name and a count for the group:
 
-   ```bash
+   ```yaml
    job:
      name: "${PRISM_JOB_NAME}"
      ...
@@ -217,3 +223,55 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    You can specify a default value for an environment variable. It will be taken if the variable is not found in any of the sources. It is indicated immediately after the variable name, separated by a vertical bar with the keyword "default=", example: `${PRISM_VAR|default=any-value}`.
 
    **Do not leave the default without a value `"${PRISM_VAR|default=}"`, otherwise the line will be ignored!**
+
+## Pack dependencies
+
+   You can specify dependencies for a Pack to deploy them sequentially, before deploying the main job. A dependency is any other package, or rather its “basic” job configuration template - `config.yaml` file.
+
+   Dependency parameters:
+   - `name`: Dependency name.
+   - `pack_version`: Pack vesrion (optional).
+   - `path`: Full path to the Pack directory.
+   - `files`: List of files name or full paths to files to update (parameter overrides/additions), configuration. If only the filename is specified, Prism will look for it in the current Pack rather than the dependency Pack. This works like the `--file` flag of the `deploy` command.
+
+   The jobs is deployed in the following order:
+   1. Dependencies deployment, in the order in which they are listed;
+   2. Jobs deployment from the current Pack (job for which the dependencies are indicated);
+
+   The `--dry-run` flag prints jobs to the console in the order in which they will be deployed.
+
+   When jobs are deployed, the deployment status will be displayed in the console, [deployment status](#deployment-status).
+
+## Deployment status
+
+   Starting with version v0.4.0, the job deployment status functionality is introduced.
+
+   When deploying jobs, the following statuses are displayed in the console: deployment, job, allocation and deployment time of each job. If an error occurs during the deployment process, the process will be stopped.
+
+   Additionally, a wait time of 2 minutes is set for the deployment of each job. You can change the waiting time for jobs to be deployed using the `--wait-time` flag (the time is indicated in seconds).
+   
+   **The job will be considered successfully deployed only if the deployment status is "successful"!**
+
+## Release
+
+   During deployment, you can specify any release name. It allows you to deploy one job under different releases, using the `--release` flag. Starting from version v0.4.0, when specifying a release, it will be added by default to the name of `job`, `group`, `task`, `device`.
+
+
+## Sidecar service
+
+   To specify the default `sidecar_service` value:
+
+   ```
+   connect {
+      sidecar_service {}
+   }
+   ```
+
+   use the `open_sidecar_service` parameter with the value `true`:
+
+   ```yaml
+   connect:
+      open_sidecar_service: true
+   ```
+
+   Otherwise, the parameter need not be specified. If you decide to leave it in place, simply set it to `false`, (in any case, this parameter will be removed from the final configuration).

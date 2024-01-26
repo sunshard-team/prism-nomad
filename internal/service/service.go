@@ -13,8 +13,6 @@ import (
 	"prism/internal/service/output"
 	"prism/internal/service/parser"
 	"prism/internal/service/project"
-
-	"github.com/hashicorp/nomad/api"
 )
 
 type Project interface {
@@ -39,6 +37,7 @@ type BlockBuilder interface {
 	Check(block model.ConfigBlock) model.TemplateBlock
 	CheckRestart(block model.ConfigBlock) model.TemplateBlock
 	Connect(block model.ConfigBlock) model.TemplateBlock
+	Consul(block model.ConfigBlock) model.TemplateBlock
 	Constraint(block model.ConfigBlock) model.TemplateBlock
 	CSIPlugin(block model.ConfigBlock) model.TemplateBlock
 	Device(block model.ConfigBlock) model.TemplateBlock
@@ -58,7 +57,6 @@ type BlockBuilder interface {
 	GatewayTerminatingService(block model.ConfigBlock) model.TemplateBlock
 	GatewayMesh() model.TemplateBlock
 	Group(block model.ConfigBlock) model.TemplateBlock
-	GroupConsul(block model.ConfigBlock) model.TemplateBlock
 	Identity(block model.ConfigBlock) model.TemplateBlock
 	Job(block model.ConfigBlock) model.TemplateBlock
 	Lifecycle(block model.ConfigBlock) model.TemplateBlock
@@ -71,6 +69,7 @@ type BlockBuilder interface {
 	Network(block model.ConfigBlock) model.TemplateBlock
 	NetworkPort(block model.ConfigBlock) model.TemplateBlock
 	NetworkDNS(block model.ConfigBlock) model.TemplateBlock
+	Numa(block model.ConfigBlock) model.TemplateBlock
 	Parameterized(block model.ConfigBlock) model.TemplateBlock
 	Periodic(block model.ConfigBlock) model.TemplateBlock
 	Proxy(block model.ConfigBlock) model.TemplateBlock
@@ -84,7 +83,7 @@ type BlockBuilder interface {
 	Spread(block model.ConfigBlock) model.TemplateBlock
 	SpreadTarget(block model.ConfigBlock) model.TemplateBlock
 	Task(block model.ConfigBlock) model.TemplateBlock
-	Template(block model.ConfigBlock, projectPath string) model.TemplateBlock
+	Template(block model.ConfigBlock) model.TemplateBlock
 	Update(block model.ConfigBlock) model.TemplateBlock
 	Upstreams(block model.ConfigBlock) model.TemplateBlock
 	UpstreamMeshGateway(block model.ConfigBlock) model.TemplateBlock
@@ -101,9 +100,7 @@ type StructureBuilder interface {
 
 type Deployment interface {
 	// Returns the configuration structure.
-	CreateConfigStructure(
-		parameter model.ConfigParameter,
-	) (model.TemplateBlock, error)
+	CreateConfigStructure(parameter model.ConfigParameter) ([]model.TemplateBlock, error)
 
 	// Checks whether the namespace exists in the cluster.
 	// If the --create-namespace flag is specified and
@@ -111,7 +108,7 @@ type Deployment interface {
 	CheckNamespace(namespace model.CheckNamespace) error
 
 	// Job configuration deployment in the nomad cluster.
-	Deployment(client *api.Client, config string) (string, error)
+	Deployment(deployment model.Deployment) (string, error)
 }
 
 type Changes interface {

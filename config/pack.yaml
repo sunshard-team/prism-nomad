@@ -26,12 +26,12 @@ pack_version: "0.0.1"
 # The version of Nomad on which the Prism Pack has been tested.
 nomad_version: "1.7.2"
 
-# Fuaters in progress.
 # Specifies dependencies of the current Prism Pack on other Prism Packs,
 # which will be automatically installed when installing the main Prism Pack.
 # dependencies:
-#   - name: "rabbit"
+#   - name: "dependency-name"
 #     pack_version: "0.0.1"
-#     path: "project/pack/rabbit"
+#     path: "/path/to/pack"
 #     files:
-#       - "project/pack/rabbit/files/rabbit_config.yaml"
+#       - "dependency_overrides.yaml"
+#       - "/path/to/pack/dependency_overrides.yaml"

@@ -86,6 +86,12 @@ func deployment(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	waitTime, err := cmd.Flags().GetInt("wait-time")
+	if err != nil {
+		fmt.Printf("failed to read flag \"wait-time\", %s\n", err)
+		os.Exit(1)
+	}
+
 	createNamespace, err := cmd.Flags().GetBool("create-namespace")
 	if err != nil {
 		fmt.Printf("failed to read flag \"create-namespace\", %s\n", err)
@@ -127,13 +133,9 @@ func deployment(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	findProjectDir := dirFormat.FindStringSubmatch(path)
-	projectDir := findProjectDir[1]
-
 	// Create a configuration structure.
 	parameter := model.ConfigParameter{
 		ProjectDirPath: path,
-		ProjectDir:     projectDir,
 		Namespace:      namespace,
 		Release:        release,
 		Files:          file,
@@ -150,33 +152,49 @@ func deployment(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	outputConfig, err := services.Output.OutputConfig(configStructure)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	var outputConfig []map[string]string
+
+	for _, config := range configStructure {
+		output, err := services.Output.OutputConfig(config)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		sc := make(map[string]string)
+		sc[config.Label] = output
+		outputConfig = append(outputConfig, sc)
 	}
 
 	// Dry run.
 	if dryRun {
 		if outputPath != "" {
-			projectName := strings.ReplaceAll(projectDir, "-", "_")
-			fileName := projectName
+			for _, config := range configStructure {
+				findProjectDir := dirFormat.FindStringSubmatch(path)
+				projectDir := fmt.Sprintf("%s_%s", findProjectDir[1], config.Label)
 
-			if release != "" {
-				fileName = fmt.Sprintf("%s_%s", projectName, release)
-			}
+				jobName := strings.ReplaceAll(projectDir, "-", "_")
+				fileName := jobName
 
-			err := services.Output.CreateConfigFile(
-				fileName, outputPath, configStructure,
-			)
+				err := services.Output.CreateConfigFile(
+					fileName, outputPath, config,
+				)
 
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 			}
 		}
 
-		fmt.Printf("Output config:\n\n%v\n", outputConfig)
+		fmt.Printf("Output config:\n\n")
+
+		for _, output := range outputConfig {
+			for _, v := range output {
+				fmt.Printf("%v\n\n", v)
+			}
+		}
+
 		return
 	}
 
@@ -216,13 +234,30 @@ func deployment(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	jobID, err := services.Deployment.Deployment(client, outputConfig)
-	if err != nil {
-		fmt.Printf("an error occurred while deploying the job: %s\n", err)
-		os.Exit(1)
-	}
+	for index, config := range outputConfig {
+		for k, v := range config {
+			deployment := model.Deployment{
+				Client:    client,
+				JobName:   k,
+				Config:    v,
+				Namespace: namespace,
+				WaitTime:  waitTime,
+			}
 
-	fmt.Printf("Job \"%s\" deployed successfully.\n", jobID)
+			jobName, err := services.Deployment.Deployment(deployment)
+			if err != nil {
+				fmt.Printf("failed to deploy job \"%s\": %s\n", jobName, err)
+				os.Exit(1)
+			}
+
+			if index != len(outputConfig)-1 {
+				fmt.Printf("Job \"%s\" deployed successfully.\n\n", jobName)
+				continue
+			}
+
+			fmt.Printf("Job \"%s\" deployed successfully.\n", jobName)
+		}
+	}
 }
 
 func init() {
@@ -231,6 +266,7 @@ func init() {
 	deployCmd.PersistentFlags().StringP("path", "p", "", "path to project directory") // required
 	deployCmd.PersistentFlags().StringP("address", "a", "", "cluster address")        // required for deployment
 	deployCmd.PersistentFlags().StringP("token", "t", "", "cluster access token")
+	deployCmd.PersistentFlags().IntP("wait-time", "w", 300, "deployment wait time in seconds")
 	deployCmd.PersistentFlags().StringP("release", "r", "", "release name")
 	deployCmd.PersistentFlags().StringP("namespace", "n", "default", "namespace name")
 
@@ -266,7 +302,7 @@ func init() {
 		"o",
 		"",
 		fmt.Sprintf(
-			"Path to the directory in which the \"%s\" file will be created",
+			"path to the directory in which the \"%s\" file will be created",
 			"<project>_<release>.nomad.hcl",
 		),
 	)

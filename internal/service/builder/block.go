@@ -6,13 +6,7 @@
 
 package builder
 
-import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"prism/internal/model"
-	"regexp"
-)
+import "prism/internal/model"
 
 type BlockBuilder struct{}
 
@@ -112,6 +106,7 @@ func (b *BlockBuilder) Check(block model.ConfigBlock) model.TemplateBlock {
 		"initial_status",
 		"success_before_passing",
 		"failures_before_critical",
+		"failures_before_warning",
 		"interval",
 		"method",
 		"body",
@@ -189,6 +184,26 @@ func (b *BlockBuilder) Connect(block model.ConfigBlock) model.TemplateBlock {
 
 	templateBlock := model.TemplateBlock{
 		Type:      "connect",
+		Parameter: parameters,
+	}
+
+	return templateBlock
+}
+
+func (b *BlockBuilder) Consul(block model.ConfigBlock) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
+
+	for _, item := range block.Parameter {
+		for k := range item {
+			switch k {
+			case "cluster", "namespace", "partition":
+				parameters = append(parameters, item)
+			}
+		}
+	}
+
+	templateBlock := model.TemplateBlock{
+		Type:      "consul",
 		Parameter: parameters,
 	}
 
@@ -600,11 +615,11 @@ func (b *BlockBuilder) GatewayMesh() model.TemplateBlock {
 
 func (b *BlockBuilder) Group(block model.ConfigBlock) model.TemplateBlock {
 	var label string
-	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
 		"count",
+		"prevent_reschedule_on_lost",
 		"shutdown_delay",
 		"stop_after_client_disconnect",
 		"max_client_disconnect",
@@ -625,36 +640,9 @@ func (b *BlockBuilder) Group(block model.ConfigBlock) model.TemplateBlock {
 		}
 	}
 
-	for _, item := range block.Block {
-		if item.Type == "consul" {
-			consul := b.GroupConsul(item)
-			internalBlock = append(internalBlock, consul)
-		}
-	}
-
 	templateBlock := model.TemplateBlock{
 		Type:      "group",
 		Label:     label,
-		Parameter: parameters,
-		Block:     internalBlock,
-	}
-
-	return templateBlock
-}
-
-func (b *BlockBuilder) GroupConsul(block model.ConfigBlock) model.TemplateBlock {
-	parameters := make([]map[string]interface{}, 0)
-
-	for _, item := range block.Parameter {
-		for k := range item {
-			if k == "namespace" {
-				parameters = append(parameters, item)
-			}
-		}
-	}
-
-	templateBlock := model.TemplateBlock{
-		Type:      "consul",
 		Parameter: parameters,
 	}
 
@@ -664,11 +652,23 @@ func (b *BlockBuilder) GroupConsul(block model.ConfigBlock) model.TemplateBlock 
 func (b *BlockBuilder) Identity(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
+	parameterName := []string{
+		"name",
+		"aud",
+		"change_mode",
+		"change_signal",
+		"env",
+		"file",
+		"ttl",
+	}
+
 	for _, item := range block.Parameter {
 		for k := range item {
-			switch k {
-			case "env", "file":
-				parameters = append(parameters, item)
+			for _, p := range parameterName {
+				switch k {
+				case p:
+					parameters = append(parameters, item)
+				}
 			}
 		}
 	}
@@ -953,6 +953,26 @@ func (b *BlockBuilder) NetworkDNS(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
+func (b *BlockBuilder) Numa(block model.ConfigBlock) model.TemplateBlock {
+	parameters := make([]map[string]interface{}, 0)
+
+	for _, item := range block.Parameter {
+		for k := range item {
+			switch k {
+			case "affinity":
+				parameters = append(parameters, item)
+			}
+		}
+	}
+
+	templateBlock := model.TemplateBlock{
+		Type:      "numa",
+		Parameter: parameters,
+	}
+
+	return templateBlock
+}
+
 func (b *BlockBuilder) Parameterized(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
@@ -979,7 +999,7 @@ func (b *BlockBuilder) Periodic(block model.ConfigBlock) model.TemplateBlock {
 	for _, item := range block.Parameter {
 		for k := range item {
 			switch k {
-			case "cron", "prohibit_overlap", "time_zone", "enabled":
+			case "cron", "crons", "prohibit_overlap", "time_zone", "enabled":
 				parameters = append(parameters, item)
 			}
 		}
@@ -1079,7 +1099,7 @@ func (b *BlockBuilder) Restart(block model.ConfigBlock) model.TemplateBlock {
 	for _, item := range block.Parameter {
 		for k := range item {
 			switch k {
-			case "attempts", "delay", "interval", "mode":
+			case "attempts", "delay", "interval", "mode", "render_templates":
 				parameters = append(parameters, item)
 			}
 		}
@@ -1132,6 +1152,7 @@ func (b *BlockBuilder) Service(block model.ConfigBlock) model.TemplateBlock {
 
 	parameterName := []string{
 		"provider",
+		"cluster",
 		"name",
 		"port",
 		"tags",
@@ -1342,15 +1363,13 @@ func (b *BlockBuilder) Task(block model.ConfigBlock) model.TemplateBlock {
 	return templateBlock
 }
 
-func (b *BlockBuilder) Template(
-	block model.ConfigBlock,
-	fileDirPath string,
-) model.TemplateBlock {
+func (b *BlockBuilder) Template(block model.ConfigBlock) model.TemplateBlock {
 	var internalBlock []model.TemplateBlock
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
 		"name",
+		"file",
 		"change_mode",
 		"change_signal",
 		"destination",
@@ -1367,38 +1386,7 @@ func (b *BlockBuilder) Template(
 	}
 
 	for _, item := range block.Parameter {
-		for k, v := range item {
-			switch k {
-			case "file":
-				var fileFullPath string
-
-				// Check the full file path or file name.
-				separatorFormat, err := regexp.Compile(`\\|\/`)
-				if err != nil {
-					fmt.Printf("failed check OS separator in file path, %s", err)
-					os.Exit(1)
-				}
-
-				findSeparator := separatorFormat.FindStringSubmatch(v.(string))
-
-				if len(findSeparator) > 0 {
-					fileFullPath = v.(string)
-				} else {
-					fileFullPath = filepath.Join(fileDirPath, v.(string))
-				}
-
-				// Read the file and add data to the "data" parameter.
-				file, err := os.ReadFile(fileFullPath)
-				if err != nil {
-					fmt.Printf("error read template files - %v\n", err)
-					os.Exit(1)
-				}
-
-				i := make(map[string]interface{})
-				i["data"] = string(file)
-				parameters = append(parameters, i)
-			}
-
+		for k := range item {
 			for _, p := range parameterName {
 				switch k {
 				case p:
@@ -1465,8 +1453,13 @@ func (b *BlockBuilder) Upstreams(block model.ConfigBlock) model.TemplateBlock {
 	parameterName := []string{
 		"destination_name",
 		"destination_namespace",
+		"destination_perr",
+		"destination_type",
 		"datacenter",
 		"local_bind_address",
+		"local_bind_port",
+		"local_bind_socket_mode",
+		"local_bind_socket_path",
 	}
 
 	for _, item := range block.Parameter {
@@ -1524,12 +1517,15 @@ func (b *BlockBuilder) Vault(block model.ConfigBlock) model.TemplateBlock {
 	parameters := make([]map[string]interface{}, 0)
 
 	parameterName := []string{
+		"allow_token_expiration",
 		"change_mode",
 		"change_signal",
+		"cluster",
 		"env",
 		"disable_file",
 		"namespace",
 		"policies",
+		"role",
 	}
 
 	for _, item := range block.Parameter {
@@ -1563,7 +1559,6 @@ func (b *BlockBuilder) Volume(block model.ConfigBlock) model.TemplateBlock {
 		"pear_alloc",
 		"access_mode",
 		"attachment_mode",
-		"mount_options",
 	}
 
 	for _, item := range block.Parameter {

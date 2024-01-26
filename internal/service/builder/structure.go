@@ -11,10 +11,7 @@ import (
 	"prism/pkg"
 )
 
-var (
-	blockBuilder BlockBuilder
-	filesDirPath string
-)
+var blockBuilder BlockBuilder
 
 type StructureBuilder struct {
 	blockBuilder BlockBuilder
@@ -29,7 +26,6 @@ func (s *StructureBuilder) BuildConfigStructure(
 	buildStructure model.BuildStructure,
 ) model.TemplateBlock {
 	blockBuilder = s.blockBuilder
-	filesDirPath = buildStructure.FilesDirPath
 	return jobStructure(buildStructure.Config)
 }
 
@@ -143,6 +139,7 @@ func groupStructure(config model.ConfigBlock) model.TemplateBlock {
 	)
 
 	configBlock["affinity"] = blockBuilder.Affinity
+	configBlock["consul"] = blockBuilder.Consul
 	configBlock["constraint"] = blockBuilder.Constraint
 	configBlock["meta"] = blockBuilder.Meta
 	configBlock["restart"] = blockBuilder.Restart
@@ -203,7 +200,7 @@ func groupStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	// network, set group block.
 	network := networkStructure(config)
-	if len(network.Block) != 0 {
+	if len(network.Parameter) != 0 || len(network.Block) != 0 {
 		group.Block = append(group.Block, network)
 	}
 
@@ -285,6 +282,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	configBlock["artifact"] = blockBuilder.Artifact
 	configBlock["affinity"] = blockBuilder.Affinity
+	configBlock["consul"] = blockBuilder.Consul
 	configBlock["constraint"] = blockBuilder.Constraint
 	configBlock["csi_plugin"] = blockBuilder.CSIPlugin
 	configBlock["dispatch_payload"] = blockBuilder.DispatchPayload
@@ -326,7 +324,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 	// template.
 	for _, block := range config.Block {
 		if block.Type == "template" {
-			template := templateStructure(block, filesDirPath)
+			template := templateStructure(block)
 
 			if len(template.Parameter) != 0 || len(template.Block) != 0 {
 				task.Block = append(task.Block, template)
@@ -356,11 +354,8 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 	return task
 }
 
-func templateStructure(
-	config model.ConfigBlock,
-	projectPath string,
-) model.TemplateBlock {
-	template := blockBuilder.Template(config, projectPath)
+func templateStructure(config model.ConfigBlock) model.TemplateBlock {
+	template := blockBuilder.Template(config)
 
 	// change script.
 	configBlock := make(
@@ -560,6 +555,12 @@ func resourcesStructure(config model.ConfigBlock) model.TemplateBlock {
 		}
 	}
 
+	configBlock := make(
+		map[string]func(model.ConfigBlock) model.TemplateBlock,
+	)
+
+	configBlock["numa"] = blockBuilder.Numa
+	resources.Block = append(resources.Block, getConfigBlock(config, configBlock)...)
 	return resources
 }
 
@@ -572,11 +573,6 @@ func deviceStructure(config model.ConfigBlock) model.TemplateBlock {
 
 	configBlock["affinity"] = blockBuilder.Affinity
 	configBlock["constraint"] = blockBuilder.Constraint
-
-	device.Block = append(
-		device.Block,
-		getConfigBlock(config, configBlock)...,
-	)
-
+	device.Block = append(device.Block, getConfigBlock(config, configBlock)...)
 	return device
 }
