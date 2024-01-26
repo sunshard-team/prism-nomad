@@ -8,8 +8,11 @@ package builder
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"prism/internal/model"
 	"prism/pkg"
+	"regexp"
 )
 
 func artifact(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -909,6 +912,42 @@ func template(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
+
+	for _, item := range block.Parameter {
+		for k, v := range item {
+			if k == "file" {
+				var fileFullPath string
+
+				// Check the full file path or file name.
+				separatorFormat, err := regexp.Compile(`\\|\/`)
+				if err != nil {
+					fmt.Printf("failed check OS separator in file path, %s", err)
+					os.Exit(1)
+				}
+
+				findSeparator := separatorFormat.FindStringSubmatch(v.(string))
+
+				if len(findSeparator) > 0 {
+					fileFullPath = v.(string)
+				} else {
+					fileFullPath = filepath.Join(changes.FilesDirPath, v.(string))
+				}
+
+				// Read the file and add data to the "data" parameter.
+				file, err := os.ReadFile(fileFullPath)
+				if err != nil {
+					fmt.Printf("error read template files - %v\n", err)
+					os.Exit(1)
+				}
+
+				i := make(map[string]interface{})
+				i["data"] = string(file)
+				block.Parameter = append(block.Parameter, i)
+
+				pkg.RemoveParameter(block, "file")
+			}
+		}
+	}
 
 	pkg.RemoveParameter(block, "name")
 

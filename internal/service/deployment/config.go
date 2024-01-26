@@ -43,13 +43,13 @@ func (s *Deployment) CreateConfigStructure(
 	configPath := filepath.Join(parameter.ProjectDirPath, configFileName)
 	filesPath := filepath.Join(parameter.ProjectDirPath, "files")
 
-	configStructure, err := s.BuildConfigStructure(configPath, "job", filesPath)
+	configStructure, err := s.BuildConfigStructure(configPath, "job")
 	if err != nil {
 		return configList, err
 	}
 
 	// Set changes.
-	config, err := s.SetChanges(parameter, packConfig, configStructure)
+	config, err := s.SetChanges(filesPath, parameter, packConfig, configStructure)
 	if err != nil {
 		return configList, err
 	}
@@ -61,14 +61,14 @@ func (s *Deployment) CreateConfigStructure(
 			configPath := filepath.Join(dependencyJob.Path, configFileName)
 			filesPath := filepath.Join(dependencyJob.Path, "files")
 
-			configStructure, err := s.BuildConfigStructure(configPath, "job", filesPath)
+			configStructure, err := s.BuildConfigStructure(configPath, "job")
 			if err != nil {
 				return configList, err
 			}
 
 			parameter.Files = dependencyJob.Files
 
-			config, err := s.SetChanges(parameter, packConfig, configStructure)
+			config, err := s.SetChanges(filesPath, parameter, packConfig, configStructure)
 			if err != nil {
 				return configList, err
 			}
@@ -82,6 +82,7 @@ func (s *Deployment) CreateConfigStructure(
 }
 
 func (s *Deployment) SetChanges(
+	filesDirPath string,
 	parameter model.ConfigParameter,
 	packConfig *model.Pack,
 	config model.TemplateBlock,
@@ -92,12 +93,12 @@ func (s *Deployment) SetChanges(
 	for _, file := range parameter.Files {
 		file = filepath.Join(file)
 
-		fileDirPath, fileFullPath, err := s.CheckFileName(file, parameter.ProjectDirPath)
+		_, fileFullPath, err := s.CheckFileName(file, parameter.ProjectDirPath)
 		if err != nil {
 			return config, fmt.Errorf("could not verify file name, %s", err)
 		}
 
-		fileConfigStructure, err := s.BuildConfigStructure(fileFullPath, "job", fileDirPath)
+		fileConfigStructure, err := s.BuildConfigStructure(fileFullPath, "job")
 		if err != nil {
 			return config, err
 		}
@@ -107,12 +108,13 @@ func (s *Deployment) SetChanges(
 
 	// Set changes.
 	changes := model.Changes{
-		Release:     parameter.Release,
-		Namespace:   parameter.Namespace,
-		Files:       files,
-		Pack:        *packConfig,
-		EnvFilePath: parameter.EnvFilePath,
-		EnvVars:     parameter.EnvVars,
+		Release:      parameter.Release,
+		Namespace:    parameter.Namespace,
+		Files:        files,
+		FilesDirPath: filesDirPath,
+		Pack:         *packConfig,
+		EnvFilePath:  parameter.EnvFilePath,
+		EnvVars:      parameter.EnvVars,
 	}
 
 	err := s.changes.SetChanges(&config, &changes)
@@ -124,9 +126,7 @@ func (s *Deployment) SetChanges(
 }
 
 // Parsing the configuration file and creating a structured job configuration.
-func (s *Deployment) BuildConfigStructure(
-	path, blockType, fileDirPath string,
-) (model.TemplateBlock, error) {
+func (s *Deployment) BuildConfigStructure(path, blockType string) (model.TemplateBlock, error) {
 	var config model.TemplateBlock
 
 	content, err := s.ParseFile(path)
@@ -140,8 +140,7 @@ func (s *Deployment) BuildConfigStructure(
 	)
 
 	buildStructure := model.BuildStructure{
-		Config:       parsedConfig,
-		FilesDirPath: fileDirPath,
+		Config: parsedConfig,
 	}
 
 	config = s.builder.BuildConfigStructure(buildStructure)

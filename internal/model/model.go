@@ -46,8 +46,7 @@ type PackDependency struct {
 
 // Necessary data for building the job configuration structure.
 type BuildStructure struct {
-	Config       ConfigBlock
-	FilesDirPath string
+	Config ConfigBlock
 }
 
 // Job deployment data.
@@ -67,19 +66,21 @@ type CheckNamespace struct {
 }
 
 type Changes struct {
-	Release     string
-	Namespace   string
-	Files       []TemplateBlock
-	Pack        Pack
-	EnvFilePath string
-	EnvVars     map[string]string
+	Release      string
+	Namespace    string
+	Files        []TemplateBlock
+	FilesDirPath string
+	Pack         Pack
+	EnvFilePath  string
+	EnvVars      map[string]string
 }
 
 type BlockChanges struct {
-	Release   string
-	Namespace string
-	File      TemplateBlock
-	Pack      Pack
+	Release      string
+	Namespace    string
+	File         TemplateBlock
+	FilesDirPath string
+	Pack         Pack
 }
 
 type Deployment struct {

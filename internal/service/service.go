@@ -83,7 +83,7 @@ type BlockBuilder interface {
 	Spread(block model.ConfigBlock) model.TemplateBlock
 	SpreadTarget(block model.ConfigBlock) model.TemplateBlock
 	Task(block model.ConfigBlock) model.TemplateBlock
-	Template(block model.ConfigBlock, projectPath string) model.TemplateBlock
+	Template(block model.ConfigBlock) model.TemplateBlock
 	Update(block model.ConfigBlock) model.TemplateBlock
 	Upstreams(block model.ConfigBlock) model.TemplateBlock
 	UpstreamMeshGateway(block model.ConfigBlock) model.TemplateBlock

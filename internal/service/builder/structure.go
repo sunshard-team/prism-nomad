@@ -11,10 +11,7 @@ import (
 	"prism/pkg"
 )
 
-var (
-	blockBuilder BlockBuilder
-	filesDirPath string
-)
+var blockBuilder BlockBuilder
 
 type StructureBuilder struct {
 	blockBuilder BlockBuilder
@@ -29,7 +26,6 @@ func (s *StructureBuilder) BuildConfigStructure(
 	buildStructure model.BuildStructure,
 ) model.TemplateBlock {
 	blockBuilder = s.blockBuilder
-	filesDirPath = buildStructure.FilesDirPath
 	return jobStructure(buildStructure.Config)
 }
 
@@ -328,7 +324,7 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 	// template.
 	for _, block := range config.Block {
 		if block.Type == "template" {
-			template := templateStructure(block, filesDirPath)
+			template := templateStructure(block)
 
 			if len(template.Parameter) != 0 || len(template.Block) != 0 {
 				task.Block = append(task.Block, template)
@@ -358,11 +354,8 @@ func taskStructure(config model.ConfigBlock) model.TemplateBlock {
 	return task
 }
 
-func templateStructure(
-	config model.ConfigBlock,
-	projectPath string,
-) model.TemplateBlock {
-	template := blockBuilder.Template(config, projectPath)
+func templateStructure(config model.ConfigBlock) model.TemplateBlock {
+	template := blockBuilder.Template(config)
 
 	// change script.
 	configBlock := make(
