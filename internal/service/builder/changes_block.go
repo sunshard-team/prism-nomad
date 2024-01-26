@@ -8,8 +8,11 @@ package builder
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"prism/internal/model"
 	"prism/pkg"
+	"regexp"
 )
 
 func artifact(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -54,17 +57,6 @@ func check(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
 
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
-
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
 			&block.Block[index], changes, single,
@@ -105,6 +97,18 @@ func connect(block *model.TemplateBlock, changes *model.BlockChanges) {
 			sidecarTask(&block.Block[index], &blockChanges)
 		case "gateway":
 			gateway(&block.Block[index], &blockChanges)
+		}
+	}
+}
+
+func consul(block *model.TemplateBlock, changes *model.BlockChanges) {
+	setFileChanges(block, &changes.File)
+
+	for index, item := range block.Parameter {
+		for k := range item {
+			if k == "namespace" {
+				block.Parameter[index][k] = changes.Namespace
+			}
 		}
 	}
 }
@@ -227,17 +231,6 @@ func gatewayProxy(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 func gatewayProxyAddress(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
 }
 
 func gatewayIngress(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -290,17 +283,6 @@ func gatewayIngressListenerService(
 	changes *model.BlockChanges,
 ) {
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
 }
 
 func gatewayTerminating(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -325,17 +307,6 @@ func gatewayTerminatingService(
 	changes *model.BlockChanges,
 ) {
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
 }
 
 func group(block *model.TemplateBlock, changes *model.BlockChanges) {
@@ -375,7 +346,7 @@ func group(block *model.TemplateBlock, changes *model.BlockChanges) {
 		case "affinity":
 			affinity(&block.Block[index], &blockChanges)
 		case "consul":
-			groupConsul(&block.Block[index], &blockChanges)
+			consul(&block.Block[index], &blockChanges)
 		case "constraint":
 			constraint(&block.Block[index], &blockChanges)
 		case "ephemeral_disk":
@@ -413,18 +384,6 @@ func group(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 }
 
-func groupConsul(block *model.TemplateBlock, changes *model.BlockChanges) {
-	setFileChanges(block, &changes.File)
-
-	for index, item := range block.Parameter {
-		for k := range item {
-			if k == "namespace" {
-				block.Parameter[index][k] = changes.Namespace
-			}
-		}
-	}
-}
-
 func identity(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 }
@@ -442,14 +401,7 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 			switch key {
 			case "type":
 				haveType = true
-
-				for _, item := range changes.Pack.Parameter {
-					for k, v := range item {
-						if k == key {
-							block.Parameter[index][key] = v.(string)
-						}
-					}
-				}
+				block.Parameter[index][key] = changes.Pack.Type
 			case "namespace":
 				haveNamespace = true
 				block.Parameter[index][key] = changes.Namespace
@@ -464,13 +416,9 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 	}
 
 	if !haveType {
-		for _, item := range changes.Pack.Parameter {
-			for k := range item {
-				if k == "type" {
-					block.Parameter = append(block.Parameter, item)
-				}
-			}
-		}
+		schedulerType := make(map[string]interface{})
+		schedulerType["type"] = changes.Pack.Type
+		block.Parameter = append(block.Parameter, schedulerType)
 	}
 
 	if !haveNamespace {
@@ -483,14 +431,8 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 			Type: "meta",
 		}
 
-		for _, item := range changes.Pack.Parameter {
-			for k, v := range item {
-				if k == "deploy_version" {
-					i := map[string]interface{}{"run_uuid": v.(string)}
-					meta.Parameter = append(meta.Parameter, i)
-				}
-			}
-		}
+		deployVersion := map[string]interface{}{"run_uuid": changes.Pack.DeployVersion}
+		meta.Parameter = append(meta.Parameter, deployVersion)
 
 		block.Block = append(block.Block, meta)
 	}
@@ -564,30 +506,18 @@ func job(block *model.TemplateBlock, changes *model.BlockChanges) {
 func jobMeta(block *model.TemplateBlock, changes *model.BlockChanges) {
 	var haveUUID bool
 
-	for _, item := range changes.Pack.Parameter {
-		for k, v := range item {
-			if k == "deploy_version" {
-				for index, p := range block.Parameter {
-					for key := range p {
-						if key == "run_uuid" {
-							haveUUID = true
-							block.Parameter[index][key] = v.(string)
-						}
-					}
-				}
+	for index, p := range block.Parameter {
+		for key := range p {
+			if key == "run_uuid" {
+				haveUUID = true
+				block.Parameter[index][key] = changes.Pack.DeployVersion
 			}
 		}
 	}
 
 	if !haveUUID {
-		for _, item := range changes.Pack.Parameter {
-			for k, v := range item {
-				if k == "deploy_version" {
-					i := map[string]interface{}{"run_uuid": v.(string)}
-					block.Parameter = append(block.Parameter, i)
-				}
-			}
-		}
+		deployVersion := map[string]interface{}{"run_uuid": changes.Pack.DeployVersion}
+		block.Parameter = append(block.Parameter, deployVersion)
 	}
 
 	setFileChanges(block, &changes.File)
@@ -687,6 +617,10 @@ func networkDNS(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 }
 
+func numa(block *model.TemplateBlock, changes *model.BlockChanges) {
+	setFileChanges(block, &changes.File)
+}
+
 func parameterized(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 }
@@ -728,11 +662,15 @@ func resources(block *model.TemplateBlock, changes *model.BlockChanges) {
 	setFileChanges(block, &changes.File)
 
 	for index, item := range block.Block {
-		if item.Type == "device" {
-			blockChanges := checkFileChanges(
-				&block.Block[index], changes, named,
-			)
+		blockChanges := checkFileChanges(
+			&block.Block[index], changes, named,
+		)
+
+		switch item.Type {
+		case "device":
 			device(&block.Block[index], &blockChanges)
+		case "numa":
+			numa(&block.Block[index], &blockChanges)
 		}
 	}
 }
@@ -775,27 +713,6 @@ func service(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	checkUnnamedDublicateBlocks(block, &changes.File, unnamedDublicateBlock)
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				switch k {
-				case "name":
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				case "tags", "canary_tags":
-					var list []interface{}
-
-					for _, tag := range v.([]interface{}) {
-						release := fmt.Sprintf("%s-%s", tag, changes.Release)
-						list = append(list, release)
-					}
-
-					block.Parameter[index][k] = list
-				}
-			}
-		}
-	}
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(&block.Block[index], changes, single)
@@ -857,17 +774,6 @@ func sidecarTask(block *model.TemplateBlock, changes *model.BlockChanges) {
 
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
-			}
-		}
-	}
 
 	for index, item := range block.Block {
 		blockChanges := checkFileChanges(
@@ -953,6 +859,8 @@ func task(block *model.TemplateBlock, changes *model.BlockChanges) {
 			artifact(&block.Block[index], &blockChanges)
 		case "affinity":
 			affinity(&block.Block[index], &blockChanges)
+		case "consul":
+			consul(&block.Block[index], &blockChanges)
 		case "config":
 			config(&block.Block[index], &blockChanges)
 		case "constraint":
@@ -1005,6 +913,42 @@ func template(block *model.TemplateBlock, changes *model.BlockChanges) {
 	checkSingleBlocks(block, &changes.File, singleBlock)
 	setFileChanges(block, &changes.File)
 
+	for _, item := range block.Parameter {
+		for k, v := range item {
+			if k == "file" {
+				var fileFullPath string
+
+				// Check the full file path or file name.
+				separatorFormat, err := regexp.Compile(`\\|\/`)
+				if err != nil {
+					fmt.Printf("failed check OS separator in file path, %s", err)
+					os.Exit(1)
+				}
+
+				findSeparator := separatorFormat.FindStringSubmatch(v.(string))
+
+				if len(findSeparator) > 0 {
+					fileFullPath = v.(string)
+				} else {
+					fileFullPath = filepath.Join(changes.FilesDirPath, v.(string))
+				}
+
+				// Read the file and add data to the "data" parameter.
+				file, err := os.ReadFile(fileFullPath)
+				if err != nil {
+					fmt.Printf("error read template files - %v\n", err)
+					os.Exit(1)
+				}
+
+				i := make(map[string]interface{})
+				i["data"] = string(file)
+				block.Parameter = append(block.Parameter, i)
+
+				pkg.RemoveParameter(block, "file")
+			}
+		}
+	}
+
 	pkg.RemoveParameter(block, "name")
 
 	for index, item := range block.Block {
@@ -1039,17 +983,6 @@ func upstreams(block *model.TemplateBlock, changes *model.BlockChanges) {
 		for k := range item {
 			if k == "destination_namespace" {
 				block.Parameter[index][k] = changes.Namespace
-			}
-		}
-	}
-
-	if changes.Release != "" {
-		for index, item := range block.Parameter {
-			for k, v := range item {
-				if k == "destination_name" {
-					release := fmt.Sprintf("%s-%s", v, changes.Release)
-					block.Parameter[index][k] = release
-				}
 			}
 		}
 	}

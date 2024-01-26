@@ -31,10 +31,11 @@ func (s *Changes) SetChanges(
 	changes *model.Changes,
 ) error {
 	blockChanges := model.BlockChanges{
-		Release:   changes.Release,
-		Namespace: changes.Namespace,
-		File:      model.TemplateBlock{},
-		Pack:      changes.Pack,
+		Release:      changes.Release,
+		Namespace:    changes.Namespace,
+		File:         model.TemplateBlock{},
+		FilesDirPath: changes.FilesDirPath,
+		Pack:         changes.Pack,
 	}
 
 	if len(changes.Files) > 0 {
@@ -253,10 +254,11 @@ func checkFileChanges(
 	}
 
 	blockChanges := model.BlockChanges{
-		Release:   changes.Release,
-		Namespace: changes.Namespace,
-		File:      fileChanges,
-		Pack:      changes.Pack,
+		Release:      changes.Release,
+		Namespace:    changes.Namespace,
+		File:         fileChanges,
+		FilesDirPath: changes.FilesDirPath,
+		Pack:         changes.Pack,
 	}
 
 	return blockChanges

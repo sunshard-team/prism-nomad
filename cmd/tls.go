@@ -105,36 +105,36 @@ func init() {
 	TLSCmd.Flags().String(
 		"ca-cert",
 		"",
-		"Path to a PEM encoded CA cert file to use to verify the Nomad server SSL certificate.",
+		"path to a PEM encoded CA cert file to use to verify the Nomad server SSL certificate",
 	)
 
 	TLSCmd.Flags().String(
 		"ca-path",
 		"",
-		"Path to a directory of PEM encoded CA cert files to verify the Nomad server SSL certificate.",
+		"path to a directory of PEM encoded CA cert files to verify the Nomad server SSL certificate",
 	)
 
 	TLSCmd.Flags().String(
 		"client-cert",
 		"",
-		"Path to a PEM encoded client certificate for TLS authentication to the Nomad server.",
+		"path to a PEM encoded client certificate for TLS authentication to the Nomad server",
 	)
 
 	TLSCmd.Flags().String(
 		"client-key",
 		"",
-		"Path to an unencrypted PEM encoded private key matching the client certificate from --client-cert.",
+		"path to an unencrypted PEM encoded private key matching the client certificate from \"--client-cert\"",
 	)
 
 	TLSCmd.Flags().String(
 		"tls-server-name",
 		"",
-		"The server name to use as the SNI host when connecting via TLS.",
+		"the server name to use as the SNI host when connecting via TLS",
 	)
 
 	TLSCmd.Flags().Bool(
 		"tls-skip-verify",
 		true,
-		"Do not verify TLS certificate. This is highly not recommended.",
+		"do not verify TLS certificate. This is highly not recommended",
 	)
 }
