@@ -18,6 +18,8 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 - [Environment variables](#environment-variables)
 - [Pack dependencies](#pack-dependencies)
 - [Deployment status](#deployment-status)
+- [Release](#release)
+- [Sidecar service](#sidecar-service)
 
 ## Prerequisites
 
@@ -62,7 +64,8 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 **1. Creating a project. In prism they are called “pack”.**
 
    To do this, run the command, where \<name> is the name of your project (default name pack name "prism", further in the example this name will be indicated).
-   ```
+
+   ```bash
    prism init <name>
    ```
 
@@ -90,7 +93,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    First, we’ll do a dry run to output the finished configuration in HCL format to make sure that everything is specified correctly.
    You can also output the result to a file in HCL format using the `--output` flag.
 
-   ```
+   ```bash
    prism deploy --path ./prism --release dev --file dev.yaml --dry-run
    ```
 
@@ -98,7 +101,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
    If everything is in order, we can deploy the job configuration.
 
-   ```
+   ```bash
    prism deploy --path ./prism --release dev --file dev.yaml --address $cluster-address
    ```
 
@@ -189,7 +192,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    **How it works.**\
    For example, let's specify a variable for the job name and a count for the group:
 
-   ```bash
+   ```yaml
    job:
      name: "${PRISM_JOB_NAME}"
      ...
@@ -248,3 +251,27 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    Additionally, a wait time of 2 minutes is set for the deployment of each job. You can change the waiting time for jobs to be deployed using the `--wait-time` flag (the time is indicated in seconds).
    
    **The job will be considered successfully deployed only if the deployment status is "successful"!**
+
+## Release
+
+   During deployment, you can specify any release name. It allows you to deploy one job under different releases, using the `--release` flag. Starting from version v0.4.0, when specifying a release, it will be added by default to the name of `job`, `group`, `task`, `device`.
+
+
+## Sidecar service
+
+   To specify the default `sidecar_service` value:
+
+   ```
+   connect {
+      sidecar_service {}
+   }
+   ```
+
+   use the `open_sidecar_service` parameter with the value `true`:
+
+   ```yaml
+   connect:
+      open_sidecar_service: true
+   ```
+
+   Otherwise, the parameter need not be specified. If you decide to leave it in place, simply set it to `false`, (in any case, this parameter will be removed from the final configuration).
