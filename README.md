@@ -198,7 +198,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
      ...
 
      group:
-       - name "group-name"
+       - name: "group-name"
          count: "${PRISM_GROUP_COUNT}"
          ...
    ```
@@ -263,7 +263,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
    ```
    connect {
-      sidecar_service {}
+     sidecar_service {}
    }
    ```
 
@@ -271,7 +271,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
    ```yaml
    connect:
-      open_sidecar_service: true
+     open_sidecar_service: true
    ```
 
    Otherwise, the parameter need not be specified. If you decide to leave it in place, simply set it to `false`, (in any case, this parameter will be removed from the final configuration).
