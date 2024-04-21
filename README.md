@@ -32,7 +32,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 1. Clone the repository to your local machine:
    ```bash
-   git clone https://github.com/sunshard-prism/prism-nomad
+   git clone https://github.com/sunshard-team/prism-nomad
    ```
 
 2. Create and move the prism binary to /usr/local/bin:
@@ -57,7 +57,7 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
 
 **Or download pre-built binary (Windows, MacOS or Linux).**
 
-[Release download](https://github.com/sunshard-prism/prism-nomad/releases)
+[Release download](https://github.com/sunshard-team/prism-nomad/releases)
 
 ## Usage
 
