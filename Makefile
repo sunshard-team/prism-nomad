@@ -1,6 +1,6 @@
 .PHONY:
 
-version ?= v0.4.0
+version ?= v0.4.1
 
 build-prism:
 	go build -a -o build/prism -ldflags="-X 'prism/cmd.version=$(version)'"
