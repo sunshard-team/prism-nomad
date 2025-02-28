@@ -55,10 +55,6 @@ Prism is a tool that simplifies the creation of Nomad job configuration template
    prism --version
    ```
 
-**Or download pre-built binary (Windows, MacOS or Linux).**
-
-[Release download](https://github.com/sunshard-team/prism-nomad/releases)
-
 ## Usage
 
 **1. Creating a project. In prism they are called “pack”.**
