@@ -28,7 +28,7 @@ func NewOutput() *Output {
 func (s *Output) OutputConfig(config model.TemplateBlock) (string, error) {
 	var buf bytes.Buffer
 
-	configTemplate, err := createTemplate(config)
+	configTemplate, err := createTemplate()
 	if err != nil {
 		return "", fmt.Errorf(
 			"error write template to buffer, %s", err,
@@ -51,7 +51,7 @@ func (s *Output) CreateConfigFile(
 	name, path string,
 	config model.TemplateBlock,
 ) error {
-	configTemplate, err := createTemplate(config)
+	configTemplate, err := createTemplate()
 	if err != nil {
 		return fmt.Errorf("error create nomad configuration file, %s", err)
 	}
@@ -76,7 +76,7 @@ func (s *Output) CreateConfigFile(
 }
 
 // Creates a nomad configuration template.
-func createTemplate(config model.TemplateBlock) (*template.Template, error) {
+func createTemplate() (*template.Template, error) {
 	// Add dynamic indentation.
 	// Add "include" function, to replace "template".
 	tmpl := template.New("config").Funcs(sprig.FuncMap())
